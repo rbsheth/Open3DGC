@@ -31,7 +31,7 @@ namespace o3dgc
         FILE* g_fileDebugDecTL = NULL;
 #endif //DEBUG_VERBOSE
 
-    O3DGCErrorCode TriangleListDecoder::Init(long * const  triangles,
+    O3DGCErrorCode TriangleListDecoder::Init(Index * const  triangles,
                                              const long numTriangles,
                                              const long numVertices,
                                              const long maxSizeV2T)
@@ -365,9 +365,9 @@ namespace o3dgc
                     c = m_tfans.GetVertex(k);
                     t = m_triangleCount*3;
                  
-                    m_triangles[t++] = focusVertex;
-                    m_triangles[t++] = b;
-                    m_triangles[t  ] = c;
+                    m_triangles[t++] = (Index) focusVertex;
+                    m_triangles[t++] = (Index) b;
+                    m_triangles[t  ] = (Index) c;
 
 #ifdef DEBUG_VERBOSE
                     printf("tri -> %i, %i, %i\n", focusVertex, b, c);

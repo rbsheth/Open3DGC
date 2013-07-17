@@ -42,10 +42,10 @@ namespace o3dgc
         //! Destructor.
                                     ~TriangleListEncoder(void);
         //! 
-        O3DGCErrorCode                Encode(const long * const triangles, 
-                                           const long numTriangles,
-                                           const long numVertices,
-                                           BinaryStream & bstream);
+        O3DGCErrorCode                Encode(const Index * const triangles, 
+                                             const long numTriangles,
+                                             const long numVertices,
+                                             BinaryStream & bstream);
         O3DGCSC3DMCStreamType       GetStreamType() const { return m_streamType; }
         void                        SetStreamType(O3DGCSC3DMCStreamType streamType) { m_streamType = streamType; }
         const long * const          GetInvVMap() const { return m_invVMap;}
@@ -54,9 +54,9 @@ namespace o3dgc
         const AdjacencyInfo &       GetVertexToTriangle() const { return m_vertexToTriangle;}
 
         private:
-        O3DGCErrorCode              Init(const long * const triangles, 
-                                       long numTriangles, 
-                                       long numVertices);
+        O3DGCErrorCode              Init(const Index * const triangles, 
+                                         long numTriangles, 
+                                         long numVertices);
         O3DGCErrorCode              CompueLocalConnectivityInfo(const long focusVertex);
         O3DGCErrorCode              ProcessVertex( long focusVertex);
         O3DGCErrorCode              ComputeTFANDecomposition(const long focusVertex);
@@ -72,7 +72,7 @@ namespace o3dgc
         long                        m_numTriangles;
         long                        m_numVertices;
         long                        m_maxSizeVertexToTriangle;
-        long const *                m_triangles;
+        Index const *               m_triangles;
         long *                      m_vtags;
         long *                      m_ttags;
         long *                      m_vmap;

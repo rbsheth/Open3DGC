@@ -62,7 +62,7 @@ namespace o3dgc
         O3DGCSC3DMCStreamType       GetStreamType() const { return m_streamType; }
         void                        SetStreamType(O3DGCSC3DMCStreamType streamType) { m_streamType = streamType; }
         const AdjacencyInfo &       GetVertexToTriangle() const { return m_vertexToTriangle;}
-        O3DGCErrorCode              Decode(long * const triangles,
+        O3DGCErrorCode              Decode(Index * const triangles,
                                            const long numTriangles,
                                            const long numVertices,
                                            const BinaryStream & bstream,
@@ -77,7 +77,7 @@ namespace o3dgc
                                     }
 
         private:
-        O3DGCErrorCode              Init(long * const triangles, 
+        O3DGCErrorCode              Init(Index * const triangles, 
                                          const long numTriangles,
                                          const long numVertices,
                                          const long maxSizeV2T);
@@ -94,7 +94,7 @@ namespace o3dgc
         long                        m_maxNumTriangles;
         long                        m_numTriangles;
         long                        m_numVertices;
-        long *                      m_triangles;
+        Index *                     m_triangles;
         long                        m_vertexCount;    
         long                        m_triangleCount;
         long                        m_numConqueredTriangles;

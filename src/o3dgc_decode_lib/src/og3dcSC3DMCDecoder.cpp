@@ -316,7 +316,7 @@ namespace o3dgc
     {
         assert(dimFloatArray <  O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES);
         const AdjacencyInfo & v2T    = m_triangleListDecoder.GetVertexToTriangle();
-        const long * const triangles = ifs.GetCoordIndex();
+        const Index * const triangles = ifs.GetCoordIndex();
         long vpred[O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES];
         long tpred[O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES];
         long nv, nt;

@@ -46,7 +46,7 @@ using namespace o3dgc;
 class IVec3Cmp 
 {
    public:
-      bool operator()(const Vec3<long> a,const Vec3<long> b) 
+      bool operator()(const Vec3<Index> a,const Vec3<Index> b) 
       { 
           if (a.X() != b.X())
           {
@@ -66,13 +66,13 @@ bool LoadOBJ(const std::string & fileName,
              std::vector< Vec3<Real> > & points,
              std::vector< Vec2<Real> > & texCoords,
              std::vector< Vec3<Real> > & normals,
-             std::vector< Vec3<long> > & triangles);
+             std::vector< Vec3<Index> > & triangles);
 
 bool SaveOBJ(const char * fileName, 
              const std::vector< Vec3<Real> > & points,
              const std::vector< Vec2<Real> > & texCoords,
              const std::vector< Vec3<Real> > & normals,
-             const std::vector< Vec3<long> > & triangles);
+             const std::vector< Vec3<Index> > & triangles);
 
 int testEncode(const std::string fileName, int qcoord, int qtexCoord, int qnormal, O3DGCSC3DMCStreamType streamType)
 {
@@ -91,7 +91,7 @@ int testEncode(const std::string fileName, int qcoord, int qtexCoord, int qnorma
     std::vector< Vec3<Real> > points;
     std::vector< Vec3<Real> > normals;
     std::vector< Vec2<Real> > texCoords;
-    std::vector< Vec3<long> > triangles;
+    std::vector< Vec3<Index> > triangles;
     bool ret = LoadOBJ(fileName, points, texCoords, normals, triangles);
     if (!ret)
     {
@@ -117,7 +117,7 @@ int testEncode(const std::string fileName, int qcoord, int qtexCoord, int qnorma
     ifs.SetNCoordIndex(triangles.size());
 
     ifs.SetCoord((Real * const) & (points[0]));
-    ifs.SetCoordIndex((long * const ) &(triangles[0]));
+    ifs.SetCoordIndex((Index * const ) &(triangles[0]));
     if (normals.size() > 0)
     {
         ifs.SetNormal((Real * const) & (normals[0]));
@@ -163,7 +163,7 @@ int testDecode(std::string fileName)
     std::vector< Vec3<Real> > normals;
     std::vector< Vec2<Real> > colors;
     std::vector< Vec2<Real> > texCoords;
-    std::vector< Vec3<long> > triangles;
+    std::vector< Vec3<Index> > triangles;
 
     BinaryStream bstream;
     IndexedFaceSet ifs;
@@ -195,7 +195,7 @@ int testDecode(std::string fileName)
 
     // allocate memory
     triangles.resize(ifs.GetNCoordIndex());
-    ifs.SetCoordIndex((long * const ) &(triangles[0]));    
+    ifs.SetCoordIndex((Index * const ) &(triangles[0]));    
 
     points.resize(ifs.GetNCoord());
     ifs.SetCoord((Real * const ) &(points[0]));    
@@ -341,7 +341,7 @@ bool LoadOBJ(const std::string & fileName,
              std::vector< Vec3<Real> > & upoints,
              std::vector< Vec2<Real> > & utexCoords,
              std::vector< Vec3<Real> > & unormals,
-             std::vector< Vec3<long> > & triangles) 
+             std::vector< Vec3<Index> > & triangles) 
 {   
     const char ObjDelimiters[]=" /";
     const size_t BufferSize = 1024;
@@ -351,18 +351,18 @@ bool LoadOBJ(const std::string & fileName,
     {        
         char buffer[BufferSize];
         Real  x[3];
-        long ip[3] = {-1, -1, -1};
-        long in[3] = {-1, -1, -1};
-        long it[3] = {-1, -1, -1};
+        Index ip[3] = {-1, -1, -1};
+        Index in[3] = {-1, -1, -1};
+        Index it[3] = {-1, -1, -1};
         char * pch;
         char * str;
-        long nv = 0;
-        Vec3<long> vertex;
-        Vec3<long> triangle;
+        Index nv = 0;
+        Vec3<Index> vertex;
+        Vec3<Index> triangle;
         std::vector< Vec3<Real> > points;
         std::vector< Vec2<Real> > texCoords;
         std::vector< Vec3<Real> > normals;
-        std::map< Vec3<long>, long, IVec3Cmp > vertices;
+        std::map< Vec3<Index>, Index, IVec3Cmp > vertices;
 
         while (!feof(fid)) 
         {
@@ -433,11 +433,11 @@ bool LoadOBJ(const std::string & fileName,
                     vertex.X() = ip[k];
                     vertex.Y() = in[k];
                     vertex.Z() = it[k];
-                    std::map< Vec3<long>, long, IVec3Cmp >::iterator it = vertices.find(vertex);
+                    std::map< Vec3<Index>, Index, IVec3Cmp >::iterator it = vertices.find(vertex);
                     if ( it == vertices.end() )
                     {
                         vertices[vertex] = nv;
-                        triangle[k]         = nv;
+                        triangle[k]      = nv;
                         ++nv;
                     }
                     else
@@ -460,7 +460,7 @@ bool LoadOBJ(const std::string & fileName,
         {
             utexCoords.resize(nv);
         }
-        for (std::map< Vec3<long>, long, IVec3Cmp >::iterator it = vertices.begin(); it != vertices.end(); ++it)
+        for (std::map< Vec3<Index>, Index, IVec3Cmp >::iterator it = vertices.begin(); it != vertices.end(); ++it)
         {
             if (points.size() > 0)
             {
@@ -491,7 +491,7 @@ bool SaveOBJ(const char * fileName,
              const std::vector< Vec3<Real> > & points,
              const std::vector< Vec2<Real> > & texCoords,
              const std::vector< Vec3<Real> > & normals,
-             const std::vector< Vec3<long> > & triangles)
+             const std::vector< Vec3<Index> > & triangles)
 {
     FILE * fid = fopen(fileName, "w");
     if (fid) 

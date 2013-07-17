@@ -243,10 +243,10 @@ namespace o3dgc
                                                    BinaryStream & bstream)
     {
         assert(dimFloatArray <  O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES);
-        const AdjacencyInfo & v2T    = m_triangleListEncoder.GetVertexToTriangle();
-        const long * const vmap      = m_triangleListEncoder.GetVMap();
-        const long * const invVMap   = m_triangleListEncoder.GetInvVMap();
-        const long * const triangles = ifs.GetCoordIndex();
+        const AdjacencyInfo & v2T     = m_triangleListEncoder.GetVertexToTriangle();
+        const long * const vmap       = m_triangleListEncoder.GetVMap();
+        const long * const invVMap    = m_triangleListEncoder.GetInvVMap();
+        const Index * const triangles = ifs.GetCoordIndex();
         long vpred[O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES];
         long tpred[O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES];
         long nv, nt;

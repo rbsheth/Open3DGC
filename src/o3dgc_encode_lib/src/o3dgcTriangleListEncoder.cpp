@@ -32,7 +32,7 @@ namespace o3dgc
 
     // extract opposite edge
     inline void CompueOppositeEdge(const long focusVertex, 
-                                   const long * triangle,
+                                   const Index * triangle,
                                    long & a, long & b)
     {                
         if (triangle[0] == focusVertex)
@@ -202,7 +202,7 @@ namespace o3dgc
         delete [] m_nonConqueredTriangles;
         delete [] m_nonConqueredEdges;
     }
-    O3DGCErrorCode TriangleListEncoder::Init(const long * const triangles, 
+    O3DGCErrorCode TriangleListEncoder::Init(const Index * const triangles, 
                                              long numTriangles, 
                                              long numVertices)
     {
@@ -280,7 +280,7 @@ namespace o3dgc
         }
         return O3DGC_OK;
     }
-    O3DGCErrorCode TriangleListEncoder::Encode(const long * const triangles, 
+    O3DGCErrorCode TriangleListEncoder::Encode(const Index * const triangles, 
                                                const long numTriangles,
                                                const long numVertices, 
                                                BinaryStream & bstream)
