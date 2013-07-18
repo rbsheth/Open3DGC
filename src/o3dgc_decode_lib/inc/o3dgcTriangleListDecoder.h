@@ -33,6 +33,7 @@ namespace o3dgc
 {
     
     //! 
+    template <class T>
     class TriangleListDecoder
     {
     public:    
@@ -62,7 +63,7 @@ namespace o3dgc
         O3DGCSC3DMCStreamType       GetStreamType() const { return m_streamType; }
         void                        SetStreamType(O3DGCSC3DMCStreamType streamType) { m_streamType = streamType; }
         const AdjacencyInfo &       GetVertexToTriangle() const { return m_vertexToTriangle;}
-        O3DGCErrorCode              Decode(Index * const triangles,
+        O3DGCErrorCode              Decode(T * const triangles,
                                            const long numTriangles,
                                            const long numVertices,
                                            const BinaryStream & bstream,
@@ -77,7 +78,7 @@ namespace o3dgc
                                     }
 
         private:
-        O3DGCErrorCode              Init(Index * const triangles, 
+        O3DGCErrorCode              Init(T * const triangles, 
                                          const long numTriangles,
                                          const long numVertices,
                                          const long maxSizeV2T);
@@ -94,7 +95,7 @@ namespace o3dgc
         long                        m_maxNumTriangles;
         long                        m_numTriangles;
         long                        m_numVertices;
-        Index *                     m_triangles;
+        T *                         m_triangles;
         long                        m_vertexCount;    
         long                        m_triangleCount;
         long                        m_numConqueredTriangles;
@@ -107,5 +108,6 @@ namespace o3dgc
         O3DGCSC3DMCStreamType       m_streamType;
     };
 }
+#include "o3dgcTriangleListDecoder.inl"    // template implementation
 #endif // O3DGC_TRIANGLE_LIST_DECODER_H
 

@@ -34,6 +34,7 @@ THE SOFTWARE.
 namespace o3dgc
 {
     //! 
+    template <class T>
     class TriangleListEncoder
     {
     public:    
@@ -42,10 +43,10 @@ namespace o3dgc
         //! Destructor.
                                     ~TriangleListEncoder(void);
         //! 
-        O3DGCErrorCode                Encode(const Index * const triangles, 
-                                             const long numTriangles,
-                                             const long numVertices,
-                                             BinaryStream & bstream);
+        O3DGCErrorCode              Encode(const T * const triangles, 
+                                           const long numTriangles,
+                                           const long numVertices,
+                                           BinaryStream & bstream);
         O3DGCSC3DMCStreamType       GetStreamType() const { return m_streamType; }
         void                        SetStreamType(O3DGCSC3DMCStreamType streamType) { m_streamType = streamType; }
         const long * const          GetInvVMap() const { return m_invVMap;}
@@ -54,7 +55,7 @@ namespace o3dgc
         const AdjacencyInfo &       GetVertexToTriangle() const { return m_vertexToTriangle;}
 
         private:
-        O3DGCErrorCode              Init(const Index * const triangles, 
+        O3DGCErrorCode              Init(const T * const triangles, 
                                          long numTriangles, 
                                          long numVertices);
         O3DGCErrorCode              CompueLocalConnectivityInfo(const long focusVertex);
@@ -72,7 +73,7 @@ namespace o3dgc
         long                        m_numTriangles;
         long                        m_numVertices;
         long                        m_maxSizeVertexToTriangle;
-        Index const *               m_triangles;
+        T const *                   m_triangles;
         long *                      m_vtags;
         long *                      m_ttags;
         long *                      m_vmap;
@@ -90,8 +91,7 @@ namespace o3dgc
         CompressedTriangleFans      m_ctfans;
         O3DGCSC3DMCStreamType       m_streamType;
     };
-
-
 }
+#include "o3dgcTriangleListEncoder.inl"    // template implementation
 #endif // O3DGC_TRIANGLE_LIST_ENCODER_H
 

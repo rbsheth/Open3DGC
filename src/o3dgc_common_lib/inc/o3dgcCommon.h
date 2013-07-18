@@ -33,7 +33,7 @@ THE SOFTWARE.
 
 namespace o3dgc
 {
-    typedef float Real;
+    typedef float        Real;
     typedef unsigned int Index;
 
     const long O3DGC_MIN_LONG      = -2147483647;
