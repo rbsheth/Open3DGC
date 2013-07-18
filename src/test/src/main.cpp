@@ -491,7 +491,7 @@ bool SaveOBJ(const char * fileName,
 {
     std::ofstream fout;
     fout.open(fileName);
-    if (fout.fail()) 
+    if (!fout.fail()) 
     {
         const size_t np = points.size();
         const size_t nn = normals.size();
