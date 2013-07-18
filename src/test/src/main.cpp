@@ -483,9 +483,6 @@ bool LoadOBJ(const std::string & fileName,
     }
     return true;
 }
-
-
-
 bool SaveOBJ(const char * fileName, 
              const std::vector< Vec3<Real> > & points,
              const std::vector< Vec2<Real> > & texCoords,
