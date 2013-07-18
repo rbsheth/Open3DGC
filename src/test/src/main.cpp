@@ -40,7 +40,7 @@ THE SOFTWARE.
 #ifdef WIN32
 #include <windows.h>
 #define PATH_SEP "\\"
-#elif
+#elif __MACH__
 #include <mach/clock.h>
 #include <mach/mach.h>
 #define PATH_SEP "/"
