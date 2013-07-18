@@ -107,7 +107,7 @@ int testEncode(const std::string fileName, int qcoord, int qtexCoord, int qnorma
 
     SC3DMCEncodeParams params;
     params.SetStreamType(streamType);
-    IndexedFaceSet ifs;
+    IndexedFaceSet<Index> ifs;
     params.SetCoordQuantBits(qcoord);
     params.SetNormalQuantBits(qnormal);
     params.SetTexCoordQuantBits(qtexCoord);
@@ -133,7 +133,7 @@ int testEncode(const std::string fileName, int qcoord, int qtexCoord, int qnorma
 
     BinaryStream bstream(points.size()*8);
 
-    SC3DMCEncoder encoder;
+    SC3DMCEncoder<Index> encoder;
     encoder.Encode(params, ifs, bstream);
 
     FILE * fout = fopen(outFileName.c_str(), "wb");
@@ -167,7 +167,7 @@ int testDecode(std::string fileName)
     std::vector< Vec3<Index> > triangles;
 
     BinaryStream bstream;
-    IndexedFaceSet ifs;
+    IndexedFaceSet<Index> ifs;
 
 
     FILE * fin = fopen(fileName.c_str(), "rb");
@@ -187,9 +187,7 @@ int testDecode(std::string fileName)
     }
     fclose(fin);
 
-//    bstream.Load(fileName.c_str());
-
-    SC3DMCDecoder decoder;
+    SC3DMCDecoder<Index> decoder;
     
     // load header
     decoder.DecodeHeader(ifs, bstream);
