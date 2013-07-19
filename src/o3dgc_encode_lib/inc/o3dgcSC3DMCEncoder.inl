@@ -26,6 +26,7 @@ THE SOFTWARE.
 
 
 #include "o3dgcArithmeticCodec.h"
+#include "o3dgcTimer.h"
 
 namespace o3dgc
 {
@@ -308,12 +309,12 @@ namespace o3dgc
                     if (predMode == O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION)
                     {
                         long a,b;
-                        if (triangles[ta*3] == v)
+                        if ((long) triangles[ta*3] == v)
                         {
                             a = triangles[ta*3 + 1];
                             b = triangles[ta*3 + 2];
                         }
-                        else if (triangles[ta*3 + 1] == v)
+                        else if ((long) triangles[ta*3 + 1] == v)
                         {
                             a = triangles[ta*3 + 0];
                             b = triangles[ta*3 + 2];
@@ -532,47 +533,91 @@ namespace o3dgc
     }
     template <class T>
     O3DGCErrorCode SC3DMCEncoder<T>::EncodePayload(const SC3DMCEncodeParams & params, 
-                                                const IndexedFaceSet<T> & ifs, 
-                                                BinaryStream & bstream)
+                                                   const IndexedFaceSet<T> & ifs, 
+                                                   BinaryStream & bstream)
     {
 
         // encode triangle list        
         m_triangleListEncoder.SetStreamType(params.GetStreamType());
+        m_stats.m_streamSizeCoordIndex = bstream.GetSize();
+        Timer timer;
+        timer.Tic();
         m_triangleListEncoder.Encode(ifs.GetCoordIndex(), ifs.GetNCoordIndex(), ifs.GetNCoord(), bstream);
+        timer.Toc();
+        m_stats.m_timeCoordIndex       = timer.GetElapsedTime();
+        m_stats.m_streamSizeCoordIndex = bstream.GetSize() - m_stats.m_streamSizeCoordIndex;
 
         // encode coord
+        m_stats.m_streamSizeCoord = bstream.GetSize();
+        timer.Tic();
         if (ifs.GetNCoord() > 0)
         {
             EncodeFloatArray(ifs.GetCoord(), ifs.GetNCoord(), 3, ifs.GetCoordMin(), ifs.GetCoordMax(), 
                                 params.GetCoordQuantBits(), ifs, params.GetCoordPredMode(), bstream);
         }
+        timer.Toc();
+        m_stats.m_timeCoord       = timer.GetElapsedTime();
+        m_stats.m_streamSizeCoord = bstream.GetSize() - m_stats.m_streamSizeCoord;
+
+
         // encode Normal
+        m_stats.m_streamSizeNormal = bstream.GetSize();
+        timer.Tic();
         if (ifs.GetNNormal() > 0)
         {
             EncodeFloatArray(ifs.GetNormal(), ifs.GetNNormal(), 3, ifs.GetNormalMin(), ifs.GetNormalMax(), 
                                 params.GetNormalQuantBits(), ifs, params.GetNormalPredMode(), bstream);
         }
+        timer.Toc();
+        m_stats.m_timeNormal       = timer.GetElapsedTime();
+        m_stats.m_streamSizeNormal = bstream.GetSize() - m_stats.m_streamSizeNormal;
+
+
         // encode Color
+        m_stats.m_streamSizeColor = bstream.GetSize();
+        timer.Tic();
         if (ifs.GetNColor() > 0)
         {
             EncodeFloatArray(ifs.GetColor(), ifs.GetNColor(), 3, ifs.GetColorMin(), ifs.GetColorMax(), 
                                 params.GetColorQuantBits(), ifs, params.GetColorPredMode(), bstream);
         }
+        timer.Toc();
+        m_stats.m_timeColor       = timer.GetElapsedTime();
+        m_stats.m_streamSizeColor = bstream.GetSize() - m_stats.m_streamSizeColor;
+
         // encode TexCoord
+        m_stats.m_streamSizeTexCoord = bstream.GetSize();
+        timer.Tic();
         if (ifs.GetNTexCoord() > 0)
         {
             EncodeFloatArray(ifs.GetTexCoord(), ifs.GetNTexCoord(), 2, ifs.GetTexCoordMin(), ifs.GetTexCoordMax(), 
                                 params.GetTexCoordQuantBits(), ifs, params.GetTexCoordPredMode(), bstream);
         }
+        timer.Toc();
+        m_stats.m_timeTexCoord       = timer.GetElapsedTime();
+        m_stats.m_streamSizeTexCoord = bstream.GetSize() - m_stats.m_streamSizeTexCoord;
+
+        m_stats.m_streamSizeFloatAttribute = bstream.GetSize();
+        timer.Tic();
         for(unsigned long a = 0; a < ifs.GetNumFloatAttributes(); ++a)
         {
             EncodeFloatArray(ifs.GetFloatAttribute(a), ifs.GetNFloatAttribute(a), ifs.GetFloatAttributeDim(a), ifs.GetFloatAttributeMin(a), ifs.GetFloatAttributeMax(a), 
                                 params.GetFloatAttributeQuantBits(a), ifs, params.GetFloatAttributePredMode(a), bstream);
         }
+        timer.Toc();
+        m_stats.m_timeFloatAttribute       = timer.GetElapsedTime();
+        m_stats.m_streamSizeFloatAttribute = bstream.GetSize() - m_stats.m_streamSizeFloatAttribute;
+
+        m_stats.m_streamSizeIntAttribute = bstream.GetSize();
+        timer.Tic();        
         for(unsigned long a = 0; a < ifs.GetNumIntAttributes(); ++a)
         {
             EncodeIntArray(ifs.GetIntAttribute(a), ifs.GetNIntAttribute(a), ifs.GetIntAttributeDim(a), params.GetIntAttributePredMode(a), bstream);
         }
+        timer.Toc();
+        m_stats.m_timeIntAttribute       = timer.GetElapsedTime();
+        m_stats.m_streamSizeIntAttribute = bstream.GetSize() - m_stats.m_streamSizeIntAttribute;
+
         return O3DGC_OK;
     }
 }

@@ -125,6 +125,46 @@ namespace o3dgc
         unsigned long num = 1;
         return ( *((char *)(&num)) == 1 )? O3DGC_LITTLE_ENDIAN : O3DGC_BIG_ENDIAN ;
     }
+    class SC3DMCStats
+    {
+    public: 
+                                    SC3DMCStats(void)
+                                    {
+                                        m_timeCoord                = 0.0;
+                                        m_timeNormal               = 0.0;
+                                        m_timeTexCoord             = 0.0;
+                                        m_timeColor                = 0.0;
+                                        m_timeCoordIndex           = 0.0;
+                                        m_timeFloatAttribute       = 0.0;
+                                        m_timeIntAttribute         = 0.0;
+                                        m_streamSizeCoord          = 0;
+                                        m_streamSizeNormal         = 0;
+                                        m_streamSizeTexCoord       = 0;
+                                        m_streamSizeColor          = 0;
+                                        m_streamSizeCoordIndex     = 0;
+                                        m_streamSizeFloatAttribute = 0;
+                                        m_streamSizeIntAttribute   = 0;
+                                    };
+                                    ~SC3DMCStats(void){};
+        
+        double                      m_timeCoord;
+        double                      m_timeNormal;
+        double                      m_timeTexCoord;
+        double                      m_timeColor;
+        double                      m_timeCoordIndex;
+        double                      m_timeFloatAttribute;
+        double                      m_timeIntAttribute;
+
+        unsigned long               m_streamSizeCoord;
+        unsigned long               m_streamSizeNormal;
+        unsigned long               m_streamSizeTexCoord;
+        unsigned long               m_streamSizeColor;
+        unsigned long               m_streamSizeCoordIndex;
+        unsigned long               m_streamSizeFloatAttribute;
+        unsigned long               m_streamSizeIntAttribute;
+
+    };
+
 }
 #endif // O3DGC_COMMON_H
 

@@ -32,12 +32,12 @@ namespace o3dgc
                                    const T * triangle,
                                    long & a, long & b)
     {                
-        if (triangle[0] == focusVertex)
+        if ((long) triangle[0] == focusVertex)
         {
             a = triangle[1];
             b = triangle[2];
         }
-        else if (triangle[1] == focusVertex)
+        else if ((long) triangle[1] == focusVertex)
         {
             a = triangle[2];
             b = triangle[0];
