@@ -69,7 +69,9 @@ namespace o3dgc
                                            const BinaryStream & bstream,
                                            unsigned long & iterator)
                                     {
-                                        unsigned char compressionMask = bstream.ReadUChar(iterator, m_streamType); // vertex/triangles orders not preserved
+                                        //unsigned char compressionMask = bstream.ReadUChar(iterator, m_streamType); // vertex/triangles orders not preserved
+										bstream.ReadUChar(iterator, m_streamType); // vertex/triangles orders not preserved
+
                                         unsigned long maxSizeV2T = bstream.ReadUInt32(iterator, m_streamType);
                                         Init(triangles, numTriangles, numVertices, maxSizeV2T);
                                         m_ctfans.Load(bstream, iterator, m_streamType);

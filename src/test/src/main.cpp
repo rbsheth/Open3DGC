@@ -129,7 +129,7 @@ class IVec3Cmp
         clock_serv_t    m_cclock;
         mach_timespec_t m_start;
         mach_timespec_t m_stop;
-    }
+    };
 #else
     class Timer
     {
@@ -154,7 +154,7 @@ class IVec3Cmp
     private:
          struct timespec m_start;
          struct timespec m_stop;
-    }
+    };
 #endif
 
 

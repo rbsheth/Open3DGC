@@ -250,7 +250,8 @@ namespace o3dgc
         Static_Bit_Model bModel0;
         Adaptive_Bit_Model bModel1;
         unsigned long sizeSize = bstream.ReadUInt32(m_iterator, m_streamType) - 9;        // bitsream size
-        unsigned char mask = bstream.ReadUChar(m_iterator, m_streamType);
+//        unsigned char mask = bstream.ReadUChar(m_iterator, m_streamType);
+        bstream.ReadUChar(m_iterator, m_streamType);
         unsigned int exp_k;
         unsigned int M = 0;
         long minValue = bstream.ReadUInt32(m_iterator, m_streamType) - O3DGC_MAX_LONG;
@@ -328,7 +329,8 @@ namespace o3dgc
         Static_Bit_Model bModel0;
         Adaptive_Bit_Model bModel1;
         unsigned long sizeSize = bstream.ReadUInt32(m_iterator, m_streamType) - 5;        // bitsream size
-        unsigned char mask = bstream.ReadUChar(m_iterator, m_streamType);
+//        unsigned char mask = bstream.ReadUChar(m_iterator, m_streamType);
+        bstream.ReadUChar(m_iterator, m_streamType);
         unsigned int exp_k;
         unsigned int M = 0;
         if (m_streamType != O3DGC_SC3DMC_STREAM_TYPE_ASCII)
