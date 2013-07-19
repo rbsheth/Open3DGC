@@ -308,12 +308,12 @@ namespace o3dgc
                     if (predMode == O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION)
                     {
                         long a,b;
-                        if (triangles[ta*3] == v)
+                        if ((long) triangles[ta*3] == v)
                         {
                             a = triangles[ta*3 + 1];
                             b = triangles[ta*3 + 2];
                         }
-                        else if (triangles[ta*3 + 1] == v)
+                        else if ((long) triangles[ta*3 + 1] == v)
                         {
                             a = triangles[ta*3 + 0];
                             b = triangles[ta*3 + 2];

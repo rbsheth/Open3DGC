@@ -476,9 +476,9 @@ bool LoadOBJ(const std::string & fileName,
     {        
         char buffer[BufferSize];
         Real  x[3];
-        Index ip[3] = {-1, -1, -1};
-        Index in[3] = {-1, -1, -1};
-        Index it[3] = {-1, -1, -1};
+        Index ip[3] = {(Index)(-1), (Index)(-1), (Index)(-1)};
+        Index in[3] = {(Index)(-1), (Index)(-1), (Index)(-1)};
+        Index it[3] = {(Index)(-1), (Index)(-1), (Index)(-1)};
         char * pch;
         char * str;
         Index nv = 0;
