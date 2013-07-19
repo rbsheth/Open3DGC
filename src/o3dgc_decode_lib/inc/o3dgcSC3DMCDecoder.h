@@ -58,7 +58,8 @@ namespace o3dgc
         //!                         
         O3DGCErrorCode              DecodePlayload(IndexedFaceSet<T> & ifs,
                                                   const BinaryStream & bstream);
-                                    
+        const SC3DMCStats &         GetStats() const { return m_stats;}
+
     private:                        
         O3DGCErrorCode              DecodeFloatArray(Real * const floatArray,
                                                      unsigned long numfloatArraySize,
@@ -86,6 +87,7 @@ namespace o3dgc
         TriangleListDecoder<T>      m_triangleListDecoder;
         long *                      m_quantFloatArray;
         unsigned long               m_quantFloatArraySize;
+        SC3DMCStats                 m_stats;
         O3DGCSC3DMCStreamType       m_streamType;
     };
 }

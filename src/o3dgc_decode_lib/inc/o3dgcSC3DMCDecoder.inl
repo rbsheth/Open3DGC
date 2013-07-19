@@ -25,6 +25,7 @@ THE SOFTWARE.
 #define O3DGC_SC3DMC_DECODER_INL
 
 #include "o3dgcArithmeticCodec.h"
+#include "o3dgcTimer.h"
 
 namespace o3dgc
 {
@@ -158,47 +159,82 @@ namespace o3dgc
 #endif //DEBUG_VERBOSE
 
         m_triangleListDecoder.SetStreamType(m_streamType);
+        m_stats.m_streamSizeCoordIndex = m_iterator;
+        Timer timer;
+        timer.Tic();
         m_triangleListDecoder.Decode(ifs.GetCoordIndex(), ifs.GetNCoordIndex(), ifs.GetNCoord(), bstream, m_iterator);
+        timer.Toc();
+        m_stats.m_timeCoordIndex       = timer.GetElapsedTime();
+        m_stats.m_streamSizeCoordIndex = m_iterator - m_stats.m_streamSizeCoordIndex;
 
-        // Decode coord
+        // decode coord
+        m_stats.m_streamSizeCoord = m_iterator;
+        timer.Tic();
         if (ifs.GetNCoord() > 0)
         {
             DecodeFloatArray(ifs.GetCoord(), ifs.GetNCoord(), 3, ifs.GetCoordMin(), ifs.GetCoordMax(),
                              m_params.GetCoordQuantBits(), ifs, m_params.GetCoordPredMode(), bstream);
         }
+        timer.Toc();
+        m_stats.m_timeCoord       = timer.GetElapsedTime();
+        m_stats.m_streamSizeCoord = m_iterator - m_stats.m_streamSizeCoord;
 
-        // encode Normal
+        // decode Normal
+        m_stats.m_streamSizeNormal = m_iterator;
+        timer.Tic();
         if (ifs.GetNNormal() > 0)
         {
             DecodeFloatArray(ifs.GetNormal(), ifs.GetNNormal(), 3, ifs.GetNormalMin(), ifs.GetNormalMax(),
                                 m_params.GetNormalQuantBits(), ifs, m_params.GetNormalPredMode(), bstream);
         }
-        // encode Color
+        timer.Toc();
+        m_stats.m_timeNormal       = timer.GetElapsedTime();
+        m_stats.m_streamSizeNormal = m_iterator - m_stats.m_streamSizeNormal;
+
+        // decode Color
+        m_stats.m_streamSizeColor = m_iterator;
+        timer.Tic();
         if (ifs.GetNColor() > 0)
         {
             DecodeFloatArray(ifs.GetColor(), ifs.GetNColor(), 3, ifs.GetColorMin(), ifs.GetColorMax(),
                                 m_params.GetColorQuantBits(), ifs, m_params.GetColorPredMode(), bstream);
         }
-        // encode TexCoord
+        timer.Toc();
+        m_stats.m_timeColor       = timer.GetElapsedTime();
+        m_stats.m_streamSizeColor = m_iterator - m_stats.m_streamSizeColor;
+
+        // decode TexCoord
+        m_stats.m_streamSizeFloatAttribute = m_iterator;
+        timer.Tic();
         if (ifs.GetNTexCoord() > 0)
         {
             DecodeFloatArray(ifs.GetTexCoord(), ifs.GetNTexCoord(), 2, ifs.GetTexCoordMin(), ifs.GetTexCoordMax(), 
                                 m_params.GetTexCoordQuantBits(), ifs, m_params.GetTexCoordPredMode(), bstream);
         }
+        timer.Toc();
+        m_stats.m_timeFloatAttribute       = timer.GetElapsedTime();
+        m_stats.m_streamSizeFloatAttribute = m_iterator - m_stats.m_streamSizeFloatAttribute;
 
+        m_stats.m_streamSizeIntAttribute = m_iterator;
+        timer.Tic();
         for(unsigned long a = 0; a < ifs.GetNumFloatAttributes(); ++a)
         {
             DecodeFloatArray(ifs.GetFloatAttribute(a), ifs.GetNFloatAttribute(a), ifs.GetFloatAttributeDim(a), ifs.GetFloatAttributeMin(a), ifs.GetFloatAttributeMax(a), 
                                 m_params.GetFloatAttributeQuantBits(a), ifs, m_params.GetFloatAttributePredMode(a), bstream);
         }
+        timer.Toc();
+        m_stats.m_timeIntAttribute       = timer.GetElapsedTime();
+        m_stats.m_streamSizeIntAttribute = m_iterator - m_stats.m_streamSizeIntAttribute;
 
+        m_stats.m_streamSizeIntAttribute = m_iterator;
+        timer.Tic();
         for(unsigned long a = 0; a < ifs.GetNumIntAttributes(); ++a)
         {
             DecodeIntArray(ifs.GetIntAttribute(a), ifs.GetNIntAttribute(a), ifs.GetIntAttributeDim(a), bstream);
         }
-#ifdef DEBUG_VERBOSE
-        fclose(g_fileDebugSC3DMCDec);
-#endif //DEBUG_VERBOSE
+        timer.Toc();
+        m_stats.m_timeIntAttribute       = timer.GetElapsedTime();
+        m_stats.m_streamSizeIntAttribute = m_iterator - m_stats.m_streamSizeIntAttribute;
         return O3DGC_OK;
     }
     inline long DecodeIntACEGC(Arithmetic_Codec & acd,

@@ -34,19 +34,13 @@ THE SOFTWARE.
 #include "o3dgcIndexedFaceSet.h"
 #include "o3dgcSC3DMCEncoder.h"
 #include "o3dgcSC3DMCDecoder.h"
+#include "o3dgcTimer.h"
 
 
 
 #ifdef WIN32
-#include <windows.h>
 #define PATH_SEP "\\"
-#elif __MACH__
-#include <mach/clock.h>
-#include <mach/mach.h>
-#define PATH_SEP "/"
 #else
-#include <time.h>
-#include <sys/time.h>
 #define PATH_SEP "/"
 #endif
 
@@ -69,93 +63,6 @@ class IVec3Cmp
       }
 };
 
-#ifdef WIN32
-    class Timer
-    {
-    public: 
-        Timer(void)
-        {
-            m_start.QuadPart = 0;
-            m_stop.QuadPart  = 0;
-            QueryPerformanceFrequency( &m_freq ) ;
-        };
-        ~Timer(void){};
-        void Tic() 
-        {
-            QueryPerformanceCounter(&m_start) ;
-        }
-        void Toc() 
-        {
-            QueryPerformanceCounter(&m_stop);
-        }
-        double GetElapsedTime() // in ms
-        {
-            LARGE_INTEGER delta;
-            delta.QuadPart = m_stop.QuadPart - m_start.QuadPart;
-            return (1000.0 * delta.QuadPart) / (double)m_freq.QuadPart;
-        }
-    private:
-        LARGE_INTEGER m_start;
-        LARGE_INTEGER m_stop;
-        LARGE_INTEGER m_freq;
-
-    };
-#elif __MACH__
-    class Timer
-    {
-    public: 
-        Timer(void)
-        {
-            memset(this, 0, sizeof(Timer));
-            host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, & m_cclock);
-        };
-        ~Timer(void)
-        {
-            mach_port_deallocate(mach_task_self(),  m_cclock);
-        };
-        void Tic() 
-        {
-            clock_get_time( m_cclock, &m_start);
-        }
-        void Toc() 
-        {
-            clock_get_time( m_cclock, &m_stop);
-        }
-        double GetElapsedTime() // in ms
-        {
-            return 1000.0 * (m_stop.tv_sec - m_start.tv_sec + (1.0E-9) * (m_stop.tv_nsec - m_start.tv_nsec));
-        }
-    private:
-        clock_serv_t    m_cclock;
-        mach_timespec_t m_start;
-        mach_timespec_t m_stop;
-    };
-#else
-    class Timer
-    {
-    public: 
-        Timer(void)
-        {
-            memset(this, 0, sizeof(Timer));
-        };
-        ~Timer(void){};
-        void Tic() 
-        {
-            clock_gettime(CLOCK_REALTIME, &m_start);
-        }
-        void Toc() 
-        {
-            clock_gettime(CLOCK_REALTIME, &m_stop);
-        }
-        double GetElapsedTime() // in ms
-        {
-            return 1000.0 * (m_stop.tv_sec - m_start.tv_sec + (1.0E-9) * (m_stop.tv_nsec - m_start.tv_nsec));
-        }
-    private:
-         struct timespec m_start;
-         struct timespec m_stop;
-    };
-#endif
 
 
 bool LoadOBJ(const std::string & fileName, 
@@ -170,7 +77,7 @@ bool SaveOBJ(const char * fileName,
              const std::vector< Vec3<Real> > & normals,
              const std::vector< Vec3<Index> > & triangles);
 
-int testEncode(const std::string fileName, int qcoord, int qtexCoord, int qnormal, O3DGCSC3DMCStreamType streamType)
+int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnormal, O3DGCSC3DMCStreamType streamType)
 {
     std::string folder;
     long found = fileName.find_last_of(PATH_SEP);
@@ -253,9 +160,19 @@ int testEncode(const std::string fileName, int qcoord, int qtexCoord, int qnorma
     fclose(fout);
     std::cout << "Bitstream size (bytes) " << bstream.GetSize() << std::endl;
 
+    std::cout << "Details" << std::endl;
+    const SC3DMCStats & stats = encoder.GetStats();
+    std::cout << "\t CoordIndex         " << stats.m_timeCoordIndex     << " ms, " << stats.m_streamSizeCoordIndex     <<" bytes (" << 8.0 * stats.m_streamSizeCoordIndex     / ifs.GetNCoord() <<" bpv)" <<std::endl;
+    std::cout << "\t Coord              " << stats.m_timeCoord          << " ms, " << stats.m_streamSizeCoord          <<" bytes (" << 8.0 * stats.m_streamSizeCoord          / ifs.GetNCoord() <<" bpv)" <<std::endl;
+    std::cout << "\t Normal             " << stats.m_timeNormal         << " ms, " << stats.m_streamSizeNormal         <<" bytes (" << 8.0 * stats.m_streamSizeNormal         / ifs.GetNCoord() <<" bpv)" <<std::endl;
+    std::cout << "\t TexCoord           " << stats.m_timeTexCoord       << " ms, " << stats.m_streamSizeTexCoord       <<" bytes (" << 8.0 * stats.m_streamSizeTexCoord       / ifs.GetNCoord() <<" bpv)" <<std::endl;
+    std::cout << "\t Color              " << stats.m_timeColor          << " ms, " << stats.m_streamSizeColor          <<" bytes (" << 8.0 * stats.m_streamSizeColor          / ifs.GetNCoord() <<" bpv)" <<std::endl;
+    std::cout << "\t Float Attributes   " << stats.m_timeFloatAttribute << " ms, " << stats.m_streamSizeFloatAttribute <<" bytes (" << 8.0 * stats.m_streamSizeFloatAttribute / ifs.GetNCoord() <<" bpv)" <<std::endl;
+    std::cout << "\t Integer Attributes " << stats.m_timeFloatAttribute << " ms, " << stats.m_streamSizeFloatAttribute <<" bytes (" << 8.0 * stats.m_streamSizeFloatAttribute / ifs.GetNCoord() <<" bpv)" <<std::endl;
+
     return 0;
 }
-int testDecode(std::string fileName)
+int testDecode(std::string & fileName)
 {
     std::string folder;
     long found = fileName.find_last_of(PATH_SEP);
@@ -340,6 +257,16 @@ int testDecode(std::string fileName)
     decoder.DecodePlayload(ifs, bstream);
     timer.Toc();
     std::cout << "DecodePlayload time (ms) " << timer.GetElapsedTime() << std::endl;
+
+    std::cout << "Details" << std::endl;
+    const SC3DMCStats & stats = decoder.GetStats();
+    std::cout << "\t CoordIndex         " << stats.m_timeCoordIndex     << " ms, " << stats.m_streamSizeCoordIndex     <<" bytes (" << 8.0*stats.m_streamSizeCoordIndex     / ifs.GetNCoord() <<" bpv)" <<std::endl;
+    std::cout << "\t Coord              " << stats.m_timeCoord          << " ms, " << stats.m_streamSizeCoord          <<" bytes (" << 8.0*stats.m_streamSizeCoord          / ifs.GetNCoord() <<" bpv)" <<std::endl;
+    std::cout << "\t Normal             " << stats.m_timeNormal         << " ms, " << stats.m_streamSizeNormal         <<" bytes (" << 8.0*stats.m_streamSizeNormal         / ifs.GetNCoord() <<" bpv)" <<std::endl;
+    std::cout << "\t TexCoord           " << stats.m_timeTexCoord       << " ms, " << stats.m_streamSizeTexCoord       <<" bytes (" << 8.0*stats.m_streamSizeTexCoord       / ifs.GetNCoord() <<" bpv)" <<std::endl;
+    std::cout << "\t Color              " << stats.m_timeColor          << " ms, " << stats.m_streamSizeColor          <<" bytes (" << 8.0*stats.m_streamSizeColor          / ifs.GetNCoord() <<" bpv)" <<std::endl;
+    std::cout << "\t Float Attributes   " << stats.m_timeFloatAttribute << " ms, " << stats.m_streamSizeFloatAttribute <<" bytes (" << 8.0*stats.m_streamSizeFloatAttribute / ifs.GetNCoord() <<" bpv)" <<std::endl;
+    std::cout << "\t Integer Attributes " << stats.m_timeFloatAttribute << " ms, " << stats.m_streamSizeFloatAttribute <<" bytes (" << 8.0*stats.m_streamSizeFloatAttribute / ifs.GetNCoord() <<" bpv)" <<std::endl;
 
     std::cout << "Saving " << outFileName << " ..." << std::endl;
     int ret = SaveOBJ(outFileName.c_str(), points, texCoords, normals, triangles);

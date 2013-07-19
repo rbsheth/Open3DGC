@@ -56,7 +56,8 @@ namespace o3dgc
         //! 
         O3DGCErrorCode              Encode(const SC3DMCEncodeParams & params, 
                                            const IndexedFaceSet<T> & ifs, 
-                                           BinaryStream & bstream);    
+                                           BinaryStream & bstream);
+        const SC3DMCStats &         GetStats() const { return m_stats;}
 
         private:
         O3DGCErrorCode              EncodeHeader(const SC3DMCEncodeParams & params, 
@@ -90,6 +91,7 @@ namespace o3dgc
         unsigned long               m_quantFloatArraySize;
         unsigned char *             m_bufferAC;
         unsigned long               m_sizeBufferAC;
+        SC3DMCStats                 m_stats;
         O3DGCSC3DMCStreamType       m_streamType;
     };
 }
