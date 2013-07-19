@@ -26,6 +26,7 @@ THE SOFTWARE.
 
 
 #include "o3dgcArithmeticCodec.h"
+#include "o3dgcTimer.h"
 
 namespace o3dgc
 {
