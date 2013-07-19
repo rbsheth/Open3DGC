@@ -33,6 +33,10 @@ namespace o3dgc
 {
     
     //! 
+<<<<<<< HEAD
+=======
+    template <class T>
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
     class TriangleListDecoder
     {
     public:    
@@ -62,13 +66,23 @@ namespace o3dgc
         O3DGCSC3DMCStreamType       GetStreamType() const { return m_streamType; }
         void                        SetStreamType(O3DGCSC3DMCStreamType streamType) { m_streamType = streamType; }
         const AdjacencyInfo &       GetVertexToTriangle() const { return m_vertexToTriangle;}
+<<<<<<< HEAD
         O3DGCErrorCode              Decode(long * const triangles,
+=======
+        O3DGCErrorCode              Decode(T * const triangles,
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
                                            const long numTriangles,
                                            const long numVertices,
                                            const BinaryStream & bstream,
                                            unsigned long & iterator)
                                     {
+<<<<<<< HEAD
                                         unsigned char compressionMask = bstream.ReadUChar(iterator, m_streamType); // vertex/triangles orders not preserved
+=======
+                                        //unsigned char compressionMask = bstream.ReadUChar(iterator, m_streamType); // vertex/triangles orders not preserved
+										bstream.ReadUChar(iterator, m_streamType); // vertex/triangles orders not preserved
+
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
                                         unsigned long maxSizeV2T = bstream.ReadUInt32(iterator, m_streamType);
                                         Init(triangles, numTriangles, numVertices, maxSizeV2T);
                                         m_ctfans.Load(bstream, iterator, m_streamType);
@@ -77,7 +91,11 @@ namespace o3dgc
                                     }
 
         private:
+<<<<<<< HEAD
         O3DGCErrorCode              Init(long * const triangles, 
+=======
+        O3DGCErrorCode              Init(T * const triangles, 
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
                                          const long numTriangles,
                                          const long numVertices,
                                          const long maxSizeV2T);
@@ -94,7 +112,11 @@ namespace o3dgc
         long                        m_maxNumTriangles;
         long                        m_numTriangles;
         long                        m_numVertices;
+<<<<<<< HEAD
         long *                      m_triangles;
+=======
+        T *                         m_triangles;
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
         long                        m_vertexCount;    
         long                        m_triangleCount;
         long                        m_numConqueredTriangles;
@@ -107,5 +129,9 @@ namespace o3dgc
         O3DGCSC3DMCStreamType       m_streamType;
     };
 }
+<<<<<<< HEAD
+=======
+#include "o3dgcTriangleListDecoder.inl"    // template implementation
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
 #endif // O3DGC_TRIANGLE_LIST_DECODER_H
 

@@ -22,8 +22,13 @@ THE SOFTWARE.
 
 
 #pragma once
+<<<<<<< HEAD
 #ifndef O3DGC_SC3DMC_H
 #define O3DGC_SC3DMC_H
+=======
+#ifndef O3DGC_SC3DMC_DECODER_H
+#define O3DGC_SC3DMC_DECODER_H
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
 
 #include "o3dgcCommon.h"
 #include "o3dgcBinaryStream.h"
@@ -34,6 +39,10 @@ THE SOFTWARE.
 namespace o3dgc
 {    
     //! 
+<<<<<<< HEAD
+=======
+    template <class T>
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
     class SC3DMCDecoder
     {
     public:    
@@ -52,11 +61,19 @@ namespace o3dgc
                                         delete [] m_quantFloatArray;
                                     }
         //!
+<<<<<<< HEAD
         O3DGCErrorCode              DecodeHeader(IndexedFaceSet & ifs,
                                                  const BinaryStream & bstream);
         //!                         
         O3DGCErrorCode              DecodePlayload(IndexedFaceSet & ifs,
                                            const BinaryStream & bstream);
+=======
+        O3DGCErrorCode              DecodeHeader(IndexedFaceSet<T> & ifs,
+                                                 const BinaryStream & bstream);
+        //!                         
+        O3DGCErrorCode              DecodePlayload(IndexedFaceSet<T> & ifs,
+                                                  const BinaryStream & bstream);
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
                                     
     private:                        
         O3DGCErrorCode              DecodeFloatArray(Real * const floatArray,
@@ -65,7 +82,11 @@ namespace o3dgc
                                                      const Real * const minfloatArray,
                                                      const Real * const maxfloatArray,
                                                      unsigned long nQBits,
+<<<<<<< HEAD
                                                      const IndexedFaceSet & ifs,
+=======
+                                                     const IndexedFaceSet<T> & ifs,
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
                                                      O3DGCSC3DMCPredictionMode predMode,
                                                      const BinaryStream & bstream);
         O3DGCErrorCode              IQuantizeFloatArray(Real * const floatArray,
@@ -82,6 +103,7 @@ namespace o3dgc
         unsigned long               m_iterator;
         unsigned long               m_streamSize;
         SC3DMCEncodeParams          m_params;
+<<<<<<< HEAD
         TriangleListDecoder         m_triangleListDecoder;
         long *                      m_quantFloatArray;
         unsigned long               m_quantFloatArraySize;
@@ -91,4 +113,14 @@ namespace o3dgc
 
 }
 #endif // O3DGC_SC3DMC_H
+=======
+        TriangleListDecoder<T>      m_triangleListDecoder;
+        long *                      m_quantFloatArray;
+        unsigned long               m_quantFloatArraySize;
+        O3DGCSC3DMCStreamType       m_streamType;
+    };
+}
+#include "o3dgcSC3DMCDecoder.inl"    // template implementation
+#endif // O3DGC_SC3DMC_DECODER_H
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
 

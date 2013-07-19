@@ -25,6 +25,10 @@ THE SOFTWARE.
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
+<<<<<<< HEAD
+=======
+#include <fstream>
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
 #include <map>
 #include <string>
 #include <vector>
@@ -35,6 +39,7 @@ THE SOFTWARE.
 #include "o3dgcSC3DMCDecoder.h"
 
 
+<<<<<<< HEAD
 using namespace o3dgc;
 
 #ifdef WIN32
@@ -47,6 +52,28 @@ class IVec3Cmp
 {
    public:
       bool operator()(const Vec3<long> a,const Vec3<long> b) 
+=======
+
+#ifdef WIN32
+#include <windows.h>
+#define PATH_SEP "\\"
+#elif __MACH__
+#include <mach/clock.h>
+#include <mach/mach.h>
+#define PATH_SEP "/"
+#else
+#include <time.h>
+#include <sys/time.h>
+#define PATH_SEP "/"
+#endif
+
+using namespace o3dgc;
+
+class IVec3Cmp 
+{
+   public:
+      bool operator()(const Vec3<Index> a,const Vec3<Index> b) 
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
       { 
           if (a.X() != b.X())
           {
@@ -60,19 +87,117 @@ class IVec3Cmp
       }
 };
 
+<<<<<<< HEAD
+=======
+#ifdef WIN32
+    class Timer
+    {
+    public: 
+        Timer(void)
+        {
+            m_start.QuadPart = 0;
+            m_stop.QuadPart  = 0;
+            QueryPerformanceFrequency( &m_freq ) ;
+        };
+        ~Timer(void){};
+        void Tic() 
+        {
+            QueryPerformanceCounter(&m_start) ;
+        }
+        void Toc() 
+        {
+            QueryPerformanceCounter(&m_stop);
+        }
+        double GetElapsedTime() // in ms
+        {
+            LARGE_INTEGER delta;
+            delta.QuadPart = m_stop.QuadPart - m_start.QuadPart;
+            return (1000.0 * delta.QuadPart) / (double)m_freq.QuadPart;
+        }
+    private:
+        LARGE_INTEGER m_start;
+        LARGE_INTEGER m_stop;
+        LARGE_INTEGER m_freq;
+
+    };
+#elif __MACH__
+    class Timer
+    {
+    public: 
+        Timer(void)
+        {
+            memset(this, 0, sizeof(Timer));
+            host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, & m_cclock);
+        };
+        ~Timer(void)
+        {
+            mach_port_deallocate(mach_task_self(),  m_cclock);
+        };
+        void Tic() 
+        {
+            clock_get_time( m_cclock, &m_start);
+        }
+        void Toc() 
+        {
+            clock_get_time( m_cclock, &m_stop);
+        }
+        double GetElapsedTime() // in ms
+        {
+            return 1000.0 * (m_stop.tv_sec - m_start.tv_sec + (1.0E-9) * (m_stop.tv_nsec - m_start.tv_nsec));
+        }
+    private:
+        clock_serv_t    m_cclock;
+        mach_timespec_t m_start;
+        mach_timespec_t m_stop;
+    };
+#else
+    class Timer
+    {
+    public: 
+        Timer(void)
+        {
+            memset(this, 0, sizeof(Timer));
+        };
+        ~Timer(void){};
+        void Tic() 
+        {
+            clock_gettime(CLOCK_REALTIME, &m_start);
+        }
+        void Toc() 
+        {
+            clock_gettime(CLOCK_REALTIME, &m_stop);
+        }
+        double GetElapsedTime() // in ms
+        {
+            return 1000.0 * (m_stop.tv_sec - m_start.tv_sec + (1.0E-9) * (m_stop.tv_nsec - m_start.tv_nsec));
+        }
+    private:
+         struct timespec m_start;
+         struct timespec m_stop;
+    };
+#endif
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
 
 
 bool LoadOBJ(const std::string & fileName, 
              std::vector< Vec3<Real> > & points,
              std::vector< Vec2<Real> > & texCoords,
              std::vector< Vec3<Real> > & normals,
+<<<<<<< HEAD
              std::vector< Vec3<long> > & triangles);
+=======
+             std::vector< Vec3<Index> > & triangles);
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
 
 bool SaveOBJ(const char * fileName, 
              const std::vector< Vec3<Real> > & points,
              const std::vector< Vec2<Real> > & texCoords,
              const std::vector< Vec3<Real> > & normals,
+<<<<<<< HEAD
              const std::vector< Vec3<long> > & triangles);
+=======
+             const std::vector< Vec3<Index> > & triangles);
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
 
 int testEncode(const std::string fileName, int qcoord, int qtexCoord, int qnormal, O3DGCSC3DMCStreamType streamType)
 {
@@ -91,7 +216,12 @@ int testEncode(const std::string fileName, int qcoord, int qtexCoord, int qnorma
     std::vector< Vec3<Real> > points;
     std::vector< Vec3<Real> > normals;
     std::vector< Vec2<Real> > texCoords;
+<<<<<<< HEAD
     std::vector< Vec3<long> > triangles;
+=======
+    std::vector< Vec3<Index> > triangles;
+    std::cout << "Loading " << fileName << " ..." << std::endl;
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
     bool ret = LoadOBJ(fileName, points, texCoords, normals, triangles);
     if (!ret)
     {
@@ -103,10 +233,18 @@ int testEncode(const std::string fileName, int qcoord, int qtexCoord, int qnorma
         std::cout <<  "Error: points.size() == 0 || triangles.size() == 0 \n" << std::endl;
         return -1;
     }
+<<<<<<< HEAD
 
     SC3DMCEncodeParams params;
     params.SetStreamType(streamType);
     IndexedFaceSet ifs;
+=======
+    std::cout << "Done." << std::endl;
+
+    SC3DMCEncodeParams params;
+    params.SetStreamType(streamType);
+    IndexedFaceSet<Index> ifs;
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
     params.SetCoordQuantBits(qcoord);
     params.SetNormalQuantBits(qnormal);
     params.SetTexCoordQuantBits(qtexCoord);
@@ -116,8 +254,19 @@ int testEncode(const std::string fileName, int qcoord, int qtexCoord, int qnorma
     ifs.SetNTexCoord(texCoords.size());
     ifs.SetNCoordIndex(triangles.size());
 
+<<<<<<< HEAD
     ifs.SetCoord((Real * const) & (points[0]));
     ifs.SetCoordIndex((long * const ) &(triangles[0]));
+=======
+    std::cout << "Mesh info "<< std::endl;
+    std::cout << "\t# coords    " << ifs.GetNCoord() << std::endl;
+    std::cout << "\t# normals   " << ifs.GetNNormal() << std::endl;
+    std::cout << "\t# texcoords " << ifs.GetNTexCoord() << std::endl;
+    std::cout << "\t# triangles " << ifs.GetNCoordIndex() << std::endl;
+
+    ifs.SetCoord((Real * const) & (points[0]));
+    ifs.SetCoordIndex((Index * const ) &(triangles[0]));
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
     if (normals.size() > 0)
     {
         ifs.SetNormal((Real * const) & (normals[0]));
@@ -132,8 +281,18 @@ int testEncode(const std::string fileName, int qcoord, int qtexCoord, int qnorma
 
     BinaryStream bstream(points.size()*8);
 
+<<<<<<< HEAD
     SC3DMCEncoder encoder;
     encoder.Encode(params, ifs, bstream);
+=======
+    
+    SC3DMCEncoder<Index> encoder;
+    Timer timer;
+    timer.Tic();
+    encoder.Encode(params, ifs, bstream);
+    timer.Toc();
+    std::cout << "Encode time (ms) " << timer.GetElapsedTime() << std::endl;
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
 
     FILE * fout = fopen(outFileName.c_str(), "wb");
     if (!fout)
@@ -142,6 +301,11 @@ int testEncode(const std::string fileName, int qcoord, int qtexCoord, int qnorma
     }
     fwrite(bstream.GetBuffer(), 1, bstream.GetSize(), fout);
     fclose(fout);
+<<<<<<< HEAD
+=======
+    std::cout << "Bitstream size (bytes) " << bstream.GetSize() << std::endl;
+
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
     return 0;
 }
 int testDecode(std::string fileName)
@@ -163,10 +327,17 @@ int testDecode(std::string fileName)
     std::vector< Vec3<Real> > normals;
     std::vector< Vec2<Real> > colors;
     std::vector< Vec2<Real> > texCoords;
+<<<<<<< HEAD
     std::vector< Vec3<long> > triangles;
 
     BinaryStream bstream;
     IndexedFaceSet ifs;
+=======
+    std::vector< Vec3<Index> > triangles;
+
+    BinaryStream bstream;
+    IndexedFaceSet<Index> ifs;
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
 
 
     FILE * fin = fopen(fileName.c_str(), "rb");
@@ -185,6 +356,7 @@ int testDecode(std::string fileName)
         return -1;
     }
     fclose(fin);
+<<<<<<< HEAD
 
 //    bstream.Load(fileName.c_str());
 
@@ -196,6 +368,21 @@ int testDecode(std::string fileName)
     // allocate memory
     triangles.resize(ifs.GetNCoordIndex());
     ifs.SetCoordIndex((long * const ) &(triangles[0]));    
+=======
+    std::cout << "Bitstream size (bytes) " << bstream.GetSize() << std::endl;
+
+    SC3DMCDecoder<Index> decoder;
+    // load header
+    Timer timer;
+    timer.Tic();
+    decoder.DecodeHeader(ifs, bstream);
+    timer.Toc();
+    std::cout << "DecodeHeader time (ms) " << timer.GetElapsedTime() << std::endl;
+
+    // allocate memory
+    triangles.resize(ifs.GetNCoordIndex());
+    ifs.SetCoordIndex((Index * const ) &(triangles[0]));    
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
 
     points.resize(ifs.GetNCoord());
     ifs.SetCoord((Real * const ) &(points[0]));    
@@ -216,14 +403,34 @@ int testDecode(std::string fileName)
         ifs.SetTexCoord((Real * const ) &(texCoords[0]));
     }
 
+<<<<<<< HEAD
     // decode mesh
     decoder.DecodePlayload(ifs, bstream);
+=======
+    std::cout << "Mesh info "<< std::endl;
+    std::cout << "\t# coords    " << ifs.GetNCoord() << std::endl;
+    std::cout << "\t# normals   " << ifs.GetNNormal() << std::endl;
+    std::cout << "\t# texcoords " << ifs.GetNTexCoord() << std::endl;
+    std::cout << "\t# triangles " << ifs.GetNCoordIndex() << std::endl;
+
+    // decode mesh
+    timer.Tic();
+    decoder.DecodePlayload(ifs, bstream);
+    timer.Toc();
+    std::cout << "DecodePlayload time (ms) " << timer.GetElapsedTime() << std::endl;
+
+    std::cout << "Saving " << outFileName << " ..." << std::endl;
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
     int ret = SaveOBJ(outFileName.c_str(), points, texCoords, normals, triangles);
     if (!ret)
     {
         std::cout << "Error: SaveOBJ()\n" << std::endl;
         return -1;
     }
+<<<<<<< HEAD
+=======
+    std::cout << "Done." << std::endl;
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
     return 0;
 }
 
@@ -341,7 +548,11 @@ bool LoadOBJ(const std::string & fileName,
              std::vector< Vec3<Real> > & upoints,
              std::vector< Vec2<Real> > & utexCoords,
              std::vector< Vec3<Real> > & unormals,
+<<<<<<< HEAD
              std::vector< Vec3<long> > & triangles) 
+=======
+             std::vector< Vec3<Index> > & triangles) 
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
 {   
     const char ObjDelimiters[]=" /";
     const size_t BufferSize = 1024;
@@ -351,6 +562,7 @@ bool LoadOBJ(const std::string & fileName,
     {        
         char buffer[BufferSize];
         Real  x[3];
+<<<<<<< HEAD
         long ip[3] = {-1, -1, -1};
         long in[3] = {-1, -1, -1};
         long it[3] = {-1, -1, -1};
@@ -363,6 +575,20 @@ bool LoadOBJ(const std::string & fileName,
         std::vector< Vec2<Real> > texCoords;
         std::vector< Vec3<Real> > normals;
         std::map< Vec3<long>, long, IVec3Cmp > vertices;
+=======
+        Index ip[3] = {-1, -1, -1};
+        Index in[3] = {-1, -1, -1};
+        Index it[3] = {-1, -1, -1};
+        char * pch;
+        char * str;
+        Index nv = 0;
+        Vec3<Index> vertex;
+        Vec3<Index> triangle;
+        std::vector< Vec3<Real> > points;
+        std::vector< Vec2<Real> > texCoords;
+        std::vector< Vec3<Real> > normals;
+        std::map< Vec3<Index>, Index, IVec3Cmp > vertices;
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
 
         while (!feof(fid)) 
         {
@@ -433,11 +659,19 @@ bool LoadOBJ(const std::string & fileName,
                     vertex.X() = ip[k];
                     vertex.Y() = in[k];
                     vertex.Z() = it[k];
+<<<<<<< HEAD
                     std::map< Vec3<long>, long, IVec3Cmp >::iterator it = vertices.find(vertex);
                     if ( it == vertices.end() )
                     {
                         vertices[vertex] = nv;
                         triangle[k]         = nv;
+=======
+                    std::map< Vec3<Index>, Index, IVec3Cmp >::iterator it = vertices.find(vertex);
+                    if ( it == vertices.end() )
+                    {
+                        vertices[vertex] = nv;
+                        triangle[k]      = nv;
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
                         ++nv;
                     }
                     else
@@ -460,7 +694,11 @@ bool LoadOBJ(const std::string & fileName,
         {
             utexCoords.resize(nv);
         }
+<<<<<<< HEAD
         for (std::map< Vec3<long>, long, IVec3Cmp >::iterator it = vertices.begin(); it != vertices.end(); ++it)
+=======
+        for (std::map< Vec3<Index>, Index, IVec3Cmp >::iterator it = vertices.begin(); it != vertices.end(); ++it)
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
         {
             if (points.size() > 0)
             {
@@ -479,28 +717,44 @@ bool LoadOBJ(const std::string & fileName,
     }
     else 
     {
+<<<<<<< HEAD
         printf( "File not found \n");
+=======
+        std::cout << "File not found" << std::endl;
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
         return false;
     }
     return true;
 }
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
 bool SaveOBJ(const char * fileName, 
              const std::vector< Vec3<Real> > & points,
              const std::vector< Vec2<Real> > & texCoords,
              const std::vector< Vec3<Real> > & normals,
+<<<<<<< HEAD
              const std::vector< Vec3<long> > & triangles)
 {
     FILE * fid = fopen(fileName, "w");
     if (fid) 
+=======
+             const std::vector< Vec3<Index> > & triangles)
+{
+    std::ofstream fout;
+    fout.open(fileName);
+    if (!fout.fail()) 
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
     {
         const size_t np = points.size();
         const size_t nn = normals.size();
         const size_t nt = texCoords.size();
         const size_t nf = triangles.size();
 
+<<<<<<< HEAD
         fprintf(fid,"####\n");
         fprintf(fid,"#\n");
         fprintf(fid,"# OBJ File Generated by test_o3dgc\n");
@@ -523,38 +777,81 @@ bool SaveOBJ(const char * fileName,
         for(size_t i = 0; i < nt; ++i)
         {
             fprintf(fid,"vt %f %f\n", texCoords[i].X(), texCoords[i].Y());
+=======
+        fout << "####" << std::endl;
+        fout << "#" << std::endl;
+        fout << "# OBJ File Generated by test_o3dgc" << std::endl;
+        fout << "#" << std::endl;
+        fout << "####" << std::endl;
+        fout << "# Object " << fileName << std::endl;
+        fout << "#" << std::endl;
+        fout << "# Vertices: " << np << std::endl;
+        fout << "# Faces: " << nf << std::endl;;
+        fout << "#" << std::endl;
+        fout << "####" << std::endl;
+        for(size_t i = 0; i < np; ++i)
+        {
+            fout << "v " << points[i].X() << " " << points[i].Y() << " " << points[i].Z() << std::endl;
+        }
+        for(size_t i = 0; i < nn; ++i)
+        {
+            fout << "vn " << normals[i].X() << " " << normals[i].Y() << " " << normals[i].Z() << std::endl;
+        }
+        for(size_t i = 0; i < nt; ++i)
+        {
+            fout << "vn " << texCoords[i].X() << " " << texCoords[i].Y() << std::endl;
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
         }
         if (nt > 0 && nn >0)
         {
             for(size_t i = 0; i < nf; ++i)
             {
+<<<<<<< HEAD
                 fprintf(fid,"f %ld/%ld/%ld %ld/%ld/%ld %ld/%ld/%ld\n", triangles[i].X()+1, triangles[i].X()+1, triangles[i].X()+1,
                                                                        triangles[i].Y()+1, triangles[i].Y()+1, triangles[i].Y()+1, 
                                                                        triangles[i].Z()+1, triangles[i].Z()+1, triangles[i].Z()+1);
+=======
+                fout << "f " << triangles[i].X()+1 << "/" << triangles[i].X()+1 << "/" << triangles[i].X()+1;
+                fout << " "  << triangles[i].Y()+1 << "/" << triangles[i].Y()+1 << "/" << triangles[i].Y()+1;
+                fout << " "  << triangles[i].Z()+1 << "/" << triangles[i].Z()+1 << "/" << triangles[i].Z()+1 << std::endl;
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
             }
         }
         else if (nt == 0 && nn > 0)
         {
             for(size_t i = 0; i < nf; ++i)
             {
+<<<<<<< HEAD
                 fprintf(fid,"f %ld//%ld %ld//%ld %ld//%ld\n", triangles[i].X()+1, triangles[i].X()+1,
                                                               triangles[i].Y()+1, triangles[i].Y()+1, 
                                                               triangles[i].Z()+1, triangles[i].Z()+1);
+=======
+                fout << "f " << triangles[i].X()+1 << "//" << triangles[i].X()+1;
+                fout << " "  << triangles[i].Y()+1 << "//" << triangles[i].Y()+1;
+                fout << " "  << triangles[i].Z()+1 << "//" << triangles[i].Z()+1 << std::endl;
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
             }
         }
         else if (nt > 0 && nn == 0)
         {
             for(size_t i = 0; i < nf; ++i)
             {
+<<<<<<< HEAD
                 fprintf(fid,"f %ld/%ld %ld/%ld %ld/%ld\n", triangles[i].X()+1, triangles[i].X()+1,
                                                            triangles[i].Y()+1, triangles[i].Y()+1, 
                                                            triangles[i].Z()+1, triangles[i].Z()+1);
+=======
+                fout << "f " << triangles[i].X()+1 << "/" << triangles[i].X()+1;
+                fout << " "  << triangles[i].Y()+1 << "/" << triangles[i].Y()+1;
+                fout << " "  << triangles[i].Z()+1 << "/" << triangles[i].Z()+1 << std::endl;
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
             }
         }
         else
         {
             for(size_t i = 0; i < nf; ++i)
             {
+<<<<<<< HEAD
                 fprintf(fid,"f %ld %ld %ld\n", triangles[i].X()+1, triangles[i].Y()+1, triangles[i].Z()+1);
             }
         }
@@ -563,6 +860,18 @@ bool SaveOBJ(const char * fileName,
     else 
     {
         printf( "Not able to create file\n");
+=======
+                fout << "f " << triangles[i].X()+1;
+                fout << " "  << triangles[i].Y()+1;
+                fout << " "  << triangles[i].Z()+1 << std::endl;
+            }
+        }
+        fout.close();
+    }
+    else 
+    {
+        std::cout << "Not able to create file" << std::endl;
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
     }
     return true;
 }

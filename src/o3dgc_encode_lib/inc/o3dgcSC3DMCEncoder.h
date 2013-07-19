@@ -34,6 +34,10 @@ THE SOFTWARE.
 namespace o3dgc
 {    
     //! 
+<<<<<<< HEAD
+=======
+    template<class T>
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
     class SC3DMCEncoder
     {
     public:    
@@ -54,15 +58,26 @@ namespace o3dgc
                                     }
         //! 
         O3DGCErrorCode              Encode(const SC3DMCEncodeParams & params, 
+<<<<<<< HEAD
                                            const IndexedFaceSet & ifs, 
+=======
+                                           const IndexedFaceSet<T> & ifs, 
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
                                            BinaryStream & bstream);    
 
         private:
         O3DGCErrorCode              EncodeHeader(const SC3DMCEncodeParams & params, 
+<<<<<<< HEAD
                                                  const IndexedFaceSet & ifs, 
                                                  BinaryStream & bstream);
         O3DGCErrorCode              EncodePayload(const SC3DMCEncodeParams & params, 
                                                   const IndexedFaceSet & ifs, 
+=======
+                                                 const IndexedFaceSet<T> & ifs, 
+                                                 BinaryStream & bstream);
+        O3DGCErrorCode              EncodePayload(const SC3DMCEncodeParams & params, 
+                                                  const IndexedFaceSet<T> & ifs, 
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
                                                   BinaryStream & bstream);
         O3DGCErrorCode              EncodeFloatArray(const Real * const floatArray, 
                                                      unsigned long numfloatArray,
@@ -70,7 +85,11 @@ namespace o3dgc
                                                      const Real * const minfloatArray,
                                                      const Real * const maxfloatArray,
                                                      unsigned long nQBits,
+<<<<<<< HEAD
                                                      const IndexedFaceSet & ifs,
+=======
+                                                     const IndexedFaceSet<T> & ifs,
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
                                                      O3DGCSC3DMCPredictionMode predMode,
                                                      BinaryStream & bstream);
         O3DGCErrorCode              QuantizeFloatArray(const Real * const floatArray, 
@@ -84,13 +103,24 @@ namespace o3dgc
                                                    unsigned long dimIntArray,
                                                    O3DGCSC3DMCPredictionMode predMode,
                                                    BinaryStream & bstream);
+<<<<<<< HEAD
         TriangleListEncoder         m_triangleListEncoder;
+=======
+        TriangleListEncoder<T>      m_triangleListEncoder;
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
         long *                      m_quantFloatArray;
         unsigned long               m_quantFloatArraySize;
         unsigned char *             m_bufferAC;
         unsigned long               m_sizeBufferAC;
+<<<<<<< HEAD
         O3DGCSC3DMCStreamType         m_streamType;
     };
 }
+=======
+        O3DGCSC3DMCStreamType       m_streamType;
+    };
+}
+#include "o3dgcSC3DMCEncoder.inl"    // template implementation
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
 #endif // O3DGC_SC3DMC_ENCODER_H
 

@@ -29,6 +29,10 @@ THE SOFTWARE.
 
 namespace o3dgc
 {
+<<<<<<< HEAD
+=======
+    template<class T>
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
     class IndexedFaceSet
     {
     public:    
@@ -127,8 +131,13 @@ namespace o3dgc
         bool                    GetSolid()             const { return m_solid             ;} 
         bool                    GetConvex()            const { return m_convex            ;}
         bool                    GetIsTriangularMesh()  const { return m_isTriangularMesh  ;}
+<<<<<<< HEAD
         const long * const      GetCoordIndex()           const { return m_coordIndex       ;}
         long * const            GetCoordIndex()                 { return m_coordIndex       ;}
+=======
+        const T * const         GetCoordIndex()           const { return m_coordIndex       ;}
+        T * const               GetCoordIndex()                 { return m_coordIndex       ;}
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
         Real * const            GetCoord()                const { return m_coord            ;}
         Real * const            GetNormal()               const { return m_normal           ;}
         Real * const            GetColor()                const { return m_color            ;}
@@ -214,7 +223,11 @@ namespace o3dgc
                                     assert(dim < O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES);
                                     m_maxFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES + dim] = max;
                                 }
+<<<<<<< HEAD
         void                    SetCoordIndex     (long * const coordIndex) { m_coordIndex = coordIndex;}
+=======
+        void                    SetCoordIndex     (T * const coordIndex){ m_coordIndex = coordIndex;}
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
         void                    SetCoord          (Real * const coord     ) { m_coord      = coord    ;}
         void                    SetNormal         (Real * const normal    ) { m_normal     = normal   ;}
         void                    SetColor          (Real * const color     ) { m_color      = color    ;}
@@ -234,7 +247,11 @@ namespace o3dgc
     private:
         // triangles list
         unsigned long           m_nCoordIndex;
+<<<<<<< HEAD
         long *                  m_coordIndex;
+=======
+        T *                     m_coordIndex;
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
         // coord, normals, texcoord and color
         unsigned long           m_nCoord;
         unsigned long           m_nNormal;
@@ -271,5 +288,9 @@ namespace o3dgc
         bool                    m_isTriangularMesh;
     };
 }
+<<<<<<< HEAD
+=======
+#include "o3dgcIndexedFaceSet.inl"    // template implementation
+>>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
 #endif // O3DGC_INDEXED_FACE_SET_H
 
