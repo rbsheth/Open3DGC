@@ -365,8 +365,8 @@ int main(int argc, char * argv[])
         return -1;
     }
 
-    std::cout << "----------------------------------------"<< inputFileName << std::endl;
-    std::cout << "Encode Parameters "<< inputFileName << std::endl;
+    std::cout << "----------------------------------------" << std::endl;
+    std::cout << "Encode Parameters " << std::endl;
     std::cout << "   Input           \t "<< inputFileName << std::endl;
 
     int ret;
