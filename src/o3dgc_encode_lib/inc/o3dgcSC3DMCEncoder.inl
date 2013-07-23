@@ -461,7 +461,7 @@ namespace o3dgc
                 {
                     predResidual  = m_quantFloatArray[v*dimFloatArray+i] - m_neighbors[bestPred].m_pred[i];
                     uPredResidual = (predResidual < 0) ? (1 - (2 * predResidual)) : (2 * predResidual);
-                    ++m_freqSymbols[(uPredResidual < M)? uPredResidual : M];
+                    ++m_freqSymbols[(uPredResidual < (long) M)? uPredResidual : M];
 
 #ifdef DEBUG_VERBOSE
                     printf("%i \t %i \t [%i]\n", vm*dimFloatArray+i, predResidual, m_neighbors[bestPred].m_pred[i]);
