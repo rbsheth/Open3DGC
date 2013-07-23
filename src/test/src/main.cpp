@@ -573,7 +573,7 @@ bool SaveOBJ(const char * fileName,
         }
         for(size_t i = 0; i < nt; ++i)
         {
-            fout << "vn " << texCoords[i].X() << " " << texCoords[i].Y() << std::endl;
+            fout << "vt " << texCoords[i].X() << " " << texCoords[i].Y() << std::endl;
         }
         if (nt > 0 && nn >0)
         {
