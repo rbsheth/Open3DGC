@@ -254,7 +254,7 @@ namespace o3dgc
                                                    BinaryStream & bstream)
     {
         assert(dimFloatArray <  O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES);
-        long predResidual, v;
+        long predResidual, v, uPredResidual;
         unsigned long nPred;
         Arithmetic_Codec ace;
         Static_Bit_Model bModel0;
@@ -459,8 +459,9 @@ namespace o3dgc
                 // use best predictor
                 for (unsigned long i = 0; i < dimFloatArray; ++i) 
                 {
-                    predResidual = m_quantFloatArray[v*dimFloatArray+i] - m_neighbors[bestPred].m_pred[i];
-                    ++m_freqSymbols[min((predResidual < 0) ? (1 - (2 * predResidual)) : (2 * predResidual), M)];
+                    predResidual  = m_quantFloatArray[v*dimFloatArray+i] - m_neighbors[bestPred].m_pred[i];
+                    uPredResidual = (predResidual < 0) ? (1 - (2 * predResidual)) : (2 * predResidual);
+                    ++m_freqSymbols[(uPredResidual < M)? uPredResidual : M];
 
 #ifdef DEBUG_VERBOSE
                     printf("%i \t %i \t [%i]\n", vm*dimFloatArray+i, predResidual, m_neighbors[bestPred].m_pred[i]);
