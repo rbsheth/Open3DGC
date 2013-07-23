@@ -259,11 +259,10 @@ namespace o3dgc
         Arithmetic_Codec ace;
         Static_Bit_Model bModel0;
         Adaptive_Bit_Model bModel1;
-        long nt;
-        long tpred[O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES];
 
         const AdjacencyInfo & v2T         = m_triangleListEncoder.GetVertexToTriangle();
         const long * const    vmap        = m_triangleListEncoder.GetVMap();
+        const long * const    tmap        = m_triangleListEncoder.GetTMap();
         const long * const    invVMap     = m_triangleListEncoder.GetInvVMap();
         const T * const       triangles   = ifs.GetCoordIndex();
         const long            nvert       = (long) numFloatArray;
@@ -311,11 +310,7 @@ namespace o3dgc
 
         for (long vm=0; vm < nvert; ++vm) 
         {
-            nt = 0;
-            memset(tpred, 0, sizeof(long) * dimFloatArray);
             nPred = 0;
-            Insert(-1, nPred, m_neighbors); // to be used for paralellogram prediction later
-
             v     = invVMap[vm];
             assert( v >= 0 && v < nvert);
 
@@ -368,13 +363,16 @@ namespace o3dgc
                                 }
                                 if (c != -1 && foundB)
                                 {
-                                    ++nt;
-                                    for (unsigned long i = 0; i < dimFloatArray; i++) 
+                                    unsigned long p = Insert(-tmap[ta]-1, nPred, m_neighbors);
+                                    if (p != 0xFFFFFFFF)
                                     {
-                                        tpred[i] += m_quantFloatArray[a*dimFloatArray+i] + 
-                                                    m_quantFloatArray[b*dimFloatArray+i] - 
-                                                    m_quantFloatArray[c*dimFloatArray+i];
-                                    } 
+                                        for (unsigned long i = 0; i < dimFloatArray; i++) 
+                                        {
+                                            m_neighbors[p].m_pred[i] = m_quantFloatArray[a*dimFloatArray+i] + 
+                                                                       m_quantFloatArray[b*dimFloatArray+i] - 
+                                                                       m_quantFloatArray[c*dimFloatArray+i];
+                                        } 
+                                    }
                                 }
                             }
                         }
@@ -406,16 +404,7 @@ namespace o3dgc
                 unsigned long bestPred = 0xFFFFFFFF;
                 double bestCost = O3DGC_MAX_DOUBLE;
                 double cost;
-                unsigned long p0 = 1;
-                if (nt > 0)
-                {
-                    p0 = 0;
-                    for (unsigned long i = 0; i < dimFloatArray; i++) 
-                    {
-                        m_neighbors[0].m_pred[i] = (tpred[i] + nt/2) / nt;
-                    } 
-                }
-                for (unsigned long p = p0; p < nPred; ++p)
+                for (unsigned long p = 0; p < nPred; ++p)
                 {
                     cost = -log2((m_freqPreds[p]+1.0) / nPredictors );
                     for (unsigned long i = 0; i < dimFloatArray; ++i) 

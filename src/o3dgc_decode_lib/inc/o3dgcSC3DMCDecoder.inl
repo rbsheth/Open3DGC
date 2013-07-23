@@ -372,8 +372,6 @@ namespace o3dgc
         Adaptive_Bit_Model bModel1;
         Adaptive_Data_Model mModelPreds(O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS+1);
         unsigned long nPred;
-        long nt;
-        long tpred[O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES];
 
         const AdjacencyInfo & v2T        = m_triangleListDecoder.GetVertexToTriangle();
         const T * const     triangles    = ifs.GetCoordIndex();       
@@ -387,7 +385,7 @@ namespace o3dgc
 
         unsigned long       iteratorPred = m_iterator + sizeSize;
         unsigned int        exp_k;
-        unsigned int        M            = 0;        
+        unsigned int        M = 0;
 
         if (m_streamType != O3DGC_SC3DMC_STREAM_TYPE_ASCII)
         {
@@ -419,10 +417,6 @@ namespace o3dgc
         for (long v=0; v < nvert; ++v) 
         {
             nPred = 0;
-            Insert(-1, nPred, m_neighbors); // to be used for paralellogram prediction later
-            nt = 0;
-            memset(tpred, 0, sizeof(long) * dimFloatArray);
-
             if ( v2T.GetNumNeighbors(v) > 0 && 
                  predMode != O3DGC_SC3DMC_NO_PREDICTION)
             {
@@ -480,13 +474,16 @@ namespace o3dgc
                                 }
                                 if (c != -1 && foundB)
                                 {
-                                    ++nt;
-                                    for (unsigned long i = 0; i < dimFloatArray; i++) 
+                                    unsigned long p = Insert(-ta-1, nPred, m_neighbors);
+                                    if (p != 0xFFFFFFFF)
                                     {
-                                        tpred[i] += m_quantFloatArray[a*dimFloatArray+i] + 
-                                                    m_quantFloatArray[b*dimFloatArray+i] - 
-                                                    m_quantFloatArray[c*dimFloatArray+i];
-                                    } 
+                                        for (unsigned long i = 0; i < dimFloatArray; i++) 
+                                        {
+                                            m_neighbors[p].m_pred[i] = m_quantFloatArray[a*dimFloatArray+i] + 
+                                                                       m_quantFloatArray[b*dimFloatArray+i] - 
+                                                                       m_quantFloatArray[c*dimFloatArray+i];
+                                        } 
+                                    }
                                 }
                             }
                         }
@@ -515,17 +512,9 @@ namespace o3dgc
             if (nPred > 1)
             {
                 unsigned long bestPred;
-                if (nt > 0)
-                {
-                    for (unsigned long i = 0; i < dimFloatArray; i++) 
-                    {
-                        m_neighbors[0].m_pred[i] = (tpred[i] + nt/2) / nt;
-                    } 
-                }
-
                 if (m_streamType == O3DGC_SC3DMC_STREAM_TYPE_ASCII)
                 {
-                    bestPred = bstream.ReadUCharASCII(iteratorPred);                    
+                    bestPred = bstream.ReadUCharASCII(iteratorPred);
                 }
                 else
                 {
