@@ -29,6 +29,7 @@ THE SOFTWARE.
 #include <map>
 #include <string>
 #include <vector>
+#include "o3dgcCommon.h"
 #include "o3dgcVector.h"
 #include "o3dgcSC3DMCEncodeParams.h"
 #include "o3dgcIndexedFaceSet.h"

@@ -91,6 +91,10 @@ namespace o3dgc
         unsigned long               m_quantFloatArraySize;
         unsigned char *             m_bufferAC;
         unsigned long               m_sizeBufferAC;
+        SC3DMCPredictor             m_neighbors  [O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS];
+        unsigned long               m_freqSymbols[O3DGC_SC3DMC_MAX_PREDICTION_SYMBOLS];
+        unsigned long               m_freqPreds  [O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS];
+        Vector<unsigned char>       m_predictors;
         SC3DMCStats                 m_stats;
         O3DGCSC3DMCStreamType       m_streamType;
     };

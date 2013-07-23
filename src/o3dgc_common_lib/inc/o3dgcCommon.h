@@ -30,12 +30,13 @@ THE SOFTWARE.
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <math.h>
 
 namespace o3dgc
 {
     typedef float        Real;
     typedef unsigned int Index;
-
+    const double O3DGC_MAX_DOUBLE  = 1.79769e+308;
     const long O3DGC_MIN_LONG      = -2147483647;
     const long O3DGC_MAX_LONG      =  2147483647;
     const long O3DGC_MAX_UCHAR8    = 255;
@@ -46,6 +47,9 @@ namespace o3dgc
     const unsigned long O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES   = 256;
     const unsigned long O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES = 8;
     const unsigned long O3DGC_SC3DMC_MAX_DIM_INT_ATTRIBUTES   = 8;
+
+    const unsigned long O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS = 8;
+    const unsigned long O3DGC_SC3DMC_MAX_PREDICTION_SYMBOLS   = 257;
 
     enum O3DGCEndianness
     {
@@ -116,6 +120,11 @@ namespace o3dgc
         a = b;
         b = tmp;
     }
+    inline double log2( double n )  
+    {  
+        return log(n) / log(2.0);  
+    }
+
     inline O3DGCEndianness SystemEndianness()
     {
         unsigned long num = 1;
@@ -160,6 +169,47 @@ namespace o3dgc
         unsigned long               m_streamSizeIntAttribute;
 
     };
+    typedef struct 
+    {        
+        long          m_v;
+        long          m_pred[O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES];
+    } SC3DMCPredictor;
+
+    // fix me: optimize this function (e.g., binary search)
+    inline unsigned long Insert(long e, unsigned long & nPred, SC3DMCPredictor * const list)
+    {
+        unsigned long pos = 0xFFFFFFFF;
+        bool foundOrInserted = false;
+        for (unsigned long j = 0; j < nPred; ++j)
+        {
+            if (e == list[j].m_v)
+            {
+                foundOrInserted = true;
+                break;
+            }
+            else if (e < list[j].m_v)
+            {
+                if (nPred < O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS)
+                {
+                    ++nPred;
+                }
+                for (unsigned long h = nPred-1; h > j; --h)
+                {
+                    list[h] = list[h-1];
+                }
+                list[j].m_v = e;                
+                pos = j;
+                foundOrInserted = true;
+                break;
+            }
+        }
+        if (!foundOrInserted && nPred < O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS)
+        {
+            pos = nPred;
+            list[nPred++].m_v = e;
+        }
+        return pos;
+    }
 
 }
 #endif // O3DGC_COMMON_H
