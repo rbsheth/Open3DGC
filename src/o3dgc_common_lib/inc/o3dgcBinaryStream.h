@@ -268,10 +268,11 @@ namespace o3dgc
         void                    WriteUInt32ASCII(unsigned long position, unsigned long value) 
                                 {
                                     assert(position < m_stream.GetSize() - O3DGC_BINARY_STREAM_NUM_SYMBOLS_UINT32);
+                                    unsigned long value0 = value;
                                     for(unsigned long i = 0; i < O3DGC_BINARY_STREAM_NUM_SYMBOLS_UINT32; ++i)
                                     {
-                                        m_stream[position++] = value & O3DGC_BINARY_STREAM_MAX_SYMBOL0;
-                                        value >>= O3DGC_BINARY_STREAM_BITS_PER_SYMBOL0;
+                                        m_stream[position++] = (value0 & O3DGC_BINARY_STREAM_MAX_SYMBOL0);
+                                        value0 >>= O3DGC_BINARY_STREAM_BITS_PER_SYMBOL0;
                                     }
                                 }
         void                    WriteUInt32ASCII(unsigned long value) 
@@ -335,7 +336,7 @@ namespace o3dgc
                                     {
                                         value  += (m_stream[position++] << shift);
                                         shift  += O3DGC_BINARY_STREAM_BITS_PER_SYMBOL0;
-                                    }                                    
+                                    }
                                     return value;
                                 }
         long                    ReadIntASCII(unsigned long & position) const

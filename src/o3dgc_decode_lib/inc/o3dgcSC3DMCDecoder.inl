@@ -474,7 +474,8 @@ namespace o3dgc
                                 }
                                 if (c != -1 && foundB)
                                 {
-                                    unsigned long p = Insert(-ta-1, nPred, m_neighbors);
+                                    SC3DMCTriplet id = {min(a, b), max(a, b), -c-1};
+                                    unsigned long p = Insert(id, nPred, m_neighbors);
                                     if (p != 0xFFFFFFFF)
                                     {
                                         for (unsigned long i = 0; i < dimFloatArray; i++) 
@@ -482,7 +483,7 @@ namespace o3dgc
                                             m_neighbors[p].m_pred[i] = m_quantFloatArray[a*dimFloatArray+i] + 
                                                                        m_quantFloatArray[b*dimFloatArray+i] - 
                                                                        m_quantFloatArray[c*dimFloatArray+i];
-                                        } 
+                                        }
                                     }
                                 }
                             }
@@ -496,7 +497,8 @@ namespace o3dgc
                             long w = triangles[ta*3 + k];
                             if ( w < v )
                             {
-                                unsigned long p = Insert(w, nPred, m_neighbors);
+                                SC3DMCTriplet id = {-1, -1, w};
+                                unsigned long p = Insert(id, nPred, m_neighbors);
                                 if (p != 0xFFFFFFFF)
                                 {
                                     for (unsigned long i = 0; i < dimFloatArray; i++) 
@@ -511,6 +513,22 @@ namespace o3dgc
             }
             if (nPred > 1)
             {
+#ifdef DEBUG_VERBOSE
+                printf("\t\t vm %i\n", v);
+                fprintf(g_fileDebugSC3DMCDec, "\t\t vm %i\n", v);
+                for (unsigned long p = 0; p < nPred; ++p)
+                {
+                    printf("\t\t pred a = %i b = %i c = %i \n", m_neighbors[p].m_id.m_a, m_neighbors[p].m_id.m_b, m_neighbors[p].m_id.m_c);
+                    fprintf(g_fileDebugSC3DMCDec, "\t\t pred a = %i b = %i c = %i \n", m_neighbors[p].m_id.m_a, m_neighbors[p].m_id.m_b, m_neighbors[p].m_id.m_c);
+                    for (unsigned long i = 0; i < dimFloatArray; ++i) 
+                    {
+                        printf("\t\t\t %i\n", m_neighbors[p].m_pred[i]);
+                        fprintf(g_fileDebugSC3DMCDec, "\t\t\t %i\n", m_neighbors[p].m_pred[i]);
+                    }
+                }
+#endif //DEBUG_VERBOSE
+
+
                 unsigned long bestPred;
                 if (m_streamType == O3DGC_SC3DMC_STREAM_TYPE_ASCII)
                 {
@@ -521,8 +539,8 @@ namespace o3dgc
                     bestPred = acd.decode(mModelPreds);
                 }
 #ifdef DEBUG_VERBOSE
-                    printf("best %i \t pos %i\n", m_neighbors[bestPred].m_v, bestPred);
-                    fprintf(g_fileDebugSC3DMCDec, "best %i \t pos %i\n", m_neighbors[bestPred].m_v, bestPred);
+                    printf("best (%i, %i, %i) \t pos %i\n", m_neighbors[bestPred].m_id.m_a, m_neighbors[bestPred].m_id.m_b, m_neighbors[bestPred].m_id.m_c, bestPred);
+                    fprintf(g_fileDebugSC3DMCDec, "best (%i, %i, %i) \t pos %i\n", m_neighbors[bestPred].m_id.m_a, m_neighbors[bestPred].m_id.m_b, m_neighbors[bestPred].m_id.m_c, bestPred);
 #endif //DEBUG_VERBOSE
                 for (unsigned long i = 0; i < dimFloatArray; i++) 
                 {

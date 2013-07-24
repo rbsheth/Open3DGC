@@ -170,24 +170,49 @@ namespace o3dgc
 
     };
     typedef struct 
-    {        
-        long          m_v;
+    {
+        long          m_a;
+        long          m_b;
+        long          m_c;
+    } SC3DMCTriplet;
+
+    typedef struct 
+    {
+        SC3DMCTriplet m_id;
         long          m_pred[O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES];
     } SC3DMCPredictor;
 
+    inline bool operator< (const SC3DMCTriplet& lhs, const SC3DMCTriplet& rhs)
+    {
+          if (lhs.m_c != rhs.m_c)
+          {
+              return (lhs.m_c < rhs.m_c);
+          }
+          else if (lhs.m_b != rhs.m_b)
+          {
+              return (lhs.m_b < rhs.m_b);
+          }
+          return (lhs.m_a < rhs.m_a);
+    }
+    inline bool operator== (const SC3DMCTriplet& lhs, const SC3DMCTriplet& rhs)
+    {
+          return (lhs.m_c == rhs.m_c && lhs.m_b == rhs.m_b && lhs.m_a == rhs.m_a);
+    }
+
+
     // fix me: optimize this function (e.g., binary search)
-    inline unsigned long Insert(long e, unsigned long & nPred, SC3DMCPredictor * const list)
+    inline unsigned long Insert(SC3DMCTriplet e, unsigned long & nPred, SC3DMCPredictor * const list)
     {
         unsigned long pos = 0xFFFFFFFF;
         bool foundOrInserted = false;
         for (unsigned long j = 0; j < nPred; ++j)
         {
-            if (e == list[j].m_v)
+            if (e == list[j].m_id)
             {
                 foundOrInserted = true;
                 break;
             }
-            else if (e < list[j].m_v)
+            else if (e < list[j].m_id)
             {
                 if (nPred < O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS)
                 {
@@ -197,7 +222,7 @@ namespace o3dgc
                 {
                     list[h] = list[h-1];
                 }
-                list[j].m_v = e;                
+                list[j].m_id = e;
                 pos = j;
                 foundOrInserted = true;
                 break;
@@ -206,11 +231,10 @@ namespace o3dgc
         if (!foundOrInserted && nPred < O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS)
         {
             pos = nPred;
-            list[nPred++].m_v = e;
+            list[nPred++].m_id = e;
         }
         return pos;
     }
-
 }
 #endif // O3DGC_COMMON_H
 
