@@ -262,7 +262,6 @@ namespace o3dgc
 
         const AdjacencyInfo & v2T         = m_triangleListEncoder.GetVertexToTriangle();
         const long * const    vmap        = m_triangleListEncoder.GetVMap();
-        const long * const    tmap        = m_triangleListEncoder.GetTMap();
         const long * const    invVMap     = m_triangleListEncoder.GetInvVMap();
         const T * const       triangles   = ifs.GetCoordIndex();
         const long            nvert       = (long) numFloatArray;
