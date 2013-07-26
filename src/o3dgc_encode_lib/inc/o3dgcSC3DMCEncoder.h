@@ -45,11 +45,14 @@ namespace o3dgc
                                         m_quantFloatArraySize = 0;
                                         m_sizeBufferAC        = 0;
                                         m_bufferAC            = 0;
+                                        m_normals             = 0;
+                                        m_normalsSize         = 0;
                                         m_streamType          = O3DGC_SC3DMC_STREAM_TYPE_UNKOWN;
                                     };
         //! Destructor.
                                     ~SC3DMCEncoder(void)
                                     {
+                                        delete [] m_normals;
                                         delete [] m_quantFloatArray;
                                         delete [] m_bufferAC;
                                     }
@@ -86,9 +89,13 @@ namespace o3dgc
                                                    unsigned long dimIntArray,
                                                    O3DGCSC3DMCPredictionMode predMode,
                                                    BinaryStream & bstream);
+        O3DGCErrorCode              ProcessNormals(const IndexedFaceSet<T> & ifs,
+                                                   BinaryStream & bstream);
         TriangleListEncoder<T>      m_triangleListEncoder;
         long *                      m_quantFloatArray;
         unsigned long               m_quantFloatArraySize;
+        Real *                      m_normals;
+        unsigned long               m_normalsSize;
         unsigned char *             m_bufferAC;
         unsigned long               m_sizeBufferAC;
         SC3DMCPredictor             m_neighbors  [O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS];

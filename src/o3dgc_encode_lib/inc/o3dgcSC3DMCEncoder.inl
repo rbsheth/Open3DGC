@@ -208,7 +208,7 @@ namespace o3dgc
         unsigned long uiValue;
         if (predResidual < 0)
         {
-            uiValue = (unsigned long) (1 - (2 * predResidual));
+            uiValue = (unsigned long) (-1 - (2 * predResidual));
         }
         else
         {
@@ -321,7 +321,7 @@ namespace o3dgc
                 for (long u = u0; u < u1; u++) 
                 {
                     long ta = v2T.GetNeighbor(u);
-                    if (predMode == O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION)
+                    if ( predMode == O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION )
                     {
                         long a,b;
                         if ((long) triangles[ta*3] == v)
@@ -377,7 +377,8 @@ namespace o3dgc
                             }
                         }
                     }
-                    if ( predMode == O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION ||
+                    if ( predMode == O3DGC_SC3DMC_SURF_NORMALS_PREDICTION  ||
+                         predMode == O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION ||
                          predMode == O3DGC_SC3DMC_DIFFERENTIAL_PREDICTION )
                     {
                         for(long k = 0; k < 3; ++k)
@@ -528,7 +529,7 @@ namespace o3dgc
         if (m_streamType != O3DGC_SC3DMC_STREAM_TYPE_ASCII)
         {
             unsigned long encodedBytes = ace.stop_encoder();
-            for(size_t i = 0; i < encodedBytes; ++i)
+            for(unsigned long i = 0; i < encodedBytes; ++i)
             {
                 bstream.WriteUChar8Bin(m_bufferAC[i]);
             }
@@ -540,8 +541,8 @@ namespace o3dgc
         {
             unsigned long start = bstream.GetSize();
             bstream.WriteUInt32ASCII(0);
-            const size_t size       = m_predictors.GetSize();
-            for(size_t i = 0; i < size; ++i)
+            const unsigned long size       = m_predictors.GetSize();
+            for(unsigned long i = 0; i < size; ++i)
             {
                 bstream.WriteUCharASCII(m_predictors[i]);
             }
@@ -625,7 +626,113 @@ namespace o3dgc
                 }
             }
             unsigned long encodedBytes = ace.stop_encoder();
-            for(size_t i = 0; i < encodedBytes; ++i)
+            for(unsigned long i = 0; i < encodedBytes; ++i)
+            {
+                bstream.WriteUChar8Bin(m_bufferAC[i]);
+            }
+        }
+        bstream.WriteUInt32(start, bstream.GetSize() - start, m_streamType);
+        return O3DGC_OK;
+    }
+    template <class T>
+    O3DGCErrorCode SC3DMCEncoder<T>::ProcessNormals(const IndexedFaceSet<T> & ifs,
+                                                    BinaryStream & bstream)
+    {
+        const long nvert  = (long) ifs.GetNNormal();
+        const unsigned long normalSize = ifs.GetNNormal() * 3;
+        if (m_normalsSize < normalSize)
+        {
+            delete [] m_normals;
+            m_normalsSize = normalSize;
+            m_normals     = new Real [normalSize];
+        }                                  
+        const AdjacencyInfo & v2T         = m_triangleListEncoder.GetVertexToTriangle();
+        const T * const       triangles   = ifs.GetCoordIndex();
+        const Real * const originalNormals = ifs.GetNormal();
+        Vec3<Real> p1, p2, p3, n0, n1;
+        long a, b, c;
+        m_predictors.Clear();
+        for (long vm=0; vm < nvert; ++vm) 
+        {
+            n0.X() = 0;
+            n0.Y() = 0;
+            n0.Z() = 0;
+            int u0 = v2T.Begin(vm);
+            int u1 = v2T.End(vm);
+            for (long u = u0; u < u1; u++) 
+            {
+                long ta = v2T.GetNeighbor(u);
+                a = triangles[ta*3 + 0];
+                b = triangles[ta*3 + 1];
+                c = triangles[ta*3 + 2];
+                p1.X() = (Real) m_quantFloatArray[3*a];
+                p1.Y() = (Real) m_quantFloatArray[3*a+1];
+                p1.Z() = (Real) m_quantFloatArray[3*a+2];
+                p2.X() = (Real) m_quantFloatArray[3*b];
+                p2.Y() = (Real) m_quantFloatArray[3*b+1];
+                p2.Z() = (Real) m_quantFloatArray[3*b+2];
+                p3.X() = (Real) m_quantFloatArray[3*c];
+                p3.Y() = (Real) m_quantFloatArray[3*c+1];
+                p3.Z() = (Real) m_quantFloatArray[3*c+2];
+                n0  += (p2-p1)^(p3-p1);
+            }
+            n0.Normalize();
+            n1.X() = originalNormals[3*vm];
+            n1.Y() = originalNormals[3*vm+1];
+            n1.Z() = originalNormals[3*vm+2];
+            n1.Normalize();
+
+            if (n1 * n0 < 0)
+            {
+                n0 = -n0;
+                m_predictors.PushBack(1);
+            }
+            else
+            {
+                m_predictors.PushBack(0);
+            }
+            n1 -= n0;
+            m_normals[3*vm]   = n1.X();
+            m_normals[3*vm+1] = n1.Y();
+            m_normals[3*vm+2] = n1.Z();
+        }
+        // encode normals orientation information 
+        unsigned long start = bstream.GetSize();
+        const unsigned long size  = (unsigned long) nvert;
+        bstream.WriteUInt32(0, m_streamType);
+        if (m_streamType == O3DGC_SC3DMC_STREAM_TYPE_ASCII)
+        {
+            long symbol;
+            for(unsigned long i = 0; i < size; )
+            {
+                symbol = 0;
+                for(unsigned long h = 0; h < O3DGC_BINARY_STREAM_BITS_PER_SYMBOL0 && i < size; ++h)
+                {
+                    symbol += (m_predictors[i] << h);
+                    ++i;
+                }
+                bstream.WriteUCharASCII((unsigned char) symbol);
+            }
+        }
+        else
+        {
+            const unsigned int NMAX = size + 100;
+            Arithmetic_Codec ace;
+            Adaptive_Bit_Model bModel;
+            if ( m_sizeBufferAC < NMAX )
+            {
+                delete [] m_bufferAC;
+                m_sizeBufferAC = NMAX;
+                m_bufferAC     = new unsigned char [m_sizeBufferAC];
+            }
+            ace.set_buffer(NMAX, m_bufferAC);
+            ace.start_encoder();
+            for(unsigned long i = 0; i < size; ++i)
+            {
+                ace.encode(m_predictors[i], bModel);
+            }
+            unsigned long encodedBytes = ace.stop_encoder();
+            for(unsigned long i = 0; i < encodedBytes; ++i)
             {
                 bstream.WriteUChar8Bin(m_bufferAC[i]);
             }
@@ -670,8 +777,19 @@ namespace o3dgc
         timer.Tic();
         if (ifs.GetNNormal() > 0)
         {
-            EncodeFloatArray(ifs.GetNormal(), ifs.GetNNormal(), 3, ifs.GetNormalMin(), ifs.GetNormalMax(), 
+            if (params.GetNormalPredMode() == O3DGC_SC3DMC_SURF_NORMALS_PREDICTION)
+            {
+                const Real minNormal[3] = {(Real)(-1),(Real)(-1),(Real)(-1)};
+                const Real maxNormal[3] = {(Real)(1),(Real)(1),(Real)(1)};
+                ProcessNormals(ifs, bstream);
+                EncodeFloatArray(m_normals, ifs.GetNNormal(), 3, minNormal, maxNormal, 
+                                 params.GetNormalQuantBits(), ifs, params.GetNormalPredMode(), bstream);
+            }
+            else
+            {
+                EncodeFloatArray(ifs.GetNormal(), ifs.GetNNormal(), 3, ifs.GetNormalMin(), ifs.GetNormalMax(), 
                                 params.GetNormalQuantBits(), ifs, params.GetNormalPredMode(), bstream);
+            }
         }
         timer.Toc();
         m_stats.m_timeNormal       = timer.GetElapsedTime();

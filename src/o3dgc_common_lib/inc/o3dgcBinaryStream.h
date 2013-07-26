@@ -43,7 +43,7 @@ namespace o3dgc
     {
     public:    
         //! Constructor.
-                                BinaryStream(size_t size = O3DGC_BINARY_STREAM_DEFAULT_SIZE)
+                                BinaryStream(unsigned long size = O3DGC_BINARY_STREAM_DEFAULT_SIZE)
                                 {
                                     m_endianness = SystemEndianness();
                                     m_stream.Allocate(size);
@@ -288,7 +288,7 @@ namespace o3dgc
                                     unsigned int uiValue;
                                     if (value < 0)
                                     {
-                                        uiValue = (unsigned long) (1 - (2 * value));
+                                        uiValue = (unsigned long) (-1 - (2 * value));
                                     }
                                     else
                                     {
@@ -344,7 +344,7 @@ namespace o3dgc
                                     unsigned long uiValue = ReadUIntASCII(position);
                                     if (uiValue & 1)
                                     {
-                                        return -((long) (uiValue >> 1));
+                                        return -((long) ((uiValue+1) >> 1));
                                     }
                                     else
                                     {
@@ -409,7 +409,7 @@ namespace o3dgc
                                     m_stream.SetSize(bufferSize);
                                     return O3DGC_OK;
                                 }
-        size_t                  GetSize() const
+        unsigned long                  GetSize() const
                                 {
                                     return m_stream.GetSize();
                                 }
@@ -429,11 +429,11 @@ namespace o3dgc
                                 {
                                     buffer = (unsigned char *) (m_stream.GetBuffer() + position); // fix me: ugly!
                                 }
-    void                        SetSize(size_t size)
+    void                        SetSize(unsigned long size)
                                 { 
                                     m_stream.SetSize(size);
                                 };
-    void                        Allocate(size_t size)
+    void                        Allocate(unsigned long size)
                                 {
                                     m_stream.Allocate(size);
                                 }

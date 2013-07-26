@@ -45,6 +45,8 @@ namespace o3dgc
                                         m_streamSize          = 0;
                                         m_quantFloatArray     = 0;
                                         m_quantFloatArraySize = 0;
+                                        m_normals             = 0;
+                                        m_normalsSize         = 0;
                                         m_streamType        = O3DGC_SC3DMC_STREAM_TYPE_UNKOWN;
                                     };
         //! Destructor.
@@ -80,6 +82,8 @@ namespace o3dgc
                                                  unsigned long numIntArraySize,
                                                  unsigned long dimIntArraySize,
                                                  const BinaryStream & bstream);
+        O3DGCErrorCode              ProcessNormals(const IndexedFaceSet<T> & ifs,
+                                                   const BinaryStream & bstream);
 
         unsigned long               m_iterator;
         unsigned long               m_streamSize;
@@ -87,6 +91,9 @@ namespace o3dgc
         TriangleListDecoder<T>      m_triangleListDecoder;
         long *                      m_quantFloatArray;
         unsigned long               m_quantFloatArraySize;
+        Real *                      m_normals;
+        unsigned long               m_normalsSize;
+        Vector<unsigned char>       m_predictors;
         SC3DMCStats                 m_stats;
         O3DGCSC3DMCStreamType       m_streamType;
     };

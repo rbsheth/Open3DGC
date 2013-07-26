@@ -36,9 +36,9 @@ namespace o3dgc
     {
         unsigned long start = bstream.GetSize();
         bstream.WriteUInt32ASCII(0);
-        const size_t size       = data.GetSize();
+        const unsigned long size       = data.GetSize();
         bstream.WriteUInt32ASCII(size);
-        for(size_t i = 0; i < size; ++i)
+        for(unsigned long i = 0; i < size; ++i)
         {
             bstream.WriteUIntASCII(data[i]);
         }
@@ -50,9 +50,9 @@ namespace o3dgc
     {
         unsigned long start = bstream.GetSize();
         bstream.WriteUInt32ASCII(0);
-        const size_t size       = data.GetSize();
+        const unsigned long size       = data.GetSize();
         bstream.WriteUInt32ASCII(size);
-        for(size_t i = 0; i < size; ++i)
+        for(unsigned long i = 0; i < size; ++i)
         {
             bstream.WriteIntASCII(data[i]);
         }
@@ -64,10 +64,10 @@ namespace o3dgc
     {
         unsigned long start = bstream.GetSize();
         bstream.WriteUInt32ASCII(0);
-        const size_t size = data.GetSize();
+        const unsigned long size = data.GetSize();
         long symbol;
         bstream.WriteUInt32ASCII(size);
-        for(size_t i = 0; i < size; )
+        for(unsigned long i = 0; i < size; )
         {
             symbol = 0;
             for(unsigned long h = 0; h < O3DGC_BINARY_STREAM_BITS_PER_SYMBOL0 && i < size; ++h)
@@ -86,7 +86,7 @@ namespace o3dgc
     {
         unsigned long start = bstream.GetSize();     
         const unsigned int NMAX = data.GetSize() * 8 + 100;
-        const size_t size       = data.GetSize();
+        const unsigned long size       = data.GetSize();
         long minValue = O3DGC_MAX_LONG;
         bstream.WriteUInt32Bin(0);
         bstream.WriteUInt32Bin(size);
@@ -97,7 +97,7 @@ namespace o3dgc
             fprintf(g_fileDebugTF, "-----------\nsize %i, start %i\n", size, start);
     #endif //DEBUG_VERBOSE
 
-            for(size_t i = 0; i < size; ++i)
+            for(unsigned long i = 0; i < size; ++i)
             {
                 if (minValue > data[i]) 
                 {
@@ -119,12 +119,12 @@ namespace o3dgc
             ace.set_buffer(NMAX, m_bufferAC);
             ace.start_encoder();
             Adaptive_Data_Model mModelValues(M+1);
-            for(size_t i = 0; i < size; ++i)
+            for(unsigned long i = 0; i < size; ++i)
             {
                 ace.encode(data[i]-minValue, mModelValues);
             }
             unsigned long encodedBytes = ace.stop_encoder();
-            for(size_t i = 0; i < encodedBytes; ++i)
+            for(unsigned long i = 0; i < encodedBytes; ++i)
             {
                 bstream.WriteUChar8Bin(m_bufferAC[i]);
             }
@@ -137,7 +137,7 @@ namespace o3dgc
     {
         unsigned long start = bstream.GetSize();     
         const unsigned int NMAX = data.GetSize() * 8 + 100;
-        const size_t size       = data.GetSize();
+        const unsigned long size       = data.GetSize();
         bstream.WriteUInt32Bin(0);
         bstream.WriteUInt32Bin(size);
         if (size > 0)
@@ -156,7 +156,7 @@ namespace o3dgc
             printf("-----------\nsize %i, start %i\n", size, start);
             fprintf(g_fileDebugTF, "-----------\nsize %i, start %i\n", size, start);
     #endif //DEBUG_VERBOSE
-            for(size_t i = 0; i < size; ++i)
+            for(unsigned long i = 0; i < size; ++i)
             {
                 ace.encode(data[i], bModel);
     #ifdef DEBUG_VERBOSE
@@ -165,7 +165,7 @@ namespace o3dgc
     #endif //DEBUG_VERBOSE
             }
             unsigned long encodedBytes = ace.stop_encoder();
-            for(size_t i = 0; i < encodedBytes; ++i)
+            for(unsigned long i = 0; i < encodedBytes; ++i)
             {
                 bstream.WriteUChar8Bin(m_bufferAC[i]);
             }
@@ -180,7 +180,7 @@ namespace o3dgc
     {
         unsigned long start = bstream.GetSize();     
         const unsigned int NMAX = data.GetSize() * 8 + 100;
-        const size_t size       = data.GetSize();
+        const unsigned long size       = data.GetSize();
         long minValue = 0;
         bstream.WriteUInt32Bin(0);
         bstream.WriteUInt32Bin(size);
@@ -190,7 +190,7 @@ namespace o3dgc
             printf("-----------\nsize %i, start %i\n", size, start);
             fprintf(g_fileDebugTF, "-----------\nsize %i, start %i\n", size, start);
 #endif //DEBUG_VERBOSE
-            for(size_t i = 0; i < size; ++i)
+            for(unsigned long i = 0; i < size; ++i)
             {
                 if (minValue > data[i]) 
                 {
@@ -215,7 +215,7 @@ namespace o3dgc
             Static_Bit_Model bModel0;
             Adaptive_Bit_Model bModel1;
             unsigned long value;
-            for(size_t i = 0; i < size; ++i)
+            for(unsigned long i = 0; i < size; ++i)
             {
                 value = data[i]-minValue;
                 if (value < M) 
@@ -229,7 +229,7 @@ namespace o3dgc
                 }
             }
             unsigned long encodedBytes = ace.stop_encoder();
-            for(size_t i = 0; i < encodedBytes; ++i)
+            for(unsigned long i = 0; i < encodedBytes; ++i)
             {
                 bstream.WriteUChar8Bin(m_bufferAC[i]);
             }
@@ -272,7 +272,7 @@ namespace o3dgc
         const unsigned long size = bstream.ReadUInt32ASCII(iterator);
         data.Allocate(size);
         data.Clear();
-        for(size_t i = 0; i < size; ++i)
+        for(unsigned long i = 0; i < size; ++i)
         {
             data.PushBack(bstream.ReadUIntASCII(iterator));
         }
@@ -286,7 +286,7 @@ namespace o3dgc
         const unsigned long size = bstream.ReadUInt32ASCII(iterator);
         data.Allocate(size);
         data.Clear();
-        for(size_t i = 0; i < size; ++i)
+        for(unsigned long i = 0; i < size; ++i)
         {
             data.PushBack(bstream.ReadIntASCII(iterator));
         }
@@ -301,7 +301,7 @@ namespace o3dgc
         long symbol;
         data.Allocate(size * O3DGC_BINARY_STREAM_BITS_PER_SYMBOL0);
         data.Clear();
-        for(size_t i = 0; i < size;)
+        for(unsigned long i = 0; i < size;)
         {
             symbol = bstream.ReadUCharASCII(iterator);
             for(unsigned long h = 0; h < O3DGC_BINARY_STREAM_BITS_PER_SYMBOL0; ++h)
@@ -318,8 +318,8 @@ namespace o3dgc
                                  const BinaryStream & bstream,
                                  unsigned long & iterator) 
     {
-        size_t sizeSize = bstream.ReadUInt32Bin(iterator) - 12;
-        size_t size     = bstream.ReadUInt32Bin(iterator);
+        unsigned long sizeSize = bstream.ReadUInt32Bin(iterator) - 12;
+        unsigned long size     = bstream.ReadUInt32Bin(iterator);
         if (size == 0)
         {
             return O3DGC_OK;
@@ -337,7 +337,7 @@ namespace o3dgc
         printf("-----------\nsize %i\n", size);
         fprintf(g_fileDebugTF, "size %i\n", size);
 #endif //DEBUG_VERBOSE
-        for(size_t i = 0; i < size; ++i)
+        for(unsigned long i = 0; i < size; ++i)
         {
             data.PushBack(acd.decode(mModelValues)+minValue);
 #ifdef DEBUG_VERBOSE
@@ -352,8 +352,8 @@ namespace o3dgc
                                    const BinaryStream & bstream,
                                    unsigned long & iterator) 
     {
-        size_t sizeSize = bstream.ReadUInt32Bin(iterator) - 12;
-        size_t size     = bstream.ReadUInt32Bin(iterator);
+        unsigned long sizeSize = bstream.ReadUInt32Bin(iterator) - 12;
+        unsigned long size     = bstream.ReadUInt32Bin(iterator);
         if (size == 0)
         {
             return O3DGC_OK;
@@ -375,7 +375,7 @@ namespace o3dgc
         printf("-----------\nsize %i\n", size);
         fprintf(g_fileDebugTF, "size %i\n", size);
 #endif //DEBUG_VERBOSE
-        for(size_t i = 0; i < size; ++i)
+        for(unsigned long i = 0; i < size; ++i)
         {
             value = acd.decode(mModelValues);
             if ( value == M)
@@ -397,8 +397,8 @@ namespace o3dgc
                                 const BinaryStream & bstream,
                                 unsigned long & iterator) 
     {
-        size_t sizeSize = bstream.ReadUInt32Bin(iterator) - 8;
-        size_t size     = bstream.ReadUInt32Bin(iterator);
+        unsigned long sizeSize = bstream.ReadUInt32Bin(iterator) - 8;
+        unsigned long size     = bstream.ReadUInt32Bin(iterator);
         if (size == 0)
         {
             return O3DGC_OK;
@@ -415,7 +415,7 @@ namespace o3dgc
         printf("-----------\nsize %i\n", size);
         fprintf(g_fileDebugTF, "size %i\n", size);
 #endif //DEBUG_VERBOSE
-        for(size_t i = 0; i < size; ++i)
+        for(unsigned long i = 0; i < size; ++i)
         {
             data.PushBack(acd.decode(bModel));
 #ifdef DEBUG_VERBOSE

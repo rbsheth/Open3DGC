@@ -95,7 +95,8 @@ namespace o3dgc
 //      O3DGC_SC3DMC_XORPrediction                  = 2, // not supported
 //      O3DGC_SC3DMC_AdaptiveDifferentialPrediction = 3, // not supported
 //      O3DGC_SC3DMC_CircularDifferentialPrediction = 4, // not supported
-        O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION        = 5  // supported
+        O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION        = 5,  // supported
+        O3DGC_SC3DMC_SURF_NORMALS_PREDICTION         = 6   // supported
     };
     enum O3DGCSC3DMCEncodingMode
     {

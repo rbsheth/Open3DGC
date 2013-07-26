@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 namespace o3dgc
 {
-    const size_t O3DGC_DEFAULT_VECTOR_SIZE = 32;
+    const unsigned long O3DGC_DEFAULT_VECTOR_SIZE = 32;
 
     //! 
     template < typename T > class Vector
@@ -46,15 +46,15 @@ namespace o3dgc
                                 {
                                     delete [] m_buffer;
                                 };
-        T &                     operator[](size_t i)
+        T &                     operator[](unsigned long i)
                                 { 
                                     return m_buffer[i];
                                 }
-        const T &               operator[](size_t i) const
+        const T &               operator[](unsigned long i) const
                                 { 
                                     return m_buffer[i];
                                 }
-        void                    Allocate(size_t size)
+        void                    Allocate(unsigned long size)
                                 {
                                     if (size > m_allocated)
                                     {
@@ -90,19 +90,19 @@ namespace o3dgc
                                 }
         const T * const         GetBuffer() const { return m_buffer;};
         T * const               GetBuffer()       { return m_buffer;};
-        size_t                  GetSize()   const { return m_size;};
-        void                    SetSize(size_t size)
+        unsigned long                  GetSize()   const { return m_size;};
+        void                    SetSize(unsigned long size)
                                 { 
                                     assert(size <= m_allocated);
                                     m_size = size;
                                 };
-        size_t                  GetAllocatedSize() const { return m_allocated;};
+        unsigned long                  GetAllocatedSize() const { return m_allocated;};
         void                    Clear(){ m_size = 0;};
 
     private:
         T *                     m_buffer;
-        size_t                  m_allocated;
-        size_t                  m_size;
+        unsigned long                  m_allocated;
+        unsigned long                  m_size;
     };
 
 
@@ -112,8 +112,8 @@ namespace o3dgc
     template < typename T > class Vec3
     {
     public:
-        T &                 operator[](size_t i) { return m_data[i];}
-        const T      &      operator[](size_t i) const { return m_data[i];}
+        T &                 operator[](unsigned long i) { return m_data[i];}
+        const T      &      operator[](unsigned long i) const { return m_data[i];}
         T &                 X();
         T &                 Y();
         T &                 Z();
@@ -149,8 +149,8 @@ namespace o3dgc
     template < typename T > class Vec2
     {
     public:
-        T &                 operator[](size_t i) { return m_data[i];}
-        const T &           operator[](size_t i) const { return m_data[i];}
+        T &                 operator[](unsigned long i) { return m_data[i];}
+        const T &           operator[](unsigned long i) const { return m_data[i];}
         T &                 X();
         T &                 Y();
         const T &           X() const;

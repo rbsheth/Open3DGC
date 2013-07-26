@@ -397,7 +397,7 @@ bool LoadOBJ(const std::string & fileName,
              std::vector< Vec3<Index> > & triangles) 
 {   
     const char ObjDelimiters[]=" /";
-    const size_t BufferSize = 1024;
+    const unsigned long BufferSize = 1024;
     FILE * fid = fopen(fileName.c_str(), "r");
     
     if (fid) 
@@ -547,10 +547,10 @@ bool SaveOBJ(const char * fileName,
     fout.open(fileName);
     if (!fout.fail()) 
     {
-        const size_t np = points.size();
-        const size_t nn = normals.size();
-        const size_t nt = texCoords.size();
-        const size_t nf = triangles.size();
+        const unsigned long np = points.size();
+        const unsigned long nn = normals.size();
+        const unsigned long nt = texCoords.size();
+        const unsigned long nf = triangles.size();
 
         fout << "####" << std::endl;
         fout << "#" << std::endl;
@@ -563,21 +563,21 @@ bool SaveOBJ(const char * fileName,
         fout << "# Faces: " << nf << std::endl;;
         fout << "#" << std::endl;
         fout << "####" << std::endl;
-        for(size_t i = 0; i < np; ++i)
+        for(unsigned long i = 0; i < np; ++i)
         {
             fout << "v " << points[i].X() << " " << points[i].Y() << " " << points[i].Z() << std::endl;
         }
-        for(size_t i = 0; i < nn; ++i)
+        for(unsigned long i = 0; i < nn; ++i)
         {
             fout << "vn " << normals[i].X() << " " << normals[i].Y() << " " << normals[i].Z() << std::endl;
         }
-        for(size_t i = 0; i < nt; ++i)
+        for(unsigned long i = 0; i < nt; ++i)
         {
             fout << "vt " << texCoords[i].X() << " " << texCoords[i].Y() << std::endl;
         }
         if (nt > 0 && nn >0)
         {
-            for(size_t i = 0; i < nf; ++i)
+            for(unsigned long i = 0; i < nf; ++i)
             {
                 fout << "f " << triangles[i].X()+1 << "/" << triangles[i].X()+1 << "/" << triangles[i].X()+1;
                 fout << " "  << triangles[i].Y()+1 << "/" << triangles[i].Y()+1 << "/" << triangles[i].Y()+1;
@@ -586,7 +586,7 @@ bool SaveOBJ(const char * fileName,
         }
         else if (nt == 0 && nn > 0)
         {
-            for(size_t i = 0; i < nf; ++i)
+            for(unsigned long i = 0; i < nf; ++i)
             {
                 fout << "f " << triangles[i].X()+1 << "//" << triangles[i].X()+1;
                 fout << " "  << triangles[i].Y()+1 << "//" << triangles[i].Y()+1;
@@ -595,7 +595,7 @@ bool SaveOBJ(const char * fileName,
         }
         else if (nt > 0 && nn == 0)
         {
-            for(size_t i = 0; i < nf; ++i)
+            for(unsigned long i = 0; i < nf; ++i)
             {
                 fout << "f " << triangles[i].X()+1 << "/" << triangles[i].X()+1;
                 fout << " "  << triangles[i].Y()+1 << "/" << triangles[i].Y()+1;
@@ -604,7 +604,7 @@ bool SaveOBJ(const char * fileName,
         }
         else
         {
-            for(size_t i = 0; i < nf; ++i)
+            for(unsigned long i = 0; i < nf; ++i)
             {
                 fout << "f " << triangles[i].X()+1;
                 fout << " "  << triangles[i].Y()+1;

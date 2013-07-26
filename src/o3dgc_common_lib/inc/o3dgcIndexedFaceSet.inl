@@ -28,8 +28,8 @@ THE SOFTWARE.
 namespace o3dgc
 {
     void ComputeVectorMinMax(const Real * const tab, 
-                             size_t size, 
-                             size_t dim,
+                             unsigned long size, 
+                             unsigned long dim,
                              Real * minTab,
                              Real * maxTab,
                              O3DGCSC3DMCQuantizationMode quantMode)
@@ -38,14 +38,14 @@ namespace o3dgc
         {
             return;
         }
-        size_t p = 0;    
-        for(size_t d = 0; d < dim; ++d)
+        unsigned long p = 0;    
+        for(unsigned long d = 0; d < dim; ++d)
         {
             maxTab[d] = minTab[d] = tab[p++];
         }        
-        for(size_t i = 1; i < size; ++i)
+        for(unsigned long i = 1; i < size; ++i)
         {
-            for(size_t d = 0; d < dim; ++d)
+            for(unsigned long d = 0; d < dim; ++d)
             {
                 if (maxTab[d] < tab[p]) maxTab[d] = tab[p];
                 if (minTab[d] > tab[p]) minTab[d] = tab[p];
@@ -57,13 +57,13 @@ namespace o3dgc
         {
             Real diag = 0.0;
             Real r;
-            for(size_t d = 0; d < dim; ++d)
+            for(unsigned long d = 0; d < dim; ++d)
             {
                 r     = (maxTab[d] - minTab[d]);
                 diag += r*r;
             } 
             diag = sqrt(diag);
-            for(size_t d = 0; d < dim; ++d)
+            for(unsigned long d = 0; d < dim; ++d)
             {
                  maxTab[d] = minTab[d] + diag;
             } 
@@ -72,7 +72,7 @@ namespace o3dgc
         {            
             Real maxr = (maxTab[0] - minTab[0]);
             Real r;
-            for(size_t d = 1; d < dim; ++d)
+            for(unsigned long d = 1; d < dim; ++d)
             {
                 r = (maxTab[d] - minTab[d]);
                 if ( r > maxr)
@@ -80,7 +80,7 @@ namespace o3dgc
                     maxr = r;
                 }
             } 
-            for(size_t d = 0; d < dim; ++d)
+            for(unsigned long d = 0; d < dim; ++d)
             {
                  maxTab[d] = minTab[d] + maxr;
             } 
