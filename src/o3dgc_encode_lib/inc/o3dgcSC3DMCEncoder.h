@@ -89,19 +89,18 @@ namespace o3dgc
                                                    unsigned long dimIntArray,
                                                    O3DGCSC3DMCPredictionMode predMode,
                                                    BinaryStream & bstream);
-        O3DGCErrorCode              ProcessNormals(const IndexedFaceSet<T> & ifs,
-                                                   BinaryStream & bstream);
+        O3DGCErrorCode              ProcessNormals(const IndexedFaceSet<T> & ifs);
         TriangleListEncoder<T>      m_triangleListEncoder;
         long *                      m_quantFloatArray;
         unsigned long               m_quantFloatArraySize;
-        Real *                      m_normals;
-        unsigned long               m_normalsSize;
         unsigned char *             m_bufferAC;
         unsigned long               m_sizeBufferAC;
         SC3DMCPredictor             m_neighbors  [O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS];
         unsigned long               m_freqSymbols[O3DGC_SC3DMC_MAX_PREDICTION_SYMBOLS];
         unsigned long               m_freqPreds  [O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS];
         Vector<unsigned char>       m_predictors;
+        Real *                      m_normals;
+        unsigned long               m_normalsSize;
         SC3DMCStats                 m_stats;
         O3DGCSC3DMCStreamType       m_streamType;
     };

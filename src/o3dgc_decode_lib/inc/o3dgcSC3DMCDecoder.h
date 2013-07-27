@@ -47,11 +47,12 @@ namespace o3dgc
                                         m_quantFloatArraySize = 0;
                                         m_normals             = 0;
                                         m_normalsSize         = 0;
-                                        m_streamType        = O3DGC_SC3DMC_STREAM_TYPE_UNKOWN;
+                                        m_streamType          = O3DGC_SC3DMC_STREAM_TYPE_UNKOWN;
                                     };
         //! Destructor.
                                     ~SC3DMCDecoder(void)
                                     {
+                                        delete [] m_normals;
                                         delete [] m_quantFloatArray;
                                     }
         //!
@@ -70,7 +71,7 @@ namespace o3dgc
                                                      const Real * const maxfloatArray,
                                                      unsigned long nQBits,
                                                      const IndexedFaceSet<T> & ifs,
-                                                     O3DGCSC3DMCPredictionMode predMode,
+                                                     O3DGCSC3DMCPredictionMode & predMode,
                                                      const BinaryStream & bstream);
         O3DGCErrorCode              IQuantizeFloatArray(Real * const floatArray,
                                                        unsigned long numfloatArraySize,
@@ -82,8 +83,7 @@ namespace o3dgc
                                                  unsigned long numIntArraySize,
                                                  unsigned long dimIntArraySize,
                                                  const BinaryStream & bstream);
-        O3DGCErrorCode              ProcessNormals(const IndexedFaceSet<T> & ifs,
-                                                   const BinaryStream & bstream);
+        O3DGCErrorCode              ProcessNormals(const IndexedFaceSet<T> & ifs);
 
         unsigned long               m_iterator;
         unsigned long               m_streamSize;
@@ -91,9 +91,9 @@ namespace o3dgc
         TriangleListDecoder<T>      m_triangleListDecoder;
         long *                      m_quantFloatArray;
         unsigned long               m_quantFloatArraySize;
+        Vector<unsigned char>       m_predictors;
         Real *                      m_normals;
         unsigned long               m_normalsSize;
-        Vector<unsigned char>       m_predictors;
         SC3DMCStats                 m_stats;
         O3DGCSC3DMCStreamType       m_streamType;
     };

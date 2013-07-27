@@ -88,6 +88,21 @@ namespace o3dgc
                                         assert(a < O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
                                         return m_intAttributePredMode[a];
                                     }
+        O3DGCSC3DMCPredictionMode & GetCoordPredMode()    { return m_coordPredMode; }
+        O3DGCSC3DMCPredictionMode & GetNormalPredMode()   { return m_normalPredMode; }
+        O3DGCSC3DMCPredictionMode & GetColorPredMode()    { return m_colorPredMode; }
+        O3DGCSC3DMCPredictionMode & GetTexCoordPredMode() { return m_texCoordPredMode; }
+        O3DGCSC3DMCPredictionMode & GetFloatAttributePredMode(unsigned long a)
+                                    {
+                                       assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
+                                       return m_floatAttributePredMode[a];
+                                    }
+        O3DGCSC3DMCPredictionMode & GetIntAttributePredMode(unsigned long a)
+                                    { 
+                                        assert(a < O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
+                                        return m_intAttributePredMode[a];
+                                    }
+
         void                        SetStreamType(O3DGCSC3DMCStreamType streamTypeMode)  { m_streamTypeMode = streamTypeMode;}
         void                        SetEncodeMode(O3DGCSC3DMCEncodingMode encodeMode)  { m_encodeMode = encodeMode;}
         void                        SetNFloatAttributes(unsigned long numFloatAttributes) 

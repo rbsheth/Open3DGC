@@ -393,7 +393,7 @@ namespace o3dgc
                                     unsigned long size = ftell(fin);
                                     m_stream.Allocate(size);
                                     rewind(fin);
-                                    unsigned int nread = fread((void *) m_stream.GetBuffer(), 1, size, fin);
+                                    unsigned int nread = (unsigned int) fread((void *) m_stream.GetBuffer(), 1, size, fin);
                                     m_stream.SetSize(size);
                                     if (nread != size)
                                     {

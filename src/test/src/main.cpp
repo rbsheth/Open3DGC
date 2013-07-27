@@ -81,7 +81,7 @@ bool SaveOBJ(const char * fileName,
 int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnormal, O3DGCSC3DMCStreamType streamType)
 {
     std::string folder;
-    long found = fileName.find_last_of(PATH_SEP);
+    long found = (long) fileName.find_last_of(PATH_SEP);
     if (found != -1)
     {
         folder = fileName.substr(0,found);
@@ -117,10 +117,10 @@ int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnor
     params.SetNormalQuantBits(qnormal);
     params.SetTexCoordQuantBits(qtexCoord);
 
-    ifs.SetNCoord(points.size());
-    ifs.SetNNormal(normals.size());
-    ifs.SetNTexCoord(texCoords.size());
-    ifs.SetNCoordIndex(triangles.size());
+    ifs.SetNCoord((unsigned long) points.size());
+    ifs.SetNNormal((unsigned long)normals.size());
+    ifs.SetNTexCoord((unsigned long)texCoords.size());
+    ifs.SetNCoordIndex((unsigned long)triangles.size());
 
     std::cout << "Mesh info "<< std::endl;
     std::cout << "\t# coords    " << ifs.GetNCoord() << std::endl;
@@ -142,7 +142,7 @@ int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnor
     // compute min/max
     ifs.ComputeMinMax(O3DGC_SC3DMC_MAX_ALL_DIMS); // O3DGC_SC3DMC_DIAG_BB
 
-    BinaryStream bstream(points.size()*8);
+    BinaryStream bstream((unsigned long)points.size()*8);
 
     
     SC3DMCEncoder<Index> encoder;
@@ -176,7 +176,7 @@ int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnor
 int testDecode(std::string & fileName)
 {
     std::string folder;
-    long found = fileName.find_last_of(PATH_SEP);
+    long found = (long)fileName.find_last_of(PATH_SEP);
     if (found != -1)
     {
         folder = fileName.substr(0,found);
@@ -207,7 +207,7 @@ int testDecode(std::string & fileName)
     unsigned long size = ftell(fin);
     bstream.Allocate(size);
     rewind(fin);
-    unsigned long nread = fread((void *) bstream.GetBuffer(), 1, size, fin);
+    unsigned long nread = (unsigned long)fread((void *) bstream.GetBuffer(), 1, size, fin);
     bstream.SetSize(size);
     if (nread != size)
     {
@@ -547,10 +547,10 @@ bool SaveOBJ(const char * fileName,
     fout.open(fileName);
     if (!fout.fail()) 
     {
-        const unsigned long np = points.size();
-        const unsigned long nn = normals.size();
-        const unsigned long nt = texCoords.size();
-        const unsigned long nf = triangles.size();
+        const unsigned long np = (unsigned long) points.size();
+        const unsigned long nn = (unsigned long) normals.size();
+        const unsigned long nt = (unsigned long) texCoords.size();
+        const unsigned long nf = (unsigned long) triangles.size();
 
         fout << "####" << std::endl;
         fout << "#" << std::endl;
