@@ -391,7 +391,6 @@ namespace o3dgc
         }   
         const AdjacencyInfo & v2T          = m_triangleListDecoder.GetVertexToTriangle();
         const T * const       triangles    = ifs.GetCoordIndex();
-        const Real * const originalNormals = ifs.GetNormal();
         Vec3<Real> p1, p2, p3, n0, nt;
         long a, b, c;
         for (long vm=0; vm < nvert; ++vm) 
