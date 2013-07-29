@@ -223,7 +223,7 @@ namespace o3dgc
         m_stats.m_streamSizeColor = m_iterator - m_stats.m_streamSizeColor;
 
         // decode TexCoord
-        m_stats.m_streamSizeFloatAttribute = m_iterator;
+        m_stats.m_streamSizeTexCoord = m_iterator;
         timer.Tic();
         if (ifs.GetNTexCoord() > 0)
         {
@@ -235,10 +235,10 @@ namespace o3dgc
             return ret;
         }
         timer.Toc();
-        m_stats.m_timeFloatAttribute       = timer.GetElapsedTime();
-        m_stats.m_streamSizeFloatAttribute = m_iterator - m_stats.m_streamSizeFloatAttribute;
+        m_stats.m_timeTexCoord       = timer.GetElapsedTime();
+        m_stats.m_streamSizeTexCoord = m_iterator - m_stats.m_streamSizeTexCoord;
 
-        m_stats.m_streamSizeIntAttribute = m_iterator;
+        m_stats.m_streamSizeFloatAttribute = m_iterator;
         timer.Tic();
         for(unsigned long a = 0; a < ifs.GetNumFloatAttributes(); ++a)
         {
@@ -250,8 +250,8 @@ namespace o3dgc
             return ret;
         }
         timer.Toc();
-        m_stats.m_timeIntAttribute       = timer.GetElapsedTime();
-        m_stats.m_streamSizeIntAttribute = m_iterator - m_stats.m_streamSizeIntAttribute;
+        m_stats.m_timeFloatAttribute       = timer.GetElapsedTime();
+        m_stats.m_streamSizeFloatAttribute = m_iterator - m_stats.m_streamSizeFloatAttribute;
 
         m_stats.m_streamSizeIntAttribute = m_iterator;
         timer.Tic();

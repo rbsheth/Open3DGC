@@ -44,7 +44,7 @@ namespace o3dgc
                                         m_texCoordQuantBits = 10;
                                         m_coordPredMode     = O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION;
                                         m_texCoordPredMode  = O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION;
-                                        m_normalPredMode    = O3DGC_SC3DMC_SURF_NORMALS_PREDICTION;
+                                        m_normalPredMode    = O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION; //O3DGC_SC3DMC_SURF_NORMALS_PREDICTION;
                                         m_colorPredMode     = O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION;
                                         for(unsigned long a = 0; a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES; ++a)
                                         {
