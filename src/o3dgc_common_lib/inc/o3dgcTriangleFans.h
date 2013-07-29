@@ -61,8 +61,7 @@ namespace o3dgc
                                         m_configs.Allocate(2*numVertices);
                                         m_operations.Allocate(2*numVertices);
                                         m_indices.Allocate(2*numVertices);
-                                        m_trianglesOrderNonZero.Allocate(numTriangles);
-                                        m_trianglesOrderIndex.Allocate(numTriangles);
+                                        m_trianglesOrder.Allocate(numTriangles);
                                         Clear();
                                         return O3DGC_OK;
                                     }
@@ -118,27 +117,30 @@ namespace o3dgc
                                     }
         O3DGCErrorCode              PushTriangleIndex(long index)
                                     {
-                                        
-                                        if (index == 0)
+                                        unsigned int uiValue;
+                                        if (index < 0)
                                         {
-                                            m_trianglesOrderNonZero.PushBack(0);
+                                            uiValue = (unsigned long) (-1 - (2 * index));
                                         }
                                         else
                                         {
-                                            m_trianglesOrderNonZero.PushBack(1);
-                                            m_trianglesOrderIndex.PushBack(index);
+                                            uiValue = (unsigned long) (2 * index);
                                         }
+                                        m_trianglesOrder.PushBack(uiValue);
                                         return O3DGC_OK;
                                     }
-        long                        ReadTriangleIndex(unsigned long & iteratorNZ, unsigned long & iteratorIndex) const
+        long                        ReadTriangleIndex(unsigned long & iterator) const
                                     {
-                                        assert(iteratorNZ < m_trianglesOrderNonZero.GetSize());
-                                        if (m_trianglesOrderNonZero[iteratorNZ++] == 0)
+                                        assert(iterator < m_trianglesOrder.GetSize());
+                                        unsigned int uiValue = m_trianglesOrder[iterator++];
+                                        if (uiValue & 1)
                                         {
-                                            return 0;
+                                            return -((long) ((uiValue+1) >> 1));
                                         }
-                                        assert(iteratorIndex < m_trianglesOrderIndex.GetSize());
-                                        return m_trianglesOrderIndex[iteratorIndex++];
+                                        else
+                                        {
+                                            return ((long) (uiValue >> 1));
+                                        }
                                     }
         O3DGCErrorCode              Clear()
                                     {
@@ -172,8 +174,7 @@ namespace o3dgc
         Vector<long>                m_configs;
         Vector<long>                m_operations;
         Vector<long>                m_indices;
-        Vector<long>                m_trianglesOrderNonZero;
-        Vector<long>                m_trianglesOrderIndex;
+        Vector<long>                m_trianglesOrder;
         unsigned char *             m_bufferAC;
         unsigned long               m_sizeBufferAC;
         O3DGCSC3DMCStreamType       m_streamType;

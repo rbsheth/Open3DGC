@@ -35,16 +35,18 @@ namespace o3dgc
         assert(numVertices  > 0);
         assert(numTriangles > 0);
 
-        m_numTriangles  = numTriangles;
-        m_numVertices   = numVertices;
-        m_triangles     = triangles;
-        m_vertexCount   = 0;
-        m_triangleCount = 0;
-        m_itNumTFans    = 0;
-        m_itDegree      = 0;
-        m_itConfig      = 0;
-        m_itOperation   = 0;
-        m_itIndex       = 0;
+        m_numTriangles      = numTriangles;
+        m_numVertices       = numVertices;
+        m_triangles         = triangles;
+        m_vertexCount       = 0;
+        m_triangleCount     = 0;
+        m_itNumTFans        = 0;
+        m_itDegree          = 0;
+        m_itConfig          = 0;
+        m_itOperation       = 0;
+        m_itIndex           = 0;
+        m_itTriangleIndex   = 0;
+        m_prevTriangleIndex = 0;
         
         if  (m_numVertices > m_maxNumVertices)
         {
@@ -319,7 +321,16 @@ namespace o3dgc
                 for (long k = k0+2; k < k1; k++)
                 {
                     c = m_tfans.GetVertex(k);
-                    t = m_triangleCount*3;
+                    if (m_decodeTrianglesOrder)
+                    {
+                        t = m_ctfans.ReadTriangleIndex(m_itTriangleIndex) + m_prevTriangleIndex;
+                        t *= 3;
+                        m_prevTriangleIndex = t + 1;
+                    }
+                    else
+                    {
+                        t = m_triangleCount*3;
+                    }
                  
                     m_triangles[t++] = (T) focusVertex;
                     m_triangles[t++] = (T) b;

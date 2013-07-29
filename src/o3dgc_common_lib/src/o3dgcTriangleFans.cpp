@@ -252,16 +252,7 @@ namespace o3dgc
             SaveIntData (m_indices   , bstream);
             if (encodeTrianglesOrder)
             {
-                SaveBinData (m_trianglesOrderNonZero, bstream);
-                unsigned long start = bstream.GetSize();
-                const unsigned long size = m_trianglesOrderIndex.GetSize();
-                bstream.WriteUInt32Bin(0);
-                bstream.WriteUInt32Bin(size);
-                for (unsigned long i = 0; i < size; ++i)
-                {
-                    bstream.WriteUInt32ASCII(m_trianglesOrderIndex[i] + O3DGC_MAX_LONG);
-                }
-                bstream.WriteUInt32Bin(start, bstream.GetSize() - start);
+                SaveUIntData(m_trianglesOrder, bstream);
             }
         }
         else
@@ -273,12 +264,7 @@ namespace o3dgc
             SaveIntACEGC(m_indices   , 8 , bstream);
             if (encodeTrianglesOrder)
             {
-                SaveBinAC   (m_trianglesOrderNonZero, bstream);
-                const unsigned long n = m_trianglesOrderIndex.GetSize();
-                for (unsigned long i = 0; i < n; ++i)
-                {
-                    bstream.WriteUInt32Bin(m_trianglesOrderIndex[i] + O3DGC_MAX_LONG);
-                }
+                SaveIntACEGC(m_trianglesOrder , 16, bstream);
             }
         }
 #ifdef DEBUG_VERBOSE
@@ -464,14 +450,7 @@ namespace o3dgc
             LoadIntData (m_indices   , bstream, iterator);
             if (decodeTrianglesOrder)
             {
-                LoadBinData (m_trianglesOrderNonZero, bstream, iterator);
-                bstream.ReadUInt32ASCII(iterator);
-                const unsigned long size = bstream.ReadUInt32ASCII(iterator);
-                m_trianglesOrderIndex.Clear();
-                for (unsigned long i = 0; i < size; ++i)
-                {
-                    m_trianglesOrderIndex[i] = bstream.ReadUInt32ASCII(iterator) - O3DGC_MAX_LONG;
-                }
+                LoadUIntData(m_trianglesOrder , bstream, iterator);
             }
         }
         else
@@ -483,14 +462,7 @@ namespace o3dgc
             LoadIntACEGC(m_indices   , 8 , bstream, iterator);
             if (decodeTrianglesOrder)
             {
-                LoadBinAC (m_trianglesOrderNonZero, bstream, iterator);
-                bstream.ReadUInt32Bin(iterator);
-                const unsigned long size = bstream.ReadUInt32Bin(iterator);
-                m_trianglesOrderIndex.Clear();
-                for (unsigned long i = 0; i < size; ++i)
-                {
-                    m_trianglesOrderIndex[i] = bstream.ReadUInt32Bin(iterator) - O3DGC_MAX_LONG;
-                }
+                LoadIntACEGC(m_trianglesOrder , 16, bstream, iterator);
             }
         }
 

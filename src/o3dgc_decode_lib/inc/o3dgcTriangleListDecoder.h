@@ -56,6 +56,9 @@ namespace o3dgc
                                         m_itConfig               = 0;
                                         m_itOperation            = 0;
                                         m_itIndex                = 0;
+                                        m_itTriangleIndex        = 0;
+                                        m_decodeTrianglesOrder   = false;
+                                        m_prevTriangleIndex      = 0;
                                     };
         //! Destructor.
                                     ~TriangleListDecoder(void){};
@@ -70,10 +73,10 @@ namespace o3dgc
                                            unsigned long & iterator)
                                     {
                                         unsigned char compressionMask = bstream.ReadUChar(iterator, m_streamType); // vertex/triangles orders not preserved
-                                        bool encodeTrianglesOrder = ( (compressionMask&2) == 1);
+                                        m_decodeTrianglesOrder = ( (compressionMask&2) == 1);
                                         unsigned long maxSizeV2T = bstream.ReadUInt32(iterator, m_streamType);
                                         Init(triangles, numTriangles, numVertices, maxSizeV2T);
-                                        m_ctfans.Load(bstream, iterator, encodeTrianglesOrder, m_streamType);
+                                        m_ctfans.Load(bstream, iterator, m_decodeTrianglesOrder, m_streamType);
                                         Decompress();
                                         return O3DGC_OK;
                                     }
@@ -92,13 +95,15 @@ namespace o3dgc
         unsigned long               m_itConfig;
         unsigned long               m_itOperation;
         unsigned long               m_itIndex;
+        unsigned long               m_itTriangleIndex;
         long                        m_maxNumVertices;
         long                        m_maxNumTriangles;
         long                        m_numTriangles;
         long                        m_numVertices;
         T *                         m_triangles;
-        long                        m_vertexCount;    
+        long                        m_vertexCount;
         long                        m_triangleCount;
+        long                        m_prevTriangleIndex;
         long                        m_numConqueredTriangles;
         long                        m_numVisitedVertices;
         long *                      m_visitedVertices;
@@ -107,6 +112,7 @@ namespace o3dgc
         CompressedTriangleFans      m_ctfans;
         TriangleFans                m_tfans;
         O3DGCSC3DMCStreamType       m_streamType;
+        bool                        m_decodeTrianglesOrder;
     };
 }
 #include "o3dgcTriangleListDecoder.inl"    // template implementation
