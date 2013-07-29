@@ -143,6 +143,7 @@ namespace o3dgc
                                         m_timeCoordIndex           = 0.0;
                                         m_timeFloatAttribute       = 0.0;
                                         m_timeIntAttribute         = 0.0;
+                                        m_timeReorder              = 0.0;
                                         m_streamSizeCoord          = 0;
                                         m_streamSizeNormal         = 0;
                                         m_streamSizeTexCoord       = 0;
@@ -160,6 +161,7 @@ namespace o3dgc
         double                      m_timeCoordIndex;
         double                      m_timeFloatAttribute;
         double                      m_timeIntAttribute;
+        double                      m_timeReorder;
 
         unsigned long               m_streamSizeCoord;
         unsigned long               m_streamSizeNormal;

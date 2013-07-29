@@ -267,6 +267,12 @@ namespace o3dgc
         m_stats.m_timeIntAttribute       = timer.GetElapsedTime();
         m_stats.m_streamSizeIntAttribute = m_iterator - m_stats.m_streamSizeIntAttribute;
 
+
+        timer.Tic();
+        m_triangleListDecoder.Reorder();
+        timer.Toc();
+        m_stats.m_timeReorder       = timer.GetElapsedTime();
+
 #ifdef DEBUG_VERBOSE
         fclose(g_fileDebugSC3DMCDec);
 #endif //DEBUG_VERBOSE

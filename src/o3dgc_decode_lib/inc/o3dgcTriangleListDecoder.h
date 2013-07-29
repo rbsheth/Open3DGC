@@ -56,12 +56,15 @@ namespace o3dgc
                                         m_itConfig               = 0;
                                         m_itOperation            = 0;
                                         m_itIndex                = 0;
-                                        m_itTriangleIndex        = 0;
+                                        m_tempTriangles          = 0;
+                                        m_tempTrianglesSize      = 0;
                                         m_decodeTrianglesOrder   = false;
-                                        m_prevTriangleIndex      = 0;
                                     };
         //! Destructor.
-                                    ~TriangleListDecoder(void){};
+                                    ~TriangleListDecoder(void)
+                                    {
+                                        delete [] m_tempTriangles;
+                                    };
 
         O3DGCSC3DMCStreamType       GetStreamType() const { return m_streamType; }
         void                        SetStreamType(O3DGCSC3DMCStreamType streamType) { m_streamType = streamType; }
@@ -73,13 +76,14 @@ namespace o3dgc
                                            unsigned long & iterator)
                                     {
                                         unsigned char compressionMask = bstream.ReadUChar(iterator, m_streamType); // vertex/triangles orders not preserved
-                                        m_decodeTrianglesOrder = ( (compressionMask&2) == 1);
+                                        m_decodeTrianglesOrder = ( (compressionMask&2) != 0);
                                         unsigned long maxSizeV2T = bstream.ReadUInt32(iterator, m_streamType);
                                         Init(triangles, numTriangles, numVertices, maxSizeV2T);
                                         m_ctfans.Load(bstream, iterator, m_decodeTrianglesOrder, m_streamType);
                                         Decompress();
                                         return O3DGC_OK;
                                     }
+        O3DGCErrorCode              Reorder();
 
         private:
         O3DGCErrorCode              Init(T * const triangles, 
@@ -95,15 +99,15 @@ namespace o3dgc
         unsigned long               m_itConfig;
         unsigned long               m_itOperation;
         unsigned long               m_itIndex;
-        unsigned long               m_itTriangleIndex;
         long                        m_maxNumVertices;
         long                        m_maxNumTriangles;
         long                        m_numTriangles;
         long                        m_numVertices;
+        long                        m_tempTrianglesSize;
         T *                         m_triangles;
+        T *                         m_tempTriangles;
         long                        m_vertexCount;
         long                        m_triangleCount;
-        long                        m_prevTriangleIndex;
         long                        m_numConqueredTriangles;
         long                        m_numVisitedVertices;
         long *                      m_visitedVertices;
