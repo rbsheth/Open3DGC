@@ -178,7 +178,7 @@ namespace o3dgc
                                                             const unsigned long M,
                                                             BinaryStream & bstream) 
     {
-        unsigned long start = bstream.GetSize();     
+        unsigned long start = bstream.GetSize();
         const unsigned int NMAX = data.GetSize() * 8 + 100;
         const unsigned long size       = data.GetSize();
         long minValue = 0;
@@ -237,7 +237,7 @@ namespace o3dgc
         bstream.WriteUInt32Bin(start, bstream.GetSize() - start);
         return O3DGC_OK;
     }
-    O3DGCErrorCode    CompressedTriangleFans::Save(BinaryStream & bstream, O3DGCSC3DMCStreamType streamType) 
+    O3DGCErrorCode    CompressedTriangleFans::Save(BinaryStream & bstream, bool encodeTrianglesOrder, O3DGCSC3DMCStreamType streamType) 
     {
 #ifdef DEBUG_VERBOSE
         g_fileDebugTF = fopen("SaveIntACEGC_new.txt", "w");
@@ -250,6 +250,19 @@ namespace o3dgc
             SaveUIntData(m_configs   , bstream);
             SaveBinData (m_operations, bstream);
             SaveIntData (m_indices   , bstream);
+            if (encodeTrianglesOrder)
+            {
+                SaveBinData (m_trianglesOrderNonZero, bstream);
+                unsigned long start = bstream.GetSize();
+                const unsigned long size = m_trianglesOrderIndex.GetSize();
+                bstream.WriteUInt32Bin(0);
+                bstream.WriteUInt32Bin(size);
+                for (unsigned long i = 0; i < size; ++i)
+                {
+                    bstream.WriteUInt32ASCII(m_trianglesOrderIndex[i] + O3DGC_MAX_LONG);
+                }
+                bstream.WriteUInt32Bin(start, bstream.GetSize() - start);
+            }
         }
         else
         {
@@ -258,6 +271,15 @@ namespace o3dgc
             SaveUIntAC  (m_configs   , 10, bstream);
             SaveBinAC   (m_operations,     bstream);
             SaveIntACEGC(m_indices   , 8 , bstream);
+            if (encodeTrianglesOrder)
+            {
+                SaveBinAC   (m_trianglesOrderNonZero, bstream);
+                const unsigned long n = m_trianglesOrderIndex.GetSize();
+                for (unsigned long i = 0; i < n; ++i)
+                {
+                    bstream.WriteUInt32Bin(m_trianglesOrderIndex[i] + O3DGC_MAX_LONG);
+                }
+            }
         }
 #ifdef DEBUG_VERBOSE
         fclose(g_fileDebugTF);
@@ -425,8 +447,9 @@ namespace o3dgc
         }
         return O3DGC_OK;
     }
-    O3DGCErrorCode    CompressedTriangleFans::Load(const BinaryStream & bstream, 
+    O3DGCErrorCode    CompressedTriangleFans::Load(const BinaryStream & bstream,
                                                    unsigned long & iterator, 
+                                                   bool decodeTrianglesOrder,
                                                    O3DGCSC3DMCStreamType streamType) 
     {
 #ifdef DEBUG_VERBOSE
@@ -439,6 +462,17 @@ namespace o3dgc
             LoadUIntData(m_configs   , bstream, iterator);
             LoadBinData (m_operations, bstream, iterator);
             LoadIntData (m_indices   , bstream, iterator);
+            if (decodeTrianglesOrder)
+            {
+                LoadBinData (m_trianglesOrderNonZero, bstream, iterator);
+                bstream.ReadUInt32ASCII(iterator);
+                const unsigned long size = bstream.ReadUInt32ASCII(iterator);
+                m_trianglesOrderIndex.Clear();
+                for (unsigned long i = 0; i < size; ++i)
+                {
+                    m_trianglesOrderIndex[i] = bstream.ReadUInt32ASCII(iterator) - O3DGC_MAX_LONG;
+                }
+            }
         }
         else
         {
@@ -447,6 +481,17 @@ namespace o3dgc
             LoadUIntAC  (m_configs   , 10, bstream, iterator);
             LoadBinAC   (m_operations,     bstream, iterator);
             LoadIntACEGC(m_indices   , 8 , bstream, iterator);
+            if (decodeTrianglesOrder)
+            {
+                LoadBinAC (m_trianglesOrderNonZero, bstream, iterator);
+                bstream.ReadUInt32Bin(iterator);
+                const unsigned long size = bstream.ReadUInt32Bin(iterator);
+                m_trianglesOrderIndex.Clear();
+                for (unsigned long i = 0; i < size; ++i)
+                {
+                    m_trianglesOrderIndex[i] = bstream.ReadUInt32Bin(iterator) - O3DGC_MAX_LONG;
+                }
+            }
         }
 
 #ifdef DEBUG_VERBOSE

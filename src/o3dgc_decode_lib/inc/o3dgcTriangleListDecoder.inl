@@ -56,7 +56,7 @@ namespace o3dgc
         }
         
         m_ctfans.SetStreamType(m_streamType);
-        m_ctfans.Allocate(m_numVertices);
+        m_ctfans.Allocate(m_numVertices, m_numTriangles);
         m_tfans.Allocate(2 * m_numVertices, 8 * m_numVertices);
 
          // compute vertex-to-triangle adjacency information

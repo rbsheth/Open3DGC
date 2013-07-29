@@ -740,7 +740,7 @@ namespace o3dgc
         m_stats.m_streamSizeCoordIndex = bstream.GetSize();
         Timer timer;
         timer.Tic();
-        m_triangleListEncoder.Encode(ifs.GetCoordIndex(), ifs.GetNCoordIndex(), ifs.GetNCoord(), bstream);
+        m_triangleListEncoder.Encode(ifs.GetCoordIndex(), ifs.GetMatID(), ifs.GetNCoordIndex(), ifs.GetNCoord(), bstream);
         timer.Toc();
         m_stats.m_timeCoordIndex       = timer.GetElapsedTime();
         m_stats.m_streamSizeCoordIndex = bstream.GetSize() - m_stats.m_streamSizeCoordIndex;

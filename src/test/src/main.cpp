@@ -64,18 +64,18 @@ class IVec3Cmp
       }
 };
 
-
-
 bool LoadOBJ(const std::string & fileName, 
-             std::vector< Vec3<Real> > & points,
-             std::vector< Vec2<Real> > & texCoords,
-             std::vector< Vec3<Real> > & normals,
-             std::vector< Vec3<Index> > & triangles);
+             std::vector< Vec3<Real> >      & points,
+             std::vector< Vec2<Real> >      & texCoords,
+             std::vector< Vec3<Real> >      & normals,
+             std::vector< Vec3<Index> >     & triangles,
+             std::vector< Index >           & matIDs,
+             std::map< std::string, Index > & materials);
 
 bool SaveOBJ(const char * fileName, 
-             const std::vector< Vec3<Real> > & points,
-             const std::vector< Vec2<Real> > & texCoords,
-             const std::vector< Vec3<Real> > & normals,
+             const std::vector< Vec3<Real> >  & points,
+             const std::vector< Vec2<Real> >  & texCoords,
+             const std::vector< Vec3<Real> >  & normals,
              const std::vector< Vec3<Index> > & triangles);
 
 int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnormal, O3DGCSC3DMCStreamType streamType)
@@ -96,8 +96,10 @@ int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnor
     std::vector< Vec3<Real> > normals;
     std::vector< Vec2<Real> > texCoords;
     std::vector< Vec3<Index> > triangles;
+    std::vector< Index > matIDs;
+    std::map< std::string, Index > materials;
     std::cout << "Loading " << fileName << " ..." << std::endl;
-    bool ret = LoadOBJ(fileName, points, texCoords, normals, triangles);
+    bool ret = LoadOBJ(fileName, points, texCoords, normals, triangles, matIDs, materials);
     if (!ret)
     {
         std::cout << "Error: LoadOBJ()\n" << std::endl;
@@ -130,6 +132,10 @@ int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnor
 
     ifs.SetCoord((Real * const) & (points[0]));
     ifs.SetCoordIndex((Index * const ) &(triangles[0]));
+    if (materials.size() > 1)
+    {
+        ifs.SetMatID((Index * const ) &(matIDs[0]));
+    }
     if (normals.size() > 0)
     {
         ifs.SetNormal((Real * const) & (normals[0]));
@@ -394,7 +400,9 @@ bool LoadOBJ(const std::string & fileName,
              std::vector< Vec3<Real> > & upoints,
              std::vector< Vec2<Real> > & utexCoords,
              std::vector< Vec3<Real> > & unormals,
-             std::vector< Vec3<Index> > & triangles) 
+             std::vector< Vec3<Index> > & triangles,
+             std::vector< Index > & matIDs,
+             std::map< std::string, Index > & materials) 
 {   
     const char ObjDelimiters[]=" /";
     const unsigned long BufferSize = 1024;
@@ -407,6 +415,8 @@ bool LoadOBJ(const std::string & fileName,
         Index ip[3] = {(Index)(-1), (Index)(-1), (Index)(-1)};
         Index in[3] = {(Index)(-1), (Index)(-1), (Index)(-1)};
         Index it[3] = {(Index)(-1), (Index)(-1), (Index)(-1)};
+        Index matID = 0;
+        Index numMatID = 0;
         char * pch;
         char * str;
         Index nv = 0;
@@ -416,11 +426,34 @@ bool LoadOBJ(const std::string & fileName,
         std::vector< Vec2<Real> > texCoords;
         std::vector< Vec3<Real> > normals;
         std::map< Vec3<Index>, Index, IVec3Cmp > vertices;
-
+        matIDs.clear();
+        materials.clear();
         while (!feof(fid)) 
         {
-            fgets(buffer, BufferSize, fid);
-            if (buffer[0] == 'v')
+            if (!fgets(buffer, BufferSize, fid))
+            {
+                break;
+            }
+            if (buffer[0] == 'u')
+            {
+                str = buffer;
+                pch = strtok (str, ObjDelimiters);
+                if ( !strcmp(pch, "usemtl") )
+                {
+                    pch = strtok (NULL, ObjDelimiters);
+                    std::map< std::string, Index >::iterator it = materials.find(pch);
+                    if ( it == materials.end() )
+                    {
+                        matID          = numMatID++;
+                        materials[pch] = matID;
+                    }
+                    else
+                    {
+                        matID = it->second;
+                    }
+                }
+            }
+            else if (buffer[0] == 'v')
             {
                 if (buffer[1] == ' ')
                 {                    
@@ -429,7 +462,10 @@ bool LoadOBJ(const std::string & fileName,
                     {
                         pch = strtok (str, ObjDelimiters);
                         if (pch) x[k] = (Real) atof(pch);
-                        else      return false;
+                        else
+                        {
+                            return false;
+                        }
                         str = NULL;
                     }
                     points.push_back( Vec3<Real>(x[0], x[1], x[2]) );
@@ -441,7 +477,10 @@ bool LoadOBJ(const std::string & fileName,
                     {
                         pch = strtok (str, ObjDelimiters);
                         if (pch) x[k] = (Real) atof(pch);
-                        else      return false;
+                        else
+                        {
+                            return false;
+                        }
                         str = NULL;
                     }
                     normals.push_back( Vec3<Real>(x[0], x[1], x[2]) );
@@ -453,32 +492,45 @@ bool LoadOBJ(const std::string & fileName,
                     {
                         pch = strtok (str, ObjDelimiters);
                         if (pch) x[k] = (Real) atof(pch);
-                        else      return false;
+                        else
+                        {
+                            return false;
+                        }
                         str = NULL;
                     }                  
                     texCoords.push_back( Vec2<Real>(x[0], x[1]) );
                 }
             }
             else if (buffer[0] == 'f')
-            {                
+            {
+
                 str = buffer+2;
                 for(int k = 0; k < 3; ++k)
                 {
                     pch = strtok (str, ObjDelimiters);
                     if (pch) ip[k] = atoi(pch) - 1;
-                    else      return false;
+                        else
+                        {
+                            return false;
+                        }
                     str = NULL;
                     if (texCoords.size() > 0)
                     {
                         pch = strtok (NULL, ObjDelimiters);
                         if (pch)  it[k] = atoi(pch) - 1;
-                        else return false;
+                        else
+                        {
+                            return false;
+                        }
                     }
                     if (normals.size() > 0)
                     {
                         pch = strtok (NULL, ObjDelimiters);
                         if (pch)  in[k] = atoi(pch) - 1;
-                        else      return false;
+                        else
+                        {
+                            return false;
+                        }
                     }
                 }
                 for(int k = 0; k < 3; ++k)
@@ -499,6 +551,7 @@ bool LoadOBJ(const std::string & fileName,
                     }
                 }                
                 triangles.push_back(triangle);
+                matIDs.push_back(matID);
             }
         }
         if (points.size() > 0)

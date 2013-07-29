@@ -171,7 +171,9 @@ namespace o3dgc
         m_ttags                   = 0;
         m_tmap                    = 0;
         m_vmap                    = 0;
+        m_count                   = 0;
         m_invVMap                 = 0;
+        m_invTMap                 = 0;
         m_nonConqueredTriangles   = 0;
         m_nonConqueredEdges       = 0;
         m_visitedVertices         = 0;
@@ -184,7 +186,7 @@ namespace o3dgc
         m_numVertices             = 0;
         m_triangles               = 0;
         m_maxSizeVertexToTriangle = 0;
-        m_streamType            = O3DGC_SC3DMC_STREAM_TYPE_UNKOWN;
+        m_streamType              = O3DGC_SC3DMC_STREAM_TYPE_UNKOWN;
     }
     template <class T>
     TriangleListEncoder<T>::~TriangleListEncoder()
@@ -192,10 +194,12 @@ namespace o3dgc
         delete [] m_vtags;
         delete [] m_vmap;
         delete [] m_invVMap;
+        delete [] m_invTMap;
         delete [] m_visitedVerticesValence;
         delete [] m_visitedVertices;
         delete [] m_ttags;
         delete [] m_tmap;
+        delete [] m_count;
         delete [] m_nonConqueredTriangles;
         delete [] m_nonConqueredEdges;
     }
@@ -232,11 +236,15 @@ namespace o3dgc
         {
             delete [] m_ttags;
             delete [] m_tmap;
+            delete [] m_invTMap;
             delete [] m_nonConqueredTriangles;
             delete [] m_nonConqueredEdges;
+            delete [] m_count;
             m_maxNumTriangles       = m_numTriangles;
             m_ttags                 = new long [m_numTriangles];
             m_tmap                  = new long [m_numTriangles];
+            m_invTMap               = new long [m_numTriangles];
+            m_count                 = new long [m_numTriangles+1];
             m_nonConqueredTriangles = new long [m_numTriangles];
             m_nonConqueredEdges     = new long [2*m_numTriangles];
         }
@@ -246,10 +254,12 @@ namespace o3dgc
         memset(m_invVMap, 0xFF, sizeof(long) * m_numVertices );
         memset(m_ttags  , 0x00, sizeof(long) * m_numTriangles);
         memset(m_tmap   , 0xFF, sizeof(long) * m_numTriangles);
+        memset(m_invTMap, 0xFF, sizeof(long) * m_numTriangles);
+        memset(m_count  , 0x00, sizeof(long) * (m_numTriangles+1));
 
         m_vfifo.Allocate(m_numVertices);
         m_ctfans.SetStreamType(m_streamType);
-        m_ctfans.Allocate(m_numVertices);
+        m_ctfans.Allocate(m_numVertices, m_numTriangles);
 
         // compute vertex-to-triangle adjacency information
         m_vertexToTriangle.AllocateNumNeighborsArray(numVertices);
@@ -281,15 +291,38 @@ namespace o3dgc
     }
     template <class T>
     O3DGCErrorCode TriangleListEncoder<T>::Encode(const T * const triangles, 
-                                               const long numTriangles,
-                                               const long numVertices, 
-                                               BinaryStream & bstream)
+                                                  const T * const matIDs,
+                                                  const long numTriangles,
+                                                  const long numVertices, 
+                                                  BinaryStream & bstream)
     {
         assert(numVertices > 0);
         assert(numTriangles > 0);
         
         Init(triangles, numTriangles, numVertices);
-        bstream.WriteUChar(0, m_streamType); // vertex/triangles orders not preserved
+        unsigned char mask = 0;
+        bool encodeTrianglesOrder = (matIDs != 0);
+
+        
+        if (encodeTrianglesOrder)
+        {
+            long numMatIDs = 0;
+            for (long t = 0; t < numTriangles; t++)
+            {
+                if (numMatIDs <= (long) matIDs[t])
+                {
+                    ++numMatIDs;
+                    assert(numMatIDs <= numTriangles);
+                }
+                ++m_count[matIDs[t]+1];
+            }
+            for (long i = 2; i <= numMatIDs; i++)
+            {
+                m_count[i] += m_count[i-1];
+            }
+            mask += 2; // preserved triangles order
+        }
+        bstream.WriteUChar(mask, m_streamType); 
         bstream.WriteUInt32(m_maxSizeVertexToTriangle, m_streamType);
 
         long v0;
@@ -308,7 +341,24 @@ namespace o3dgc
                 }
             }
         }
-        m_ctfans.Save(bstream, m_streamType);
+        if (encodeTrianglesOrder)
+        {
+            long t, prev = 0;
+            long pred;
+            for (long i = 0; i < numTriangles; ++i)
+            {
+                t = m_invTMap[i];
+                m_tmap[t] = m_count[ matIDs[t] ]++;
+                pred = m_tmap[t] - prev;
+                m_ctfans.PushTriangleIndex(pred);
+                prev = m_tmap[t] + 1;
+            }
+            for (long t = 0; t < numTriangles; ++t)
+            {
+                m_invTMap[m_tmap[t]] = t;
+            }
+        }
+        m_ctfans.Save(bstream, encodeTrianglesOrder, m_streamType);
         return O3DGC_OK;
     }
     template <class T>
@@ -481,11 +531,12 @@ namespace o3dgc
             m_tfans.AddVertex( focusVertex );
             m_tfans.AddVertex( m_nonConqueredEdges[indexSeedTriangle*2] );
             m_tfans.AddVertex( m_nonConqueredEdges[indexSeedTriangle*2 + 1] );
-            m_ttags[ seedTriangle ] = 1; // mark triangle as processed
-            m_tmap[seedTriangle]    = m_triangleCount++;    
+            m_ttags[ seedTriangle ]         = 1; // mark triangle as processed
+            m_tmap[seedTriangle]            = m_triangleCount++;
+            m_invTMap[m_tmap[seedTriangle]] = seedTriangle;
             ++processedTriangles;
-            currentIndex            = indexSeedTriangle;
-            currentTriangle         = seedTriangle;
+            currentIndex                    = indexSeedTriangle;
+            currentTriangle                 = seedTriangle;
             do
             {
                 // find next triangle            
@@ -500,9 +551,10 @@ namespace o3dgc
                     {
                         currentIndex = index;
                         m_tfans.AddVertex( m_nonConqueredEdges[currentIndex*2+1] );
-                        m_ttags[currentTriangle] = 1; // mark triangle as processed
-                        m_tmap [currentTriangle] = m_triangleCount++;                            
-                        ++processedTriangles;                        
+                        m_ttags[currentTriangle]            = 1; // mark triangle as processed
+                        m_tmap [currentTriangle]            = m_triangleCount++;
+                        m_invTMap[m_tmap [currentTriangle]] = currentTriangle;
+                        ++processedTriangles;
                         break;
                     }
                 }

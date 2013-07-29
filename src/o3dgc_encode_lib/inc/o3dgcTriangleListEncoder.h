@@ -43,13 +43,15 @@ namespace o3dgc
         //! Destructor.
                                     ~TriangleListEncoder(void);
         //! 
-        O3DGCErrorCode              Encode(const T * const triangles, 
+        O3DGCErrorCode              Encode(const T * const triangles,
+                                           const T * const matIDs,
                                            const long numTriangles,
                                            const long numVertices,
                                            BinaryStream & bstream);
         O3DGCSC3DMCStreamType       GetStreamType() const { return m_streamType; }
         void                        SetStreamType(O3DGCSC3DMCStreamType streamType) { m_streamType = streamType; }
         const long * const          GetInvVMap() const { return m_invVMap;}
+        const long * const          GetInvTMap() const { return m_invTMap;}        
         const long * const          GetVMap()    const { return m_vmap;}
         const long * const          GetTMap()    const { return m_tmap;}
         const AdjacencyInfo &       GetVertexToTriangle() const { return m_vertexToTriangle;}
@@ -79,6 +81,8 @@ namespace o3dgc
         long *                      m_vmap;
         long *                      m_invVMap;
         long *                      m_tmap;
+        long *                      m_invTMap;
+        long *                      m_count;
         long *                      m_nonConqueredTriangles;
         long *                      m_nonConqueredEdges;
         long *                      m_visitedVertices;
