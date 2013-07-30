@@ -290,15 +290,7 @@ namespace o3dgc
         {
             uiValue += acd.ExpGolombDecode(exp_k, bModel0, bModel1);
         }
-
-        if (uiValue & 1)
-        {
-            return - ((long)((uiValue+1) >> 1));
-        }
-        else
-        {
-            return  (long)(uiValue >> 1);
-        }
+        return UIntToInt(uiValue);
     }
     inline unsigned long DecodeUIntACEGC(Arithmetic_Codec & acd,
                                          Adaptive_Data_Model & mModelValues,

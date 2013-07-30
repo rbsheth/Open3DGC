@@ -98,7 +98,7 @@ namespace o3dgc
         SC3DMCPredictor             m_neighbors  [O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS];
         unsigned long               m_freqSymbols[O3DGC_SC3DMC_MAX_PREDICTION_SYMBOLS];
         unsigned long               m_freqPreds  [O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS];
-        Vector<unsigned char>       m_predictors;
+        Vector<long>                m_predictors;
         Real *                      m_normals;
         unsigned long               m_normalsSize;
         SC3DMCStats                 m_stats;

@@ -239,6 +239,140 @@ namespace o3dgc
         }
         return pos;
     }
+    inline void SphereToCube(const Real x, const Real y, const Real z, 
+                             Real & a, Real & b, long & index)
+    {
+        Real ax = fabs(x);
+        Real ay = fabs(y);
+        Real az = fabs(z);
+        if (az >= ax && az >= ay)
+        {
+            if (z >= 0.0)
+            {
+                index = 0;
+                a = x;
+                b = y;
+            }
+            else
+            {
+                index = 1;
+                a = -x;
+                b = -y;
+            }
+        }
+        else if (ay >= ax && ay >= az)
+        {
+            if (y >= 0.0)
+            {
+                index = 2;
+                a = z;
+                b = x;
+            }
+            else
+            {
+                index = 3;
+                a = -z;
+                b = -x;
+            }
+        }
+        else if (ax >= ay && ax >= az)
+        {
+            if (x >= 0.0)
+            {
+                index = 4;
+                a = y;
+                b = z;
+            }
+            else
+            {
+                index = 5;
+                a = -y;
+                b = -z;
+            }
+        }
+    }
+/*
+    inline void SphereToCube(const Real x, const Real y, const Real z, 
+                             Real & a, Real & b, long & index)
+    {
+        Real ax = fabs(x);
+        Real ay = fabs(y);
+        Real az = fabs(z);
+        if (az >= ax && az >= ay)
+        {
+            if (z >= 0.0) index = 0;
+            else          index = 4;
+            if (x < 0.0)  index += 1;
+            if (y < 0.0)  index += 2;
+            a = ax;
+            b = ay;
+        }
+        else if (ay >= ax && ay >= az)
+        {
+            if (y >= 0.0) index = 8;
+            else          index = 12;
+            if (x < 0.0)  index += 1;
+            if (z < 0.0)  index += 2;
+            a = ax;
+            b = az;
+        }
+        else if (ax >= ay && ax >= az)
+        {
+            if (x >= 0.0) index = 16;
+            else          index = 20;
+            if (y < 0.0)  index += 1;
+            if (z < 0.0)  index += 2;
+            a = ay;
+            b = az;
+        }
+    }
+*/
+    inline void CubeToSphere(const Real a, const Real b, const long index,
+                             Real & x, Real & y, Real & z)
+    {
+        const Real sign[2] = {1.0, -1.0};
+        switch( index >> 2 )
+        {
+        case 0:
+            x = a * sign[index&1];
+            y = b * sign[index&2];
+            z = (Real) sqrt(1.0 - x*x+y*y);
+            break;
+        case 1:
+            x = a * sign[index&1];
+            y = b * sign[index&2];
+            z = (Real) -sqrt(1.0 - x*x+y*y);
+            break;
+        case 2:
+            x = a * sign[index&1];
+            z = b * sign[index&2];
+            y = (Real) sqrt(1.0 - x*x+z*z);
+            break;
+        case 3:
+            x = a * sign[index&1];
+            z = b * sign[index&2];
+            y = (Real) -sqrt(1.0 - x*x+z*z);
+            break;
+        case 4:
+            y = a * sign[index&1];
+            z = b * sign[index&2];
+            x = (Real) sqrt(1.0 - y*y+z*z);
+            break;
+        case 5:
+            y = a * sign[index&1];
+            z = b * sign[index&2];
+            x = (Real) -sqrt(1.0 - y*y+z*z);
+            break;
+        }
+    }
+    inline unsigned long IntToUInt(long value)
+    {
+        return (value < 0)?(unsigned long) (-1 - (2 * value)):(unsigned long) (2 * value);
+    }
+    inline long UIntToInt(unsigned long uiValue)
+    {
+        return (uiValue & 1)?-((long) ((uiValue+1) >> 1)):((long) (uiValue >> 1));
+    }
 }
 #endif // O3DGC_COMMON_H
 

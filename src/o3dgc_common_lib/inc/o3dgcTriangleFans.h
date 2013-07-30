@@ -117,30 +117,13 @@ namespace o3dgc
                                     }
         O3DGCErrorCode              PushTriangleIndex(long index)
                                     {
-                                        unsigned int uiValue;
-                                        if (index < 0)
-                                        {
-                                            uiValue = (unsigned long) (-1 - (2 * index));
-                                        }
-                                        else
-                                        {
-                                            uiValue = (unsigned long) (2 * index);
-                                        }
-                                        m_trianglesOrder.PushBack(uiValue);
+                                        m_trianglesOrder.PushBack(IntToUInt(index));
                                         return O3DGC_OK;
                                     }
         long                        ReadTriangleIndex(unsigned long & iterator) const
                                     {
                                         assert(iterator < m_trianglesOrder.GetSize());
-                                        unsigned int uiValue = m_trianglesOrder[iterator++];
-                                        if (uiValue & 1)
-                                        {
-                                            return -((long) ((uiValue+1) >> 1));
-                                        }
-                                        else
-                                        {
-                                            return ((long) (uiValue >> 1));
-                                        }
+                                        return UIntToInt(m_trianglesOrder[iterator++]);
                                     }
         O3DGCErrorCode              Clear()
                                     {

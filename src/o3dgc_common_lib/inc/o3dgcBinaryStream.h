@@ -259,7 +259,6 @@ namespace o3dgc
                                     return m_stream[position++];
                                 }
 
-
         void                    WriteFloat32ASCII(float value) 
                                 {
                                     unsigned long uiValue = *((unsigned long *)(&value));
@@ -285,16 +284,7 @@ namespace o3dgc
                                 }
         void                    WriteIntASCII(long value) 
                                 {
-                                    unsigned int uiValue;
-                                    if (value < 0)
-                                    {
-                                        uiValue = (unsigned long) (-1 - (2 * value));
-                                    }
-                                    else
-                                    {
-                                        uiValue = (unsigned long) (2 * value);
-                                    }
-                                    WriteUIntASCII(uiValue);
+                                    WriteUIntASCII(IntToUInt(value));
                                 }
         void                    WriteUIntASCII(unsigned long value) 
                                 {
@@ -341,15 +331,7 @@ namespace o3dgc
                                 }
         long                    ReadIntASCII(unsigned long & position) const
                                 {
-                                    unsigned long uiValue = ReadUIntASCII(position);
-                                    if (uiValue & 1)
-                                    {
-                                        return -((long) ((uiValue+1) >> 1));
-                                    }
-                                    else
-                                    {
-                                        return ((long) (uiValue >> 1));
-                                    }
+                                    return UIntToInt(ReadUIntASCII(position));
                                 }
         unsigned long           ReadUIntASCII(unsigned long & position) const
                                 {
@@ -409,7 +391,7 @@ namespace o3dgc
                                     m_stream.SetSize(bufferSize);
                                     return O3DGC_OK;
                                 }
-        unsigned long                  GetSize() const
+        unsigned long           GetSize() const
                                 {
                                     return m_stream.GetSize();
                                 }
