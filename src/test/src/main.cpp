@@ -372,7 +372,7 @@ int main(int argc, char * argv[])
     std::string inputFileName;
     int qcoord    = 12;
     int qtexCoord = 10;
-    int qnormal   = 10;
+    int qnormal   = 8;
     O3DGCSC3DMCStreamType streamType = O3DGC_SC3DMC_STREAM_TYPE_BINARY;
     for(int i = 1; i < argc; ++i)
     {

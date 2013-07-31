@@ -38,8 +38,8 @@ namespace o3dgc
                                         memset(this, 0, sizeof(SC3DMCEncodeParams));
                                         m_encodeMode        = O3DGC_SC3DMC_TFAN;
                                         m_streamTypeMode    = O3DGC_SC3DMC_STREAM_TYPE_ASCII;
-                                        m_coordQuantBits    = 12;
-                                        m_normalQuantBits   = 10;
+                                        m_coordQuantBits    = 14;
+                                        m_normalQuantBits   = 8;
                                         m_colorQuantBits    = 10;
                                         m_texCoordQuantBits = 10;
                                         m_coordPredMode     = O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION;
