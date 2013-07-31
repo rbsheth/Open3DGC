@@ -72,6 +72,7 @@ namespace o3dgc
         O3DGCErrorCode              EncodeFloatArray(const Real * const floatArray, 
                                                      unsigned long numfloatArray,
                                                      unsigned long dimfloatArray,
+                                                     unsigned long stride,
                                                      const Real * const minfloatArray,
                                                      const Real * const maxfloatArray,
                                                      unsigned long nQBits,
@@ -81,12 +82,14 @@ namespace o3dgc
         O3DGCErrorCode              QuantizeFloatArray(const Real * const floatArray, 
                                                        unsigned long numFloatArray,
                                                        unsigned long dimFloatArray,
+                                                       unsigned long stride,
                                                        const Real * const minfloatArray,
                                                        const Real * const maxfloatArray,
                                                        unsigned long nQBits);
         O3DGCErrorCode              EncodeIntArray(const long * const intArray, 
                                                    unsigned long numIntArray,
                                                    unsigned long dimIntArray,
+                                                   unsigned long stride,
                                                    O3DGCSC3DMCPredictionMode predMode,
                                                    BinaryStream & bstream);
         O3DGCErrorCode              ProcessNormals(const IndexedFaceSet<T> & ifs);

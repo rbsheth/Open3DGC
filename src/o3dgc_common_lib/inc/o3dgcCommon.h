@@ -246,7 +246,7 @@ namespace o3dgc
     }
     template <class T> 
     inline void SphereToCube(const T x, const T y, const T z, 
-                             T & a, T & b, long & index)
+                             T & a, T & b, char & index)
     {
         T ax = absolute(x);
         T ay = absolute(y);
@@ -297,6 +297,44 @@ namespace o3dgc
             }
         }
     }
+    inline void CubeToSphere(const Real a, const Real b, const char index,
+                             Real & x, Real & y, Real & z)
+    {
+        switch( index )
+        {
+        case 0:
+            x = a;
+            y = b;
+            z =  (Real) sqrt(max(0.0, 1.0 - x*x-y*y));
+            break;
+        case 1:
+            x = -a;
+            y = -b;
+            z = -(Real) sqrt(max(0.0, 1.0 - x*x-y*y));
+            break;
+        case 2:
+            z = a;
+            x = b;
+            y =  (Real) sqrt(max(0.0, 1.0 - x*x-z*z));
+            break;
+        case 3:
+            z = -a;
+            x = -b;
+            y = -(Real) sqrt(max(0.0, 1.0 - x*x-z*z));
+            break;
+        case 4:
+            y = a;
+            z = b;
+            x =  (Real) sqrt(max(0.0, 1.0 - y*y-z*z));
+            break;
+        case 5:
+            y = -a;
+            z = -b;
+            x = -(Real) sqrt(max(0.0, 1.0 - y*y-z*z));
+            break;
+        }
+    }
+
 /*
     inline void SphereToCube(const Real x, const Real y, const Real z, 
                              Real & a, Real & b, long & index)
@@ -332,7 +370,6 @@ namespace o3dgc
             b = az;
         }
     }
-*/
     inline void CubeToSphere(const Real a, const Real b, const long index,
                              Real & x, Real & y, Real & z)
     {
@@ -371,6 +408,7 @@ namespace o3dgc
             break;
         }
     }
+    */
     inline unsigned long IntToUInt(long value)
     {
         return (value < 0)?(unsigned long) (-1 - (2 * value)):(unsigned long) (2 * value);
