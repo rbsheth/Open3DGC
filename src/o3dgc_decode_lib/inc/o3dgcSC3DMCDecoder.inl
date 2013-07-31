@@ -424,7 +424,6 @@ namespace o3dgc
                 fprintf(g_fileDebugSC3DMCDec, "\t (%i, %i, %i) \t pred (%f, %f, %f)\n", a, b, c, nt.X(), nt.Y(), nt.Z());
 #endif //DEBUG_VERBOSE
             }
-            n0.Normalize();
             if (m_predictors[vm])
             {
                 n0 = -n0;

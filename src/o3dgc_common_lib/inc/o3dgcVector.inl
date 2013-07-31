@@ -61,15 +61,12 @@ namespace o3dgc
         return m_data[2];
     }
     template <typename T>
-    inline  void Vec3<T>::Normalize()
-    {
-        T n = sqrt(m_data[0]*m_data[0]+m_data[1]*m_data[1]+m_data[2]*m_data[2]);
-        if (n != 0.0) (*this) /= n;
-    }
-    template <typename T>
-    inline  T Vec3<T>::GetNorm() const
+    inline  double Vec3<T>::GetNorm() const
     { 
-        return sqrt(m_data[0]*m_data[0]+m_data[1]*m_data[1]+m_data[2]*m_data[2]);
+        double a = (double) (m_data[0]);
+        double b = (double) (m_data[1]);
+        double c = (double) (m_data[2]);
+        return sqrt(a*a+b*b+c*c);
     }
     template <typename T>
     inline  void Vec3<T>::operator= (const Vec3 & rhs)
@@ -209,15 +206,11 @@ namespace o3dgc
         return m_data[1];
     }
     template <typename T>
-    inline  void Vec2<T>::Normalize()
-    {
-        T n = sqrt(m_data[0]*m_data[0]+m_data[1]*m_data[1]);
-        if (n != 0.0) (*this) /= n;
-    }
-    template <typename T>
-    inline  T Vec2<T>::GetNorm() const
+    inline  double Vec2<T>::GetNorm() const
     { 
-        return sqrt(m_data[0]*m_data[0]+m_data[1]*m_data[1]);
+        double a = (double) (m_data[0]);
+        double b = (double) (m_data[1]);
+        return sqrt(a*a+b*b);
     }
     template <typename T>
     inline  void Vec2<T>::operator= (const Vec2 & rhs)

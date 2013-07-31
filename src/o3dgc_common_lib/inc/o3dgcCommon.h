@@ -106,12 +106,17 @@ namespace o3dgc
         O3DGC_SC3DMC_TFAN       = 2,        // supported
     };    
     template<class T> 
-    inline const T& min(const T& a, const T& b)
+    inline const T absolute(const T& a)
+    {
+        return (a < (T)(0)) ? -a : a;
+    }
+    template<class T> 
+    inline const T min(const T& a, const T& b)
     {
         return (b < a) ? b : a;
     }
     template<class T> 
-    inline const T& max(const T& a, const T& b)
+    inline const T max(const T& a, const T& b)
     {
         return (b > a) ? b : a;
     }
@@ -239,15 +244,16 @@ namespace o3dgc
         }
         return pos;
     }
-    inline void SphereToCube(const Real x, const Real y, const Real z, 
-                             Real & a, Real & b, long & index)
+    template <class T> 
+    inline void SphereToCube(const T x, const T y, const T z, 
+                             T & a, T & b, long & index)
     {
-        Real ax = fabs(x);
-        Real ay = fabs(y);
-        Real az = fabs(z);
+        T ax = absolute(x);
+        T ay = absolute(y);
+        T az = absolute(z);
         if (az >= ax && az >= ay)
         {
-            if (z >= 0.0)
+            if (z >= (T)(0))
             {
                 index = 0;
                 a = x;
@@ -262,7 +268,7 @@ namespace o3dgc
         }
         else if (ay >= ax && ay >= az)
         {
-            if (y >= 0.0)
+            if (y >= (T)(0))
             {
                 index = 2;
                 a = z;
@@ -277,7 +283,7 @@ namespace o3dgc
         }
         else if (ax >= ay && ax >= az)
         {
-            if (x >= 0.0)
+            if (x >= (T)(0))
             {
                 index = 4;
                 a = y;

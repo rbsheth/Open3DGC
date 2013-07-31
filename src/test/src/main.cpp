@@ -169,7 +169,7 @@ int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnor
     params.SetNormalQuantBits(qnormal);
     params.SetTexCoordQuantBits(qtexCoord);
 
-//    params.SetNormalPredMode(O3DGC_SC3DMC_SURF_NORMALS_PREDICTION);
+    params.SetNormalPredMode(O3DGC_SC3DMC_SURF_NORMALS_PREDICTION);
 
     ifs.SetNCoord((unsigned long) points.size());
     ifs.SetNNormal((unsigned long)normals.size());

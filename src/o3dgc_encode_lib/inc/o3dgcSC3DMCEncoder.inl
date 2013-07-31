@@ -657,8 +657,10 @@ namespace o3dgc
         const AdjacencyInfo & v2T          = m_triangleListEncoder.GetVertexToTriangle();
         const T * const       triangles    = ifs.GetCoordIndex();
         const Real * const originalNormals = ifs.GetNormal();
-        Vec3<Real> p1, p2, p3, n0, n1, nt;
-        Real na0, nb0, na1, nb1;
+        Vec3<long> p1, p2, p3, n0, nt;
+        Vec3<Real> n1;
+        long na0, nb0;
+        Real rna0, rnb0, na1, nb1, norm0, norm1;
         long ni0 = 0, ni1 = 0;
         long a, b, c;
         m_predictors.Clear();
@@ -675,30 +677,53 @@ namespace o3dgc
                 a = triangles[ta*3 + 0];
                 b = triangles[ta*3 + 1];
                 c = triangles[ta*3 + 2];
-                p1.X() = (Real) m_quantFloatArray[3*a];
-                p1.Y() = (Real) m_quantFloatArray[3*a+1];
-                p1.Z() = (Real) m_quantFloatArray[3*a+2];
-                p2.X() = (Real) m_quantFloatArray[3*b];
-                p2.Y() = (Real) m_quantFloatArray[3*b+1];
-                p2.Z() = (Real) m_quantFloatArray[3*b+2];
-                p3.X() = (Real) m_quantFloatArray[3*c];
-                p3.Y() = (Real) m_quantFloatArray[3*c+1];
-                p3.Z() = (Real) m_quantFloatArray[3*c+2];
+                p1.X() = m_quantFloatArray[3*a];
+                p1.Y() = m_quantFloatArray[3*a+1];
+                p1.Z() = m_quantFloatArray[3*a+2];
+                p2.X() = m_quantFloatArray[3*b];
+                p2.Y() = m_quantFloatArray[3*b+1];
+                p2.Z() = m_quantFloatArray[3*b+2];
+                p3.X() = m_quantFloatArray[3*c];
+                p3.Y() = m_quantFloatArray[3*c+1];
+                p3.Z() = m_quantFloatArray[3*c+2];
                 nt  = (p2-p1)^(p3-p1);
                 n0 += nt;
             }
-            n0.Normalize();    
+            norm0 = (Real) n0.GetNorm();
+            if (norm0 == 0.0)
+            {
+                n0.X() = 0;
+                n0.Y() = 0;
+                n0.Z() = 1;
+            }
             SphereToCube(n0.X(), n0.Y(), n0.Z(), na0, nb0, ni0);
+            rna0 = na0 / norm0;
+            rnb0 = nb0 / norm0;
 
             n1.X() = originalNormals[3*v];
             n1.Y() = originalNormals[3*v+1];
             n1.Z() = originalNormals[3*v+2];
-            n1.Normalize();
+            norm1 = (Real) n1.GetNorm();
+            if (norm1 != 0.0)
+            {
+                n1.X() /= norm1;
+                n1.Y() /= norm1;
+                n1.Z() /= norm1;
+            }
             SphereToCube(n1.X(), n1.Y(), n1.Z(), na1, nb1, ni1);
 
+            
             m_predictors.PushBack( ni1 - ni0);
-            m_normals[2*v]   = na1 - na0;
-            m_normals[2*v+1] = nb1 - nb0;
+            if (ni1/2 == ni0/2)
+            {
+                m_normals[2*v]   = na1 - rna0;
+                m_normals[2*v+1] = nb1 - rnb0;
+            }
+            else
+            {
+                m_normals[2*v]   = na1;
+                m_normals[2*v+1] = nb1;
+            }
         }
         return O3DGC_OK;
     }

@@ -120,8 +120,7 @@ namespace o3dgc
         const T      &      X() const;
         const T      &      Y() const;
         const T      &      Z() const;
-        void                Normalize();
-        T                   GetNorm() const;
+        double              GetNorm() const;
         void                operator= (const Vec3 & rhs);
         void                operator+=(const Vec3 & rhs);
         void                operator-=(const Vec3 & rhs);
@@ -155,8 +154,7 @@ namespace o3dgc
         T &                 Y();
         const T &           X() const;
         const T &           Y() const;
-        void                Normalize();
-        T                   GetNorm() const;
+        double              GetNorm() const;
         void                operator= (const Vec2 & rhs);
         void                operator+=(const Vec2 & rhs);
         void                operator-=(const Vec2 & rhs);
