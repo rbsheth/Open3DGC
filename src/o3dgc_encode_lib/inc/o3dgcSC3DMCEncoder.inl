@@ -713,7 +713,7 @@ namespace o3dgc
                 n1.Y() /= norm1;
                 n1.Z() /= norm1;
             }
-            SphereToCube(n1.X(), n1.Y(), n1.Z(), na1, nb1, ni1);          
+            SphereToCube(n1.X(), n1.Y(), n1.Z(), na1, nb1, ni1);
             m_predictors.PushBack(ni1 - ni0);
             if ( (ni1 >> 1) != (ni0 >> 1) )
             {
