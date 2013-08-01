@@ -689,7 +689,7 @@ bool SaveOBJ(const std::string & fileName,
              const std::string & materialLib)
 {
     std::ofstream fout;
-    fout.open(fileName);
+    fout.open(fileName.c_str());
     if (!fout.fail()) 
     {
         const unsigned long np = (unsigned long) points.size();
@@ -801,7 +801,7 @@ bool SaveOBJ(const std::string & fileName,
 bool SaveMaterials(const std::string & fileName, const std::vector< Material > & materials, const std::string & materialLib)
 {
     std::ofstream fout;
-    fout.open(fileName);
+    fout.open(fileName.c_str());
     if (!fout.fail()) 
     {
         const size_t numMaterials = materials.size();
@@ -826,7 +826,7 @@ bool LoadMaterials(const std::string & fileName, std::vector< Material > & mater
     std::ifstream fin;
     materials.clear();
     materialLib.clear();
-    fin.open(fileName);
+    fin.open(fileName.c_str());
     if (!fin.fail()) 
     {
         size_t numMaterials = 0;

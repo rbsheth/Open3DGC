@@ -734,7 +734,6 @@ namespace o3dgc
         {
             const Real minNormal[2] = {(Real)(-2),(Real)(-2)};
             const Real maxNormal[2] = {(Real)(2),(Real)(2)};
-            Real * const outputNormals = ifs.GetNormal();
             Real na1, nb1;
             Real na0, nb0;
             char ni1;
