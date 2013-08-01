@@ -128,7 +128,7 @@ namespace o3dgc
         bool                    GetSolid()             const { return m_solid           ;} 
         bool                    GetConvex()            const { return m_convex          ;}
         bool                    GetIsTriangularMesh()  const { return m_isTriangularMesh;}
-        const T * const         GetMatID()                const { return m_matID     ;}
+        const unsigned long * const GetMatID()         const { return m_matID     ;}
         const T * const         GetCoordIndex()           const { return m_coordIndex;}
         T * const               GetCoordIndex()                 { return m_coordIndex;}
         Real * const            GetCoord()                const { return m_coord     ;}
@@ -216,7 +216,7 @@ namespace o3dgc
                                     assert(dim < O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES);
                                     m_maxFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES + dim] = max;
                                 }
-        void                    SetMatID          (T * const matID)         { m_matID      = matID;}
+        void                    SetMatID          (unsigned long * const matID) { m_matID      = matID;}
         void                    SetCoordIndex     (T * const coordIndex)    { m_coordIndex = coordIndex;}
         void                    SetCoord          (Real * const coord     ) { m_coord      = coord    ;}
         void                    SetNormal         (Real * const normal    ) { m_normal     = normal   ;}
@@ -238,7 +238,7 @@ namespace o3dgc
         // triangles list
         unsigned long           m_nCoordIndex;
         T *                     m_coordIndex;
-        T *                     m_matID;
+        unsigned long *         m_matID;
         // coord, normals, texcoord and color
         unsigned long           m_nCoord;
         unsigned long           m_nNormal;

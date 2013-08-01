@@ -78,7 +78,7 @@ public:
         m_id           = 0;
         m_numTriangles = 0;
     };
-    unsigned long   m_id;
+    unsigned long	m_id;
     unsigned long   m_numTriangles;
     std::string     m_name;
 };
@@ -184,7 +184,7 @@ int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnor
     ifs.SetCoordIndex((Index * const ) &(triangles[0]));
     if (materials.size() > 1)
     {
-        ifs.SetMatID((Index * const ) &(matIDs[0]));
+        ifs.SetMatID((unsigned long * const ) &(matIDs[0]));
     }
     if (normals.size() > 0)
     {

@@ -291,7 +291,7 @@ namespace o3dgc
     }
     template <class T>
     O3DGCErrorCode TriangleListEncoder<T>::Encode(const T * const triangles, 
-                                                  const T * const matIDs,
+                                                  const unsigned long * const matIDs,
                                                   const long numTriangles,
                                                   const long numVertices, 
                                                   BinaryStream & bstream)

@@ -44,7 +44,7 @@ namespace o3dgc
                                     ~TriangleListEncoder(void);
         //! 
         O3DGCErrorCode              Encode(const T * const triangles,
-                                           const T * const matIDs,
+                                           const unsigned long * const matIDs,
                                            const long numTriangles,
                                            const long numVertices,
                                            BinaryStream & bstream);
