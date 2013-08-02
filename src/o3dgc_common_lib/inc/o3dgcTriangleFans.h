@@ -50,10 +50,10 @@ namespace o3dgc
                                     {
                                         delete [] m_bufferAC;
                                     };
-        O3DGCSC3DMCStreamType         GetStreamType() const { return m_streamType; }
+        O3DGCSC3DMCStreamType       GetStreamType() const { return m_streamType; }
         void                        SetStreamType(O3DGCSC3DMCStreamType streamType) { m_streamType = streamType; }
 
-        O3DGCErrorCode              Allocate(long numVertices)
+        O3DGCErrorCode              Allocate(long numVertices, long numTriangles)
                                     {
                                         assert(numVertices > 0);
                                         m_numTFANs.Allocate(numVertices);
@@ -61,6 +61,7 @@ namespace o3dgc
                                         m_configs.Allocate(2*numVertices);
                                         m_operations.Allocate(2*numVertices);
                                         m_indices.Allocate(2*numVertices);
+                                        m_trianglesOrder.Allocate(numTriangles);
                                         Clear();
                                         return O3DGC_OK;
                                     }
@@ -74,7 +75,7 @@ namespace o3dgc
                                         assert(iterator < m_numTFANs.GetSize());
                                         return m_numTFANs[iterator++];
                                     }
-        O3DGCErrorCode                PushDegree(long degree)
+        O3DGCErrorCode              PushDegree(long degree)
                                     {
                                         m_degrees.PushBack(degree);
                                         return O3DGC_OK;
@@ -84,7 +85,7 @@ namespace o3dgc
                                         assert(iterator < m_degrees.GetSize());
                                         return m_degrees[iterator++];
                                     }
-        O3DGCErrorCode                PushConfig(long config)
+        O3DGCErrorCode              PushConfig(long config)
                                     {
                                         m_configs.PushBack(config);
                                         return O3DGC_OK;
@@ -94,7 +95,7 @@ namespace o3dgc
                                         assert(iterator < m_configs.GetSize());
                                         return m_configs[iterator++];
                                     }
-        O3DGCErrorCode                PushOperation(long op)
+        O3DGCErrorCode              PushOperation(long op)
                                     {
                                         m_operations.PushBack(op);
                                         return O3DGC_OK;
@@ -114,7 +115,17 @@ namespace o3dgc
                                         assert(iterator < m_indices.GetSize());
                                         return m_indices[iterator++];
                                     }
-        O3DGCErrorCode                Clear()
+        O3DGCErrorCode              PushTriangleIndex(long index)
+                                    {
+                                        m_trianglesOrder.PushBack(IntToUInt(index));
+                                        return O3DGC_OK;
+                                    }
+        long                        ReadTriangleIndex(unsigned long & iterator) const
+                                    {
+                                        assert(iterator < m_trianglesOrder.GetSize());
+                                        return UIntToInt(m_trianglesOrder[iterator++]);
+                                    }
+        O3DGCErrorCode              Clear()
                                     {
                                         m_numTFANs.Clear();
                                         m_degrees.Clear();
@@ -124,10 +135,12 @@ namespace o3dgc
                                         return O3DGC_OK;
                                     }
         O3DGCErrorCode              Save(BinaryStream & bstream,
-                                       O3DGCSC3DMCStreamType streamType);
+                                         bool encodeTrianglesOrder,
+                                         O3DGCSC3DMCStreamType streamType);
         O3DGCErrorCode              Load(const BinaryStream & bstream, 
-                                       unsigned long & iterator, 
-                                       O3DGCSC3DMCStreamType streamType);
+                                         unsigned long & iterator, 
+                                         bool decodeTrianglesOrder,
+                                         O3DGCSC3DMCStreamType streamType);
 
     private:
         O3DGCErrorCode              SaveBinAC(const Vector<long> & data,
@@ -144,6 +157,7 @@ namespace o3dgc
         Vector<long>                m_configs;
         Vector<long>                m_operations;
         Vector<long>                m_indices;
+        Vector<long>                m_trianglesOrder;
         unsigned char *             m_bufferAC;
         unsigned long               m_sizeBufferAC;
         O3DGCSC3DMCStreamType       m_streamType;

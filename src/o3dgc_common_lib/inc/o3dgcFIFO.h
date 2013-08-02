@@ -47,7 +47,7 @@ namespace o3dgc
                                 {
                                     delete [] m_buffer;
                                 };
-        O3DGCErrorCode          Allocate(size_t size)
+        O3DGCErrorCode          Allocate(unsigned long size)
                                 {
                                     assert(size > 0);
                                     if (size > m_allocated)
@@ -63,7 +63,7 @@ namespace o3dgc
                                 {
                                     assert(m_size > 0);
                                     --m_size;
-                                    size_t current = m_start++;
+                                    unsigned long current = m_start++;
                                     if (m_start == m_allocated) 
                                     {
                                         m_end = 0;
@@ -81,16 +81,16 @@ namespace o3dgc
                                         m_end = 0;
                                     }
                                 }
-        const size_t            GetSize()          const { return m_size;};
-        const size_t            GetAllocatedSize() const { return m_allocated;};
+        const unsigned long     GetSize()          const { return m_size;};
+        const unsigned long     GetAllocatedSize() const { return m_allocated;};
         void                    Clear() { m_start = m_end = m_size = 0;};
 
     private:
         T *                     m_buffer;
-        size_t                  m_allocated;
-        size_t                  m_size;
-        size_t                  m_start;
-        size_t                  m_end;
+        unsigned long           m_allocated;
+        unsigned long           m_size;
+        unsigned long           m_start;
+        unsigned long           m_end;
     };
 }
 #endif // O3DGC_FIFO_H

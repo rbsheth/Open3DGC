@@ -34,18 +34,16 @@ namespace o3dgc
     {
         assert(numVertices  > 0);
         assert(numTriangles > 0);
-
-        m_numTriangles  = numTriangles;
-        m_numVertices   = numVertices;
-        m_triangles     = triangles;
-        m_vertexCount   = 0;
-        m_triangleCount = 0;
-        m_itNumTFans    = 0;
-        m_itDegree      = 0;
-        m_itConfig      = 0;
-        m_itOperation   = 0;
-        m_itIndex       = 0;
-        
+        m_numTriangles      = numTriangles;
+        m_numVertices       = numVertices;
+        m_triangles         = triangles;
+        m_vertexCount       = 0;
+        m_triangleCount     = 0;
+        m_itNumTFans        = 0;
+        m_itDegree          = 0;
+        m_itConfig          = 0;
+        m_itOperation       = 0;
+        m_itIndex           = 0;        
         if  (m_numVertices > m_maxNumVertices)
         {
             m_maxNumVertices         = m_numVertices;
@@ -55,8 +53,15 @@ namespace o3dgc
             m_visitedVertices        = new long [m_numVertices];
         }
         
+        if (m_decodeTrianglesOrder && m_tempTrianglesSize < m_numTriangles)
+        {
+            delete [] m_tempTriangles;
+            m_tempTrianglesSize      = m_numTriangles;
+            m_tempTriangles          = new T [3*m_tempTrianglesSize];
+        }
+
         m_ctfans.SetStreamType(m_streamType);
-        m_ctfans.Allocate(m_numVertices);
+        m_ctfans.Allocate(m_numVertices, m_numTriangles);
         m_tfans.Allocate(2 * m_numVertices, 8 * m_numVertices);
 
          // compute vertex-to-triangle adjacency information
@@ -81,6 +86,25 @@ namespace o3dgc
             }
             CompueLocalConnectivityInfo(focusVertex);
             DecompressTFAN(focusVertex);
+        }
+        return O3DGC_OK;
+    }
+    template<class T>
+    O3DGCErrorCode TriangleListDecoder<T>::Reorder()
+    {
+        if (m_decodeTrianglesOrder)
+        {
+            unsigned long itTriangleIndex = 0;
+            long prevTriangleIndex = 0;
+            long t;
+            memcpy(m_tempTriangles, m_triangles, m_numTriangles * 3 * sizeof(T));
+            for(long i = 0; i < m_numTriangles; ++i)
+            {
+                t  = m_ctfans.ReadTriangleIndex(itTriangleIndex) + prevTriangleIndex;
+                assert( t >= 0 && t < m_numTriangles);
+                memcpy(m_triangles + 3 * t, m_tempTriangles + 3 * i, sizeof(T) * 3);
+                prevTriangleIndex = t + 1;
+            }
         }
         return O3DGC_OK;
     }

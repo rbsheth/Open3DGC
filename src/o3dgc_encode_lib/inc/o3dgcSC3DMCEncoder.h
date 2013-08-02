@@ -45,11 +45,14 @@ namespace o3dgc
                                         m_quantFloatArraySize = 0;
                                         m_sizeBufferAC        = 0;
                                         m_bufferAC            = 0;
+                                        m_normals             = 0;
+                                        m_normalsSize         = 0;
                                         m_streamType          = O3DGC_SC3DMC_STREAM_TYPE_UNKOWN;
                                     };
         //! Destructor.
                                     ~SC3DMCEncoder(void)
                                     {
+                                        delete [] m_normals;
                                         delete [] m_quantFloatArray;
                                         delete [] m_bufferAC;
                                     }
@@ -69,6 +72,7 @@ namespace o3dgc
         O3DGCErrorCode              EncodeFloatArray(const Real * const floatArray, 
                                                      unsigned long numfloatArray,
                                                      unsigned long dimfloatArray,
+                                                     unsigned long stride,
                                                      const Real * const minfloatArray,
                                                      const Real * const maxfloatArray,
                                                      unsigned long nQBits,
@@ -78,19 +82,28 @@ namespace o3dgc
         O3DGCErrorCode              QuantizeFloatArray(const Real * const floatArray, 
                                                        unsigned long numFloatArray,
                                                        unsigned long dimFloatArray,
+                                                       unsigned long stride,
                                                        const Real * const minfloatArray,
                                                        const Real * const maxfloatArray,
                                                        unsigned long nQBits);
         O3DGCErrorCode              EncodeIntArray(const long * const intArray, 
                                                    unsigned long numIntArray,
                                                    unsigned long dimIntArray,
+                                                   unsigned long stride,
                                                    O3DGCSC3DMCPredictionMode predMode,
                                                    BinaryStream & bstream);
+        O3DGCErrorCode              ProcessNormals(const IndexedFaceSet<T> & ifs);
         TriangleListEncoder<T>      m_triangleListEncoder;
         long *                      m_quantFloatArray;
         unsigned long               m_quantFloatArraySize;
         unsigned char *             m_bufferAC;
         unsigned long               m_sizeBufferAC;
+        SC3DMCPredictor             m_neighbors  [O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS];
+        unsigned long               m_freqSymbols[O3DGC_SC3DMC_MAX_PREDICTION_SYMBOLS];
+        unsigned long               m_freqPreds  [O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS];
+        Vector<long>                m_predictors;
+        Real *                      m_normals;
+        unsigned long               m_normalsSize;
         SC3DMCStats                 m_stats;
         O3DGCSC3DMCStreamType       m_streamType;
     };

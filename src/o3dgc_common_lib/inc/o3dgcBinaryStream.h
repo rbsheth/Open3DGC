@@ -43,7 +43,7 @@ namespace o3dgc
     {
     public:    
         //! Constructor.
-                                BinaryStream(size_t size = O3DGC_BINARY_STREAM_DEFAULT_SIZE)
+                                BinaryStream(unsigned long size = O3DGC_BINARY_STREAM_DEFAULT_SIZE)
                                 {
                                     m_endianness = SystemEndianness();
                                     m_stream.Allocate(size);
@@ -259,7 +259,6 @@ namespace o3dgc
                                     return m_stream[position++];
                                 }
 
-
         void                    WriteFloat32ASCII(float value) 
                                 {
                                     unsigned long uiValue = *((unsigned long *)(&value));
@@ -268,10 +267,11 @@ namespace o3dgc
         void                    WriteUInt32ASCII(unsigned long position, unsigned long value) 
                                 {
                                     assert(position < m_stream.GetSize() - O3DGC_BINARY_STREAM_NUM_SYMBOLS_UINT32);
+                                    unsigned long value0 = value;
                                     for(unsigned long i = 0; i < O3DGC_BINARY_STREAM_NUM_SYMBOLS_UINT32; ++i)
                                     {
-                                        m_stream[position++] = value & O3DGC_BINARY_STREAM_MAX_SYMBOL0;
-                                        value >>= O3DGC_BINARY_STREAM_BITS_PER_SYMBOL0;
+                                        m_stream[position++] = (value0 & O3DGC_BINARY_STREAM_MAX_SYMBOL0);
+                                        value0 >>= O3DGC_BINARY_STREAM_BITS_PER_SYMBOL0;
                                     }
                                 }
         void                    WriteUInt32ASCII(unsigned long value) 
@@ -288,16 +288,7 @@ namespace o3dgc
                                 }
         void                    WriteIntASCII(long value) 
                                 {
-                                    unsigned int uiValue;
-                                    if (value < 0)
-                                    {
-                                        uiValue = (unsigned long) (1 - (2 * value));
-                                    }
-                                    else
-                                    {
-                                        uiValue = (unsigned long) (2 * value);
-                                    }
-                                    WriteUIntASCII(uiValue);
+                                    WriteUIntASCII(IntToUInt(value));
                                 }
         void                    WriteUIntASCII(unsigned long value) 
                                 {
@@ -343,20 +334,12 @@ namespace o3dgc
                                     {
                                         value  += (m_stream[position++] << shift);
                                         shift  += O3DGC_BINARY_STREAM_BITS_PER_SYMBOL0;
-                                    }                                    
+                                    }
                                     return value;
                                 }
         long                    ReadIntASCII(unsigned long & position) const
                                 {
-                                    unsigned long uiValue = ReadUIntASCII(position);
-                                    if (uiValue & 1)
-                                    {
-                                        return -((long) (uiValue >> 1));
-                                    }
-                                    else
-                                    {
-                                        return ((long) (uiValue >> 1));
-                                    }
+                                    return UIntToInt(ReadUIntASCII(position));
                                 }
         unsigned long           ReadUIntASCII(unsigned long & position) const
                                 {
@@ -400,7 +383,7 @@ namespace o3dgc
                                     unsigned long size = ftell(fin);
                                     m_stream.Allocate(size);
                                     rewind(fin);
-                                    unsigned int nread = fread((void *) m_stream.GetBuffer(), 1, size, fin);
+                                    unsigned int nread = (unsigned int) fread((void *) m_stream.GetBuffer(), 1, size, fin);
                                     m_stream.SetSize(size);
                                     if (nread != size)
                                     {
@@ -416,7 +399,7 @@ namespace o3dgc
                                     m_stream.SetSize(bufferSize);
                                     return O3DGC_OK;
                                 }
-        size_t                  GetSize() const
+        unsigned long           GetSize() const
                                 {
                                     return m_stream.GetSize();
                                 }
@@ -436,11 +419,11 @@ namespace o3dgc
                                 {
                                     buffer = (unsigned char *) (m_stream.GetBuffer() + position); // fix me: ugly!
                                 }
-    void                        SetSize(size_t size)
+    void                        SetSize(unsigned long size)
                                 { 
                                     m_stream.SetSize(size);
                                 };
-    void                        Allocate(size_t size)
+    void                        Allocate(unsigned long size)
                                 {
                                     m_stream.Allocate(size);
                                 }

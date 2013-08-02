@@ -29,6 +29,7 @@ THE SOFTWARE.
 #include <map>
 #include <string>
 #include <vector>
+#include "o3dgcCommon.h"
 #include "o3dgcVector.h"
 #include "o3dgcSC3DMCEncodeParams.h"
 #include "o3dgcIndexedFaceSet.h"
@@ -63,24 +64,56 @@ class IVec3Cmp
       }
 };
 
-
+class Material
+{
+public:
+    Material(unsigned long id, unsigned long numTriangles, const std::string & name)
+    {
+        m_id           = id;
+        m_numTriangles = numTriangles;
+        m_name         = name;
+    };
+    Material()
+    {
+        m_id           = 0;
+        m_numTriangles = 0;
+    };
+    unsigned long	m_id;
+    unsigned long   m_numTriangles;
+    std::string     m_name;
+};
 
 bool LoadOBJ(const std::string & fileName, 
-             std::vector< Vec3<Real> > & points,
-             std::vector< Vec2<Real> > & texCoords,
-             std::vector< Vec3<Real> > & normals,
-             std::vector< Vec3<Index> > & triangles);
+             std::vector< Vec3<Real> > & upoints,
+             std::vector< Vec2<Real> > & utexCoords,
+             std::vector< Vec3<Real> > & unormals,
+             std::vector< Vec3<Index> > & triangles,
+             std::vector< unsigned long > & matIDs,
+             std::vector< Material > & materials,
+             std::string & materialLib);
 
-bool SaveOBJ(const char * fileName, 
+bool SaveOBJ(const std::string & fileName, 
              const std::vector< Vec3<Real> > & points,
              const std::vector< Vec2<Real> > & texCoords,
              const std::vector< Vec3<Real> > & normals,
-             const std::vector< Vec3<Index> > & triangles);
+             const std::vector< Vec3<Index> > & triangles,
+             const std::vector< Material > & materials,
+             const std::vector< unsigned long > matIDs,
+             const std::string & materialLib);
+
+bool LoadMaterials(const std::string & fileName, 
+                   std::vector< Material > & materials, 
+                   std::string & materialLib);
+
+bool SaveMaterials(const std::string & fileName, 
+                   const std::vector< Material > & materials, 
+                   const std::string & materialLib);
+
 
 int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnormal, O3DGCSC3DMCStreamType streamType)
 {
     std::string folder;
-    long found = fileName.find_last_of(PATH_SEP);
+    long found = (long) fileName.find_last_of(PATH_SEP);
     if (found != -1)
     {
         folder = fileName.substr(0,found);
@@ -95,8 +128,11 @@ int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnor
     std::vector< Vec3<Real> > normals;
     std::vector< Vec2<Real> > texCoords;
     std::vector< Vec3<Index> > triangles;
+    std::vector< unsigned long > matIDs;
+    std::vector< Material > materials;
+    std::string materialLib;
     std::cout << "Loading " << fileName << " ..." << std::endl;
-    bool ret = LoadOBJ(fileName, points, texCoords, normals, triangles);
+    bool ret = LoadOBJ(fileName, points, texCoords, normals, triangles, matIDs, materials, materialLib);
     if (!ret)
     {
         std::cout << "Error: LoadOBJ()\n" << std::endl;
@@ -109,6 +145,24 @@ int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnor
     }
     std::cout << "Done." << std::endl;
 
+    if (materials.size() > 0)
+    {
+        std::string matFileName = folder + PATH_SEP + file.substr(0, file.find_last_of(".")) + ".mat";
+        ret = SaveMaterials(matFileName.c_str(), materials, materialLib);
+    }
+    if (!ret)
+    {
+        std::cout << "Error: SaveMatrials()\n" << std::endl;
+        return -1;
+    }
+/*
+    ret = SaveOBJ("debug.obj", points, texCoords, normals, triangles, materials, matIDs, materialLib);
+    if (!ret)
+    {
+        std::cout << "Error: SaveOBJ()\n" << std::endl;
+        return -1;
+    }
+*/
     SC3DMCEncodeParams params;
     params.SetStreamType(streamType);
     IndexedFaceSet<Index> ifs;
@@ -116,10 +170,10 @@ int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnor
     params.SetNormalQuantBits(qnormal);
     params.SetTexCoordQuantBits(qtexCoord);
 
-    ifs.SetNCoord(points.size());
-    ifs.SetNNormal(normals.size());
-    ifs.SetNTexCoord(texCoords.size());
-    ifs.SetNCoordIndex(triangles.size());
+    ifs.SetNCoord((unsigned long) points.size());
+    ifs.SetNNormal((unsigned long)normals.size());
+    ifs.SetNTexCoord((unsigned long)texCoords.size());
+    ifs.SetNCoordIndex((unsigned long)triangles.size());
 
     std::cout << "Mesh info "<< std::endl;
     std::cout << "\t# coords    " << ifs.GetNCoord() << std::endl;
@@ -129,6 +183,10 @@ int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnor
 
     ifs.SetCoord((Real * const) & (points[0]));
     ifs.SetCoordIndex((Index * const ) &(triangles[0]));
+    if (materials.size() > 1)
+    {
+        ifs.SetMatID((unsigned long * const ) &(matIDs[0]));
+    }
     if (normals.size() > 0)
     {
         ifs.SetNormal((Real * const) & (normals[0]));
@@ -141,7 +199,7 @@ int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnor
     // compute min/max
     ifs.ComputeMinMax(O3DGC_SC3DMC_MAX_ALL_DIMS); // O3DGC_SC3DMC_DIAG_BB
 
-    BinaryStream bstream(points.size()*8);
+    BinaryStream bstream((unsigned long)points.size()*8);
 
     
     SC3DMCEncoder<Index> encoder;
@@ -175,7 +233,7 @@ int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnor
 int testDecode(std::string & fileName)
 {
     std::string folder;
-    long found = fileName.find_last_of(PATH_SEP);
+    long found = (long)fileName.find_last_of(PATH_SEP);
     if (found != -1)
     {
         folder = fileName.substr(0,found);
@@ -187,11 +245,30 @@ int testDecode(std::string & fileName)
     std::string file(fileName.substr(found+1));
     std::string outFileName = folder + PATH_SEP + file.substr(0, file.find_last_of(".")) + "_dec.obj";
 
+
     std::vector< Vec3<Real> > points;
     std::vector< Vec3<Real> > normals;
     std::vector< Vec2<Real> > colors;
     std::vector< Vec2<Real> > texCoords;
     std::vector< Vec3<Index> > triangles;
+    std::vector< unsigned long > matIDs;
+    std::vector< Material > materials;
+    std::string materialLib;
+
+    std::string matFileName = folder + PATH_SEP + file.substr(0, file.find_last_of(".")) + ".mat";
+    bool ret = LoadMaterials(matFileName.c_str(), materials, materialLib);
+    if (ret)
+    {
+        const size_t numMaterials = materials.size();
+        unsigned long n, shift = 0;
+        for(size_t i = 0; i < numMaterials; ++i)
+        {
+            n = materials[i].m_numTriangles + shift;
+            matIDs.resize(n, materials[i].m_id);
+            shift = n;
+        }
+    }
+    
 
     BinaryStream bstream;
     IndexedFaceSet<Index> ifs;
@@ -206,7 +283,7 @@ int testDecode(std::string & fileName)
     unsigned long size = ftell(fin);
     bstream.Allocate(size);
     rewind(fin);
-    unsigned long nread = fread((void *) bstream.GetBuffer(), 1, size, fin);
+    unsigned long nread = (unsigned long)fread((void *) bstream.GetBuffer(), 1, size, fin);
     bstream.SetSize(size);
     if (nread != size)
     {
@@ -267,9 +344,11 @@ int testDecode(std::string & fileName)
     std::cout << "\t Color              " << stats.m_timeColor          << " ms, " << stats.m_streamSizeColor          <<" bytes (" << 8.0*stats.m_streamSizeColor          / ifs.GetNCoord() <<" bpv)" <<std::endl;
     std::cout << "\t Float Attributes   " << stats.m_timeFloatAttribute << " ms, " << stats.m_streamSizeFloatAttribute <<" bytes (" << 8.0*stats.m_streamSizeFloatAttribute / ifs.GetNCoord() <<" bpv)" <<std::endl;
     std::cout << "\t Integer Attributes " << stats.m_timeFloatAttribute << " ms, " << stats.m_streamSizeFloatAttribute <<" bytes (" << 8.0*stats.m_streamSizeFloatAttribute / ifs.GetNCoord() <<" bpv)" <<std::endl;
+    std::cout << "\t Reorder            " << stats.m_timeReorder        << " ms,  " << 0 <<" bytes (" << 0.0 <<" bpv)" <<std::endl;
 
     std::cout << "Saving " << outFileName << " ..." << std::endl;
-    int ret = SaveOBJ(outFileName.c_str(), points, texCoords, normals, triangles);
+
+    ret = SaveOBJ(outFileName.c_str(), points, texCoords, normals, triangles, materials, matIDs, materialLib);
     if (!ret)
     {
         std::cout << "Error: SaveOBJ()\n" << std::endl;
@@ -292,7 +371,7 @@ int main(int argc, char * argv[])
     std::string inputFileName;
     int qcoord    = 12;
     int qtexCoord = 10;
-    int qnormal   = 10;
+    int qnormal   = 8;
     O3DGCSC3DMCStreamType streamType = O3DGC_SC3DMC_STREAM_TYPE_BINARY;
     for(int i = 1; i < argc; ++i)
     {
@@ -393,10 +472,13 @@ bool LoadOBJ(const std::string & fileName,
              std::vector< Vec3<Real> > & upoints,
              std::vector< Vec2<Real> > & utexCoords,
              std::vector< Vec3<Real> > & unormals,
-             std::vector< Vec3<Index> > & triangles) 
+             std::vector< Vec3<Index> > & triangles,
+             std::vector< unsigned long > & matIDs,
+             std::vector< Material > & materials,
+             std::string & materialLib) 
 {   
     const char ObjDelimiters[]=" /";
-    const size_t BufferSize = 1024;
+    const unsigned long BufferSize = 1024;
     FILE * fid = fopen(fileName.c_str(), "r");
     
     if (fid) 
@@ -406,6 +488,8 @@ bool LoadOBJ(const std::string & fileName,
         Index ip[3] = {(Index)(-1), (Index)(-1), (Index)(-1)};
         Index in[3] = {(Index)(-1), (Index)(-1), (Index)(-1)};
         Index it[3] = {(Index)(-1), (Index)(-1), (Index)(-1)};
+        unsigned long matID = 0;
+        unsigned long numMatID = 0;
         char * pch;
         char * str;
         Index nv = 0;
@@ -415,20 +499,59 @@ bool LoadOBJ(const std::string & fileName,
         std::vector< Vec2<Real> > texCoords;
         std::vector< Vec3<Real> > normals;
         std::map< Vec3<Index>, Index, IVec3Cmp > vertices;
-
+        std::map< std::string, unsigned long > matMap;
+        materialLib.clear();        
+        matIDs.clear();
+        materials.clear();
         while (!feof(fid)) 
         {
-            fgets(buffer, BufferSize, fid);
-            if (buffer[0] == 'v')
+            if (!fgets(buffer, BufferSize, fid))
+            {
+                break;
+            }
+            if (buffer[0] == 'u')
+            {
+                str = buffer;
+                pch = strtok (str, " ");
+                if ( !strcmp(pch, "usemtl") )
+                {
+                    pch = strtok (NULL, " ");
+                    std::map< std::string, unsigned long >::iterator it = matMap.find(pch);                    
+                    if ( it == matMap.end() )
+                    {
+                        matID          = numMatID++;
+                        matMap[pch]    = matID;
+                        materials.push_back(Material(matID, 0, pch));
+                    }
+                    else
+                    {
+                        matID = it->second;                        
+                    }
+                }
+            }
+            else if (buffer[0] == 'm')
+            {
+                str = buffer;
+                pch = strtok (str, " ");
+                if ( !strcmp(pch, "mtllib") )
+                {
+                    pch = strtok (NULL, " ");
+                    materialLib = pch;
+                }
+            } 
+            else if (buffer[0] == 'v')
             {
                 if (buffer[1] == ' ')
                 {                    
                     str = buffer+2;
                     for(int k = 0; k < 3; ++k)
                     {
-                        pch = strtok (str, ObjDelimiters);
+                        pch = strtok (str, " ");
                         if (pch) x[k] = (Real) atof(pch);
-                        else      return false;
+                        else
+                        {
+                            return false;
+                        }
                         str = NULL;
                     }
                     points.push_back( Vec3<Real>(x[0], x[1], x[2]) );
@@ -438,9 +561,12 @@ bool LoadOBJ(const std::string & fileName,
                     str = buffer+2;
                     for(int k = 0; k < 3; ++k)
                     {
-                        pch = strtok (str, ObjDelimiters);
+                        pch = strtok (str, " ");
                         if (pch) x[k] = (Real) atof(pch);
-                        else      return false;
+                        else
+                        {
+                            return false;
+                        }
                         str = NULL;
                     }
                     normals.push_back( Vec3<Real>(x[0], x[1], x[2]) );
@@ -450,34 +576,47 @@ bool LoadOBJ(const std::string & fileName,
                     str = buffer+2;
                     for(int k = 0; k < 2; ++k)
                     {
-                        pch = strtok (str, ObjDelimiters);
+                        pch = strtok (str, " ");
                         if (pch) x[k] = (Real) atof(pch);
-                        else      return false;
+                        else
+                        {
+                            return false;
+                        }
                         str = NULL;
                     }                  
                     texCoords.push_back( Vec2<Real>(x[0], x[1]) );
                 }
             }
             else if (buffer[0] == 'f')
-            {                
+            {
+
                 str = buffer+2;
                 for(int k = 0; k < 3; ++k)
                 {
                     pch = strtok (str, ObjDelimiters);
                     if (pch) ip[k] = atoi(pch) - 1;
-                    else      return false;
+                        else
+                        {
+                            return false;
+                        }
                     str = NULL;
                     if (texCoords.size() > 0)
                     {
                         pch = strtok (NULL, ObjDelimiters);
                         if (pch)  it[k] = atoi(pch) - 1;
-                        else return false;
+                        else
+                        {
+                            return false;
+                        }
                     }
                     if (normals.size() > 0)
                     {
                         pch = strtok (NULL, ObjDelimiters);
                         if (pch)  in[k] = atoi(pch) - 1;
-                        else      return false;
+                        else
+                        {
+                            return false;
+                        }
                     }
                 }
                 for(int k = 0; k < 3; ++k)
@@ -498,6 +637,11 @@ bool LoadOBJ(const std::string & fileName,
                     }
                 }                
                 triangles.push_back(triangle);
+                if (materials.size() > 0)
+                {
+                    ++materials[matID].m_numTriangles;
+                    matIDs.push_back(matID);
+                }
             }
         }
         if (points.size() > 0)
@@ -536,20 +680,25 @@ bool LoadOBJ(const std::string & fileName,
     }
     return true;
 }
-bool SaveOBJ(const char * fileName, 
+bool SaveOBJ(const std::string & fileName, 
              const std::vector< Vec3<Real> > & points,
              const std::vector< Vec2<Real> > & texCoords,
              const std::vector< Vec3<Real> > & normals,
-             const std::vector< Vec3<Index> > & triangles)
+             const std::vector< Vec3<Index> > & triangles,
+             const std::vector< Material > & materials,
+             const std::vector< unsigned long > matIDs,
+             const std::string & materialLib)
 {
     std::ofstream fout;
-    fout.open(fileName);
+    fout.open(fileName.c_str());
     if (!fout.fail()) 
     {
-        const size_t np = points.size();
-        const size_t nn = normals.size();
-        const size_t nt = texCoords.size();
-        const size_t nf = triangles.size();
+        const unsigned long np = (unsigned long) points.size();
+        const unsigned long nn = (unsigned long) normals.size();
+        const unsigned long nt = (unsigned long) texCoords.size();
+        const unsigned long nf = (unsigned long) triangles.size();
+        const bool useMaterial = (materials.size() > 0 && matIDs.size());
+        unsigned long matID;
 
         fout << "####" << std::endl;
         fout << "#" << std::endl;
@@ -558,26 +707,42 @@ bool SaveOBJ(const char * fileName,
         fout << "####" << std::endl;
         fout << "# Object " << fileName << std::endl;
         fout << "#" << std::endl;
-        fout << "# Vertices: " << np << std::endl;
-        fout << "# Faces: " << nf << std::endl;;
+        fout << "# Coord:     " << np << std::endl;
+        fout << "# Normals:   " << nn << std::endl;
+        fout << "# TexCoord:  " << nt << std::endl;;
+        fout << "# Triangles: " << nf << std::endl;;
         fout << "#" << std::endl;
         fout << "####" << std::endl;
-        for(size_t i = 0; i < np; ++i)
+        for(unsigned long i = 0; i < np; ++i)
         {
             fout << "v " << points[i].X() << " " << points[i].Y() << " " << points[i].Z() << std::endl;
         }
-        for(size_t i = 0; i < nn; ++i)
+        for(unsigned long i = 0; i < nn; ++i)
         {
             fout << "vn " << normals[i].X() << " " << normals[i].Y() << " " << normals[i].Z() << std::endl;
         }
-        for(size_t i = 0; i < nt; ++i)
+        for(unsigned long i = 0; i < nt; ++i)
         {
-            fout << "vn " << texCoords[i].X() << " " << texCoords[i].Y() << std::endl;
+            fout << "vt " << texCoords[i].X() << " " << texCoords[i].Y() << std::endl;
+        }
+        if (!materialLib.empty())
+        {
+            fout <<"mtllib " << materialLib << std::endl;
+        }
+        if (useMaterial)
+        {
+            matID = matIDs[0];
+            fout <<"usemtl " << materials[matID].m_name << std::endl;                 
         }
         if (nt > 0 && nn >0)
         {
-            for(size_t i = 0; i < nf; ++i)
+            for(unsigned long i = 0; i < nf; ++i)
             {
+                if (useMaterial && matID != matIDs[i])
+                {
+                    matID = matIDs[i];
+                    fout <<"usemtl " << materials[matID].m_name << std::endl;                 
+                }
                 fout << "f " << triangles[i].X()+1 << "/" << triangles[i].X()+1 << "/" << triangles[i].X()+1;
                 fout << " "  << triangles[i].Y()+1 << "/" << triangles[i].Y()+1 << "/" << triangles[i].Y()+1;
                 fout << " "  << triangles[i].Z()+1 << "/" << triangles[i].Z()+1 << "/" << triangles[i].Z()+1 << std::endl;
@@ -585,8 +750,13 @@ bool SaveOBJ(const char * fileName,
         }
         else if (nt == 0 && nn > 0)
         {
-            for(size_t i = 0; i < nf; ++i)
+            for(unsigned long i = 0; i < nf; ++i)
             {
+                if (useMaterial && matID != matIDs[i])
+                {
+                    matID = matIDs[i];
+                    fout <<"usemtl " << materials[matID].m_name << std::endl;                 
+                }
                 fout << "f " << triangles[i].X()+1 << "//" << triangles[i].X()+1;
                 fout << " "  << triangles[i].Y()+1 << "//" << triangles[i].Y()+1;
                 fout << " "  << triangles[i].Z()+1 << "//" << triangles[i].Z()+1 << std::endl;
@@ -594,8 +764,13 @@ bool SaveOBJ(const char * fileName,
         }
         else if (nt > 0 && nn == 0)
         {
-            for(size_t i = 0; i < nf; ++i)
+            for(unsigned long i = 0; i < nf; ++i)
             {
+                if (useMaterial && matID != matIDs[i])
+                {
+                    matID = matIDs[i];
+                    fout <<"usemtl " << materials[matID].m_name << std::endl;                 
+                }
                 fout << "f " << triangles[i].X()+1 << "/" << triangles[i].X()+1;
                 fout << " "  << triangles[i].Y()+1 << "/" << triangles[i].Y()+1;
                 fout << " "  << triangles[i].Z()+1 << "/" << triangles[i].Z()+1 << std::endl;
@@ -603,8 +778,13 @@ bool SaveOBJ(const char * fileName,
         }
         else
         {
-            for(size_t i = 0; i < nf; ++i)
+            for(unsigned long i = 0; i < nf; ++i)
             {
+                if (useMaterial && matID != matIDs[i])
+                {
+                    matID = matIDs[i];
+                    fout <<"usemtl " << materials[matID].m_name << std::endl;                 
+                }
                 fout << "f " << triangles[i].X()+1;
                 fout << " "  << triangles[i].Y()+1;
                 fout << " "  << triangles[i].Z()+1 << std::endl;
@@ -615,9 +795,70 @@ bool SaveOBJ(const char * fileName,
     else 
     {
         std::cout << "Not able to create file" << std::endl;
+        return false;
+    }
+    return true;
+}
+bool SaveMaterials(const std::string & fileName, const std::vector< Material > & materials, const std::string & materialLib)
+{
+    std::ofstream fout;
+    fout.open(fileName.c_str());
+    if (!fout.fail()) 
+    {
+        const size_t numMaterials = materials.size();
+        fout << "MaterialLib " << materialLib << std::endl;
+        fout << "Materials " << numMaterials << std::endl;
+        for(size_t i = 0; i < numMaterials; ++i)
+        {
+            fout << materials[i].m_id << " " << materials[i].m_numTriangles << " " << materials[i].m_name << std::endl;
+        }
+        fout.close();
+    }
+    else 
+    {
+        std::cout << "Not able to create file" << std::endl;
+        return false;
     }
     return true;
 }
 
-
+bool LoadMaterials(const std::string & fileName, std::vector< Material > & materials, std::string & materialLib)
+{
+    std::ifstream fin;
+    materials.clear();
+    materialLib.clear();
+    fin.open(fileName.c_str());
+    if (!fin.fail()) 
+    {
+        size_t numMaterials = 0;
+        std::string tmp;
+        while(!fin.eof())
+        {
+            fin >> tmp;
+            if (tmp == "MaterialLib")
+            {
+                fin >> materialLib;
+            }
+            else if (tmp == "Materials")
+            {
+                fin >> numMaterials;
+                materials.resize(numMaterials);
+                for(size_t i = 0; i < numMaterials; ++i)
+                {
+                    fin >> materials[i].m_id;
+                    fin >> materials[i].m_numTriangles;
+                    fin >> materials[i].m_name;
+                }
+                fin.close();
+                return true;
+            }        
+        }
+        fin.close();
+    }
+    else 
+    {
+        std::cout << "Not able to load file" << std::endl;
+    }
+    return false;
+}
 

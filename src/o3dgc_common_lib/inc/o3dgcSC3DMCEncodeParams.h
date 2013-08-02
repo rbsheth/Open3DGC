@@ -38,14 +38,14 @@ namespace o3dgc
                                         memset(this, 0, sizeof(SC3DMCEncodeParams));
                                         m_encodeMode        = O3DGC_SC3DMC_TFAN;
                                         m_streamTypeMode    = O3DGC_SC3DMC_STREAM_TYPE_ASCII;
-                                        m_coordQuantBits    = 12;
-                                        m_normalQuantBits   = 10;
+                                        m_coordQuantBits    = 14;
+                                        m_normalQuantBits   = 8;
                                         m_colorQuantBits    = 10;
                                         m_texCoordQuantBits = 10;
                                         m_coordPredMode     = O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION;
                                         m_texCoordPredMode  = O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION;
-                                        m_normalPredMode    = O3DGC_SC3DMC_DIFFERENTIAL_PREDICTION;  
-                                        m_colorPredMode     = O3DGC_SC3DMC_DIFFERENTIAL_PREDICTION;
+                                        m_normalPredMode    = O3DGC_SC3DMC_SURF_NORMALS_PREDICTION;
+                                        m_colorPredMode     = O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION;
                                         for(unsigned long a = 0; a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES; ++a)
                                         {
                                             m_floatAttributePredMode[a] = O3DGC_SC3DMC_DIFFERENTIAL_PREDICTION;
@@ -88,6 +88,21 @@ namespace o3dgc
                                         assert(a < O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
                                         return m_intAttributePredMode[a];
                                     }
+        O3DGCSC3DMCPredictionMode & GetCoordPredMode()    { return m_coordPredMode; }
+        O3DGCSC3DMCPredictionMode & GetNormalPredMode()   { return m_normalPredMode; }
+        O3DGCSC3DMCPredictionMode & GetColorPredMode()    { return m_colorPredMode; }
+        O3DGCSC3DMCPredictionMode & GetTexCoordPredMode() { return m_texCoordPredMode; }
+        O3DGCSC3DMCPredictionMode & GetFloatAttributePredMode(unsigned long a)
+                                    {
+                                       assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
+                                       return m_floatAttributePredMode[a];
+                                    }
+        O3DGCSC3DMCPredictionMode & GetIntAttributePredMode(unsigned long a)
+                                    { 
+                                        assert(a < O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
+                                        return m_intAttributePredMode[a];
+                                    }
+
         void                        SetStreamType(O3DGCSC3DMCStreamType streamTypeMode)  { m_streamTypeMode = streamTypeMode;}
         void                        SetEncodeMode(O3DGCSC3DMCEncodingMode encodeMode)  { m_encodeMode = encodeMode;}
         void                        SetNFloatAttributes(unsigned long numFloatAttributes) 
