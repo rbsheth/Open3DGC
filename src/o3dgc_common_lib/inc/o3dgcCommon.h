@@ -34,9 +34,6 @@ THE SOFTWARE.
 
 namespace o3dgc
 {
-<<<<<<< HEAD
-    typedef float Real;
-=======
     typedef float        Real;
     typedef unsigned int Index;
     const double O3DGC_MAX_DOUBLE  = 1.79769e+308;

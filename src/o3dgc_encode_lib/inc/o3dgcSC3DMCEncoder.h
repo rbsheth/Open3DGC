@@ -111,4 +111,3 @@ namespace o3dgc
 #include "o3dgcSC3DMCEncoder.inl"    // template implementation
 #endif // O3DGC_SC3DMC_ENCODER_H
 
-

@@ -35,7 +35,6 @@ namespace o3dgc
 {
     //! 
     template <class T>
->>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
     class TriangleListEncoder
     {
     public:    
@@ -58,15 +57,9 @@ namespace o3dgc
         const AdjacencyInfo &       GetVertexToTriangle() const { return m_vertexToTriangle;}
 
         private:
-<<<<<<< HEAD
-        O3DGCErrorCode              Init(const long * const triangles, 
-                                       long numTriangles, 
-                                       long numVertices);
-=======
         O3DGCErrorCode              Init(const T * const triangles, 
                                          long numTriangles, 
                                          long numVertices);
->>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
         O3DGCErrorCode              CompueLocalConnectivityInfo(const long focusVertex);
         O3DGCErrorCode              ProcessVertex( long focusVertex);
         O3DGCErrorCode              ComputeTFANDecomposition(const long focusVertex);
@@ -82,11 +75,7 @@ namespace o3dgc
         long                        m_numTriangles;
         long                        m_numVertices;
         long                        m_maxSizeVertexToTriangle;
-<<<<<<< HEAD
-        long const *                m_triangles;
-=======
         T const *                   m_triangles;
->>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
         long *                      m_vtags;
         long *                      m_ttags;
         long *                      m_vmap;
@@ -106,13 +95,7 @@ namespace o3dgc
         CompressedTriangleFans      m_ctfans;
         O3DGCSC3DMCStreamType       m_streamType;
     };
-<<<<<<< HEAD
-
-
-}
-=======
 }
 #include "o3dgcTriangleListEncoder.inl"    // template implementation
->>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
 #endif // O3DGC_TRIANGLE_LIST_ENCODER_H
 

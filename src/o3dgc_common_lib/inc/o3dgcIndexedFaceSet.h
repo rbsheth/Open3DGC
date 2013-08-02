@@ -30,7 +30,6 @@ THE SOFTWARE.
 namespace o3dgc
 {
     template<class T>
->>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
     class IndexedFaceSet
     {
     public:    
@@ -238,9 +237,6 @@ namespace o3dgc
     private:
         // triangles list
         unsigned long           m_nCoordIndex;
-<<<<<<< HEAD
-        long *                  m_coordIndex;
-=======
         T *                     m_coordIndex;
         unsigned long *         m_matID;
         // coord, normals, texcoord and color
@@ -279,9 +275,6 @@ namespace o3dgc
         bool                    m_isTriangularMesh;
     };
 }
-<<<<<<< HEAD
-=======
 #include "o3dgcIndexedFaceSet.inl"    // template implementation
->>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
 #endif // O3DGC_INDEXED_FACE_SET_H
 

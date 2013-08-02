@@ -1,8 +1,7 @@
 CMakeCache.txt
 CMakeFiles/
 Makefile
-*.cmake
+cmake_install.cmake
 *.a
-
-
+test_o3dgc
 

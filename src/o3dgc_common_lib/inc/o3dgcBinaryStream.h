@@ -276,11 +276,7 @@ namespace o3dgc
                                 }
         void                    WriteUInt32ASCII(unsigned long value) 
                                 {
-<<<<<<< HEAD
-                                    for(long i = 0; i < O3DGC_BINARY_STREAM_NUM_SYMBOLS_UINT32; ++i)
-=======
                                     for(unsigned long i = 0; i < O3DGC_BINARY_STREAM_NUM_SYMBOLS_UINT32; ++i)
->>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
                                     {
                                         m_stream.PushBack(value & O3DGC_BINARY_STREAM_MAX_SYMBOL0);
                                         value >>= O3DGC_BINARY_STREAM_BITS_PER_SYMBOL0;
@@ -326,11 +322,7 @@ namespace o3dgc
                                     assert(position < m_stream.GetSize() - O3DGC_BINARY_STREAM_NUM_SYMBOLS_UINT32);
                                     unsigned long value = 0;
                                     unsigned long shift = 0;
-<<<<<<< HEAD
-                                    for(long i = 0; i < O3DGC_BINARY_STREAM_NUM_SYMBOLS_UINT32; ++i)
-=======
                                     for(unsigned long i = 0; i < O3DGC_BINARY_STREAM_NUM_SYMBOLS_UINT32; ++i)
->>>>>>> eed4f212e93f096aa3c1130ba4dadb947a493d98
                                     {
                                         value  += (m_stream[position++] << shift);
                                         shift  += O3DGC_BINARY_STREAM_BITS_PER_SYMBOL0;
