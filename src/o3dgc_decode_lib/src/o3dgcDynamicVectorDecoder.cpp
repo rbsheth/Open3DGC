@@ -23,6 +23,57 @@ THE SOFTWARE.
 
 namespace o3dgc
 {
+    O3DGCErrorCode Update(long * const data, const long size)
+    {   
+        assert(size > 1);
+        const long size1 = size - 1;
+        long p = 2;
+        data[0] -= data[1] >> 1;
+        while(p < size1)
+        {
+			data[p] -= (data[p-1] + data[p+1]) >> 2;
+            p += 2;
+		}
+		if ( p == size1)
+		{
+			data[p] -= data[p-1]>>1;
+		}
+        return O3DGC_OK;
+    }
+    O3DGCErrorCode Predict(long * const data, const long size)
+    {   
+        assert(size > 1);
+        const long size1 = size - 1;
+        long p = 1;
+        while(p < size1)
+        {
+			data[p] += (data[p-1] + data[p+1]) >> 1;
+            p += 2;
+		}
+		if ( p == size1)
+		{
+			data[p] += data[p-1];
+		}
+        return O3DGC_OK;
+    }
+    O3DGCErrorCode Merge(long * const data, const long size)
+    {
+        assert(size > 1);
+        const long h = size >> 2;
+        long       a = h-1;
+        long       b = h;
+    
+        while (a > 0)
+        {
+            for (long i = a; i < b; i += 2)
+            {
+                swap(data[i], data[i+1]);
+            }
+            --a;
+            ++b;
+        }
+        return O3DGC_OK;
+    }
     DynamicVectorDecoder::DynamicVectorDecoder(void)
     {
         m_maxNumVectors           = 0;
