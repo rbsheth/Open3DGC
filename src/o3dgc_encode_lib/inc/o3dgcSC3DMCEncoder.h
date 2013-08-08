@@ -41,6 +41,7 @@ namespace o3dgc
         //! Constructor.
                                     SC3DMCEncoder(void)
                                     {
+                                        m_posSize             = 0;
                                         m_quantFloatArray     = 0;
                                         m_quantFloatArraySize = 0;
                                         m_sizeBufferAC        = 0;
@@ -95,6 +96,7 @@ namespace o3dgc
         O3DGCErrorCode              ProcessNormals(const IndexedFaceSet<T> & ifs);
         TriangleListEncoder<T>      m_triangleListEncoder;
         long *                      m_quantFloatArray;
+        unsigned long               m_posSize;
         unsigned long               m_quantFloatArraySize;
         unsigned char *             m_bufferAC;
         unsigned long               m_sizeBufferAC;

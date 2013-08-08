@@ -36,11 +36,12 @@ namespace o3dgc
 {
     typedef float        Real;
     typedef unsigned int Index;
-    const double O3DGC_MAX_DOUBLE  = 1.79769e+308;
-    const long O3DGC_MIN_LONG      = -2147483647;
-    const long O3DGC_MAX_LONG      =  2147483647;
-    const long O3DGC_MAX_UCHAR8    = 255;
-    const long O3DGC_MAX_TFAN_SIZE = 256;
+    const double O3DGC_MAX_DOUBLE       = 1.79769e+308;
+    const long O3DGC_MIN_LONG           = -2147483647;
+    const long O3DGC_MAX_LONG           =  2147483647;
+    const long O3DGC_MAX_UCHAR8         = 255;
+    const long O3DGC_MAX_TFAN_SIZE      = 256;
+    const unsigned long O3DGC_MAX_ULONG = 4294967295;
 
     const unsigned long O3DGC_SC3DMC_START_CODE               = 0x00001F1;
     const unsigned long O3DGC_DV_START_CODE                   = 0x00001F2;
@@ -51,7 +52,6 @@ namespace o3dgc
 
     const unsigned long O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS = 8;
     const unsigned long O3DGC_SC3DMC_MAX_PREDICTION_SYMBOLS   = 257;
-    const unsigned long O3DGC_DV_MAX_PREDICTION_SYMBOLS       = 17;
 
     enum O3DGCEndianness
     {

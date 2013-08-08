@@ -60,7 +60,12 @@ namespace o3dgc
                                              const Real * const minFloatArray,
                                              const Real * const maxFloatArray,
                                              unsigned long nQBits);
+        O3DGCErrorCode              EncodeAC(unsigned long num, 
+                                             unsigned long dim, 
+                                             unsigned long M, 
+                                             unsigned long & encodedBytes);
 
+        unsigned long               m_posSize;
         unsigned long               m_sizeBufferAC;
         unsigned long               m_maxNumVectors;
         unsigned long               m_numVectors;

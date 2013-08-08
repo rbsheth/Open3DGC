@@ -101,6 +101,7 @@ namespace o3dgc
         m_quantVectors  = 0;
         m_sizeBufferAC  = 0;
         m_bufferAC      = 0;
+        m_posSize       = 0;
         m_streamType    = O3DGC_STREAM_TYPE_UNKOWN;
     }
     DynamicVectorEncoder::~DynamicVectorEncoder()
@@ -123,7 +124,7 @@ namespace o3dgc
         EncodeHeader(params, dynamicVector, bstream);
         // Encode payload
         EncodePayload(params, dynamicVector, bstream);
-        bstream.WriteUInt32(O3DGC_BINARY_STREAM_NUM_SYMBOLS_UINT32, bstream.GetSize() - start, m_streamType);
+        bstream.WriteUInt32(m_posSize, bstream.GetSize() - start, m_streamType);
         return O3DGC_OK;
 
     }
@@ -133,32 +134,65 @@ namespace o3dgc
     {
         m_streamType = params.GetStreamType();
         bstream.WriteUInt32(O3DGC_DV_START_CODE, m_streamType);
+        m_posSize = bstream.GetSize();
         bstream.WriteUInt32(0, m_streamType); // to be filled later
-        bstream.WriteUChar((unsigned char) params.GetStreamType(), m_streamType);
         bstream.WriteUChar((unsigned char) params.GetEncodeMode(), m_streamType);
         bstream.WriteUInt32(dynamicVector.GetNVector() , m_streamType);
         if (dynamicVector.GetNVector() > 0)
         {
             bstream.WriteUInt32(dynamicVector.GetDimVector(), m_streamType);
-            for(unsigned long j=0 ; j<dynamicVector.GetDimVector() ; ++j)
-            {
-                bstream.WriteFloat32((float) dynamicVector.GetMin(j), m_streamType);
-                bstream.WriteFloat32((float) dynamicVector.GetMax(j), m_streamType);
-            }            
             bstream.WriteUChar ((unsigned char) params.GetQuantBits(), m_streamType);
         }
         return O3DGC_OK;
     }
+    O3DGCErrorCode DynamicVectorEncoder::EncodeAC(unsigned long num, 
+                                                  unsigned long dim, 
+                                                  unsigned long M, 
+                                                  unsigned long & encodedBytes)
+    {
+        Arithmetic_Codec ace;
+        Static_Bit_Model bModel0;
+        Adaptive_Bit_Model bModel1;
+        Adaptive_Data_Model mModelValues(M+2);
+
+        const unsigned int NMAX = num * dim * 8 + 100;
+        if ( m_sizeBufferAC < NMAX )
+        {
+            delete [] m_bufferAC;
+            m_sizeBufferAC = NMAX;
+            m_bufferAC     = new unsigned char [m_sizeBufferAC];
+        }
+        ace.set_buffer(NMAX, m_bufferAC);
+        ace.start_encoder();
+        ace.ExpGolombEncode(0, 0, bModel0, bModel1);
+        ace.ExpGolombEncode(M, 0, bModel0, bModel1);
+        for(unsigned long v = 0; v < num; ++v)
+        {
+            for(unsigned long d = 0; d < dim; ++d)
+            {
+                EncodeIntACEGC(m_quantVectors[d * num + v], ace, mModelValues, bModel0, bModel1, M);
+            }
+        }
+        encodedBytes = ace.stop_encoder();
+        return O3DGC_OK;
+    }
+
     O3DGCErrorCode DynamicVectorEncoder::EncodePayload(const DVEncodeParams & params,
                                                        const DynamicVector & dynamicVector,
                                                        BinaryStream & bstream)
     {
 #ifdef DEBUG_VERBOSE
-        g_fileDebugDVEnc = fopen("dv_enc_main.txt", "w");
+        g_fileDebugDVEnc = fopen("dv_enc.txt", "w");
 #endif //DEBUG_VERBOSE
+        unsigned long      start = bstream.GetSize();
         const unsigned long dim  = dynamicVector.GetDimVector();
         const unsigned long num  = dynamicVector.GetNVector();
-        const unsigned long size = dim * num;
+        const unsigned long size = dim * num;        
+        for(unsigned long j=0 ; j<dynamicVector.GetDimVector() ; ++j)
+        {
+            bstream.WriteFloat32((float) dynamicVector.GetMin(j), m_streamType);
+            bstream.WriteFloat32((float) dynamicVector.GetMax(j), m_streamType);
+        }
         Quantize(dynamicVector.GetVectors(), 
                  num, 
                  dim,
@@ -166,35 +200,23 @@ namespace o3dgc
                  dynamicVector.GetMin(),
                  dynamicVector.GetMax(),
                  params.GetQuantBits());
-        
         for(unsigned long d = 0; d < dim; ++d)
         {
             Transform(m_quantVectors + d * num, num);
         }
-
-        Arithmetic_Codec ace;
-        Static_Bit_Model bModel0;
-        Adaptive_Bit_Model bModel1;
-
-        unsigned long         start       = bstream.GetSize();
-        const unsigned long   M           = O3DGC_DV_MAX_PREDICTION_SYMBOLS - 1;
-        unsigned long         nSymbols    = O3DGC_DV_MAX_PREDICTION_SYMBOLS;
-        Adaptive_Data_Model mModelValues(M+2);
-
-        if (m_streamType == O3DGC_STREAM_TYPE_BINARY)
+        #ifdef DEBUG_VERBOSE
+        printf("IntArray (%i, %i)\n", num, dim);
+        fprintf(g_fileDebugDVEnc, "IntArray (%i, %i)\n", num, dim);
+        for(unsigned long v = 0; v < num; ++v)
         {
-            const unsigned int NMAX = num * dim * (3 << params.GetQuantBits()) + 100;
-            if ( m_sizeBufferAC < NMAX )
+            for(unsigned long d = 0; d < dim; ++d)
             {
-                delete [] m_bufferAC;
-                m_sizeBufferAC = NMAX;
-                m_bufferAC     = new unsigned char [m_sizeBufferAC];
+                printf("%i\t %i \t %i\n", d * num + v, m_quantVectors[d * num + v], IntToUInt(m_quantVectors[d * num + v]));
+                fprintf(g_fileDebugDVEnc, "%i\t %i \t %i\n", d * num + v, m_quantVectors[d * num + v], IntToUInt(m_quantVectors[d * num + v]));
             }
-            ace.set_buffer(NMAX, m_bufferAC);
-            ace.start_encoder();
-            ace.ExpGolombEncode(0, 0, bModel0, bModel1);
-            ace.ExpGolombEncode(M, 0, bModel0, bModel1);
         }
+        #endif //DEBUG_VERBOSE
+
         bstream.WriteUInt32(0, m_streamType);
         if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
         {
@@ -208,17 +230,22 @@ namespace o3dgc
         }
         else
         {
-            for(unsigned long v = 0; v < num; ++v)
+            unsigned long encodedBytes = 0;
+            unsigned long bestEncodedBytes = O3DGC_MAX_ULONG;
+            unsigned long M = 1;
+            unsigned long bestM = 1;
+            while (M < 1024)
             {
-                for(unsigned long d = 0; d < dim; ++d)
+                EncodeAC(num, dim, M, encodedBytes);
+                if (encodedBytes > bestEncodedBytes)
                 {
-                    EncodeIntACEGC(m_quantVectors[d * num + v], ace, mModelValues, bModel0, bModel1, M);
+                    break;
                 }
+                bestM = M;
+                bestEncodedBytes = encodedBytes;
+                M *= 2;
             }
-        }
-        if (m_streamType == O3DGC_STREAM_TYPE_BINARY)
-        {
-            unsigned long encodedBytes = ace.stop_encoder();
+            EncodeAC(num, dim, bestM, encodedBytes);
             for(unsigned long i = 0; i < encodedBytes; ++i)
             {
                 bstream.WriteUChar8Bin(m_bufferAC[i]);

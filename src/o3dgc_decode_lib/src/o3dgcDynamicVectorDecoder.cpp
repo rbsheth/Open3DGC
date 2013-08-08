@@ -39,13 +39,13 @@ namespace o3dgc
         data[0] -= data[1] >> 1;
         while(p < size1)
         {
-			data[p] -= (data[p-1] + data[p+1]) >> 2;
+            data[p] -= (data[p-1] + data[p+1] + 2) >> 2;
             p += 2;
-		}
-		if ( p == size1)
-		{
-			data[p] -= data[p-1]>>1;
-		}
+        }
+        if ( p == size1)
+        {
+            data[p] -= data[p-1]>>1;
+        }
         return O3DGC_OK;
     }
     O3DGCErrorCode IPredict(long * const data, const long size)
@@ -55,13 +55,13 @@ namespace o3dgc
         long p = 1;
         while(p < size1)
         {
-			data[p] += (data[p-1] + data[p+1]) >> 1;
+            data[p] += (data[p-1] + data[p+1] + 1) >> 1;
             p += 2;
-		}
-		if ( p == size1)
-		{
-			data[p] += data[p-1];
-		}
+        }
+        if ( p == size1)
+        {
+            data[p] += data[p-1];
+        }
         return O3DGC_OK;
     }
     O3DGCErrorCode Merge(long * const data, const long size)
@@ -87,20 +87,24 @@ namespace o3dgc
         unsigned long n    = size;
         unsigned long even = 0;
         unsigned long k    = 0;
-        unsigned long tmp[32];
+        unsigned long tmp[10];
+        unsigned long e[10];
+        tmp[k] = n;
+        e[k] = (n & 1);
+        even += ((n&1) << k++);
         while(n > 1)
         {
-            even += ((n&1) << k);
             n = (n >> 1) + (n & 1);
             tmp[k] = n;
-            ++k;
+            e[k] = (n & 1);
+            even += ((n&1) << k++);
         }
-        for(long i = k-1; i >= 0; --i)
+        for(long i = k-2; i >= 0; --i)
         {
+            n = (n << 1) - ((even>>i) & 1);
             Merge  (data, n);
             IUpdate (data, n);
             IPredict(data, n);
-            n = (n << 1) + (even & (1<<i)); 
         }
         return O3DGC_OK;
     }
@@ -127,7 +131,7 @@ namespace o3dgc
         {
             m_iterator = iterator0;
             start_code = bstream.ReadUInt32(m_iterator, O3DGC_STREAM_TYPE_ASCII);
-            if (start_code != O3DGC_SC3DMC_START_CODE)
+            if (start_code != O3DGC_DV_START_CODE)
             {
                 return O3DGC_ERROR_CORRUPTED_STREAM;
             }
@@ -147,11 +151,6 @@ namespace o3dgc
         if (dynamicVector.GetNVector() > 0)
         {
             dynamicVector.SetDimVector( bstream.ReadUInt32(m_iterator, m_streamType) );
-            for(unsigned long j=0 ; j < dynamicVector.GetDimVector() ; ++j)
-            {
-                dynamicVector.SetMin(j, (Real) bstream.ReadFloat32(m_iterator, m_streamType));
-                dynamicVector.SetMax(j, (Real) bstream.ReadFloat32(m_iterator, m_streamType));
-            }            
             m_params.SetQuantBits(bstream.ReadUChar(m_iterator, m_streamType));
         }
         return O3DGC_OK;
@@ -161,13 +160,17 @@ namespace o3dgc
     {
         O3DGCErrorCode ret = O3DGC_OK;
 #ifdef DEBUG_VERBOSE
-        g_fileDebugDVCDec = fopen("DV_dec.txt", "w");
+        g_fileDebugDVCDec = fopen("dv_dec.txt", "w");
 #endif //DEBUG_VERBOSE
 
         const unsigned long dim  = dynamicVector.GetDimVector();
         const unsigned long num  = dynamicVector.GetNVector();
         const unsigned long size = dim * num;
-
+        for(unsigned long j=0 ; j < dynamicVector.GetDimVector() ; ++j)
+        {
+            dynamicVector.SetMin(j, (Real) bstream.ReadFloat32(m_iterator, m_streamType));
+            dynamicVector.SetMax(j, (Real) bstream.ReadFloat32(m_iterator, m_streamType));
+        }
         Arithmetic_Codec acd;
         Static_Bit_Model bModel0;
         Adaptive_Bit_Model bModel1;
@@ -214,7 +217,19 @@ namespace o3dgc
                 }
             }
         }
-        
+        #ifdef DEBUG_VERBOSE
+        printf("IntArray (%i, %i)\n", num, dim);
+        fprintf(g_fileDebugDVCDec, "IntArray (%i, %i)\n", num, dim);
+        for(unsigned long v = 0; v < num; ++v)
+        {
+            for(unsigned long d = 0; d < dim; ++d)
+            {
+                printf("%i\t %i \t %i\n", d * num + v, m_quantVectors[d * num + v], IntToUInt(m_quantVectors[d * num + v]));
+                fprintf(g_fileDebugDVCDec, "%i\t %i \t %i\n", d * num + v, m_quantVectors[d * num + v], IntToUInt(m_quantVectors[d * num + v]));
+            }
+        }
+        fflush(g_fileDebugDVCDec);
+        #endif //DEBUG_VERBOSE
         for(unsigned long d = 0; d < dim; ++d)
         {
             ITransform(m_quantVectors + d * num, num);
@@ -267,7 +282,4 @@ namespace o3dgc
         }
         return O3DGC_OK;
     }
-
-
-
 }

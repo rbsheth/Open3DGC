@@ -370,7 +370,7 @@ enum Mode
 int testDynamicVectorCompression()
 {
     const std::string outFileName("lift.s3d");
-    const unsigned long N = 101;
+    const unsigned long N = 500;
     const unsigned long D = 3;
     const unsigned long S = D*N;
     Real vectors[N*D];
@@ -397,7 +397,8 @@ int testDynamicVectorCompression()
     dynamicVectorEncoder.ComputeMinMax(O3DGC_SC3DMC_MAX_ALL_DIMS);
 
     DVEncodeParams params;
-    params.SetQuantBits(10);    
+    params.SetQuantBits(12);
+//    params.SetStreamType(O3DGC_STREAM_TYPE_ASCII);
     params.SetStreamType(O3DGC_STREAM_TYPE_BINARY);
     
     BinaryStream bstream(N*D*16);
@@ -435,13 +436,13 @@ int testDynamicVectorCompression()
     }
     fwrite(bstream.GetBuffer(), 1, bstream.GetSize(), fout);
     fclose(fout);
-    std::cout << "Bitstream size (bytes) " << bstream.GetSize() << std::endl;
+    std::cout << "Bitstream size (bytes) " << bstream.GetSize() << " (" << bstream.GetSize() * 8.0 / dynamicVectorEncoder.GetNVector() << " bpv)" <<std::endl;
     return 0;
 }
 
 int main(int argc, char * argv[])
 {
-    return testDynamicVectorCompression();
+//    return testDynamicVectorCompression();
     Mode mode = UNKNOWN;
     std::string inputFileName;
     int qcoord    = 12;

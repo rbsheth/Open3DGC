@@ -49,7 +49,7 @@ namespace o3dgc
         EncodeHeader(params, ifs, bstream);
         // Encode payload
         EncodePayload(params, ifs, bstream);
-        bstream.WriteUInt32(O3DGC_BINARY_STREAM_NUM_SYMBOLS_UINT32, bstream.GetSize() - start, m_streamType);
+        bstream.WriteUInt32(m_posSize, bstream.GetSize() - start, m_streamType);
         return O3DGC_OK;
     }
     template <class T>
@@ -59,6 +59,7 @@ namespace o3dgc
     {
         m_streamType = params.GetStreamType();
         bstream.WriteUInt32(O3DGC_SC3DMC_START_CODE, m_streamType);
+        m_posSize = bstream.GetSize();
         bstream.WriteUInt32(0, m_streamType); // to be filled later
 
         bstream.WriteUChar(O3DGC_SC3DMC_TFAN, m_streamType);
