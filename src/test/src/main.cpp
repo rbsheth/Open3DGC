@@ -423,7 +423,7 @@ int testDynamicVectorCompression()
 
 int main(int argc, char * argv[])
 {
-    return testDynamicVectorCompression();
+//    return testDynamicVectorCompression();
     Mode mode = UNKNOWN;
     std::string inputFileName;
     int qcoord    = 12;
