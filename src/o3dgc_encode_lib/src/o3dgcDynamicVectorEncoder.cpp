@@ -69,7 +69,7 @@ namespace o3dgc
     {   
         assert(size > 1);
         long a = 1;
-        long b = size;
+        long b = size-1;
         while (a < b) 
         {
             for (long i = a; i < b; i += 2) 
@@ -93,24 +93,6 @@ namespace o3dgc
         }
         return O3DGC_OK;
     }
-    inline void EncodeIntACEGC(long predResidual, 
-                               Arithmetic_Codec & ace,
-                               Adaptive_Data_Model & mModelValues,
-                               Static_Bit_Model & bModel0,
-                               Adaptive_Bit_Model & bModel1,
-                               const unsigned long M)
-    {
-        unsigned long uiValue = IntToUInt(predResidual);
-        if (uiValue < M) 
-        {
-            ace.encode(uiValue, mModelValues);
-        }
-        else 
-        {
-            ace.encode(M, mModelValues);
-            ace.ExpGolombEncode(uiValue-M, 0, bModel0, bModel1);
-        }
-    }
     DynamicVectorEncoder::DynamicVectorEncoder(void)
     {
         m_maxNumVectors = 0;
@@ -127,24 +109,26 @@ namespace o3dgc
         delete [] m_bufferAC;
     }
     O3DGCErrorCode DynamicVectorEncoder::Encode(const DVEncodeParams & params,
+                                                const DynamicVector & dynamicVector,
                                                 BinaryStream & bstream)
     {
         assert(params.GetQuantBits() > 0);
-        assert(params.GetNVector()   > 0);
-        assert(params.GetDimVector() > 0);
-        assert(params.GetStride()    >= params.GetDimVector());
-        assert(params.GetVectors() && params.GetMin() && params.GetMax());
+        assert(dynamicVector.GetNVector()   > 0);
+        assert(dynamicVector.GetDimVector() > 0);
+        assert(dynamicVector.GetStride()    >= dynamicVector.GetDimVector());
+        assert(dynamicVector.GetVectors() && dynamicVector.GetMin() && dynamicVector.GetMax());
         assert(m_streamType != O3DGC_STREAM_TYPE_UNKOWN);
         // Encode header
         unsigned long start = bstream.GetSize();
-        EncodeHeader(params, bstream);
+        EncodeHeader(params, dynamicVector, bstream);
         // Encode payload
-        EncodePayload(params, bstream);
+        EncodePayload(params, dynamicVector, bstream);
         bstream.WriteUInt32(O3DGC_BINARY_STREAM_NUM_SYMBOLS_UINT32, bstream.GetSize() - start, m_streamType);
         return O3DGC_OK;
 
     }
-    O3DGCErrorCode DynamicVectorEncoder::EncodeHeader(const DVEncodeParams & params, 
+    O3DGCErrorCode DynamicVectorEncoder::EncodeHeader(const DVEncodeParams & params,
+                                                      const DynamicVector & dynamicVector,
                                                       BinaryStream & bstream)
     {
         m_streamType = params.GetStreamType();
@@ -152,34 +136,35 @@ namespace o3dgc
         bstream.WriteUInt32(0, m_streamType); // to be filled later
         bstream.WriteUChar((unsigned char) params.GetStreamType(), m_streamType);
         bstream.WriteUChar((unsigned char) params.GetEncodeMode(), m_streamType);
-        bstream.WriteUInt32(params.GetNVector() , m_streamType);
-        if (params.GetNVector() > 0)
+        bstream.WriteUInt32(dynamicVector.GetNVector() , m_streamType);
+        if (dynamicVector.GetNVector() > 0)
         {
-            bstream.WriteUInt32(params.GetDimVector(), m_streamType);
-            for(unsigned long j=0 ; j<params.GetDimVector() ; ++j)
+            bstream.WriteUInt32(dynamicVector.GetDimVector(), m_streamType);
+            for(unsigned long j=0 ; j<dynamicVector.GetDimVector() ; ++j)
             {
-                bstream.WriteFloat32((float) params.GetMin(j), m_streamType);
-                bstream.WriteFloat32((float) params.GetMax(j), m_streamType);
+                bstream.WriteFloat32((float) dynamicVector.GetMin(j), m_streamType);
+                bstream.WriteFloat32((float) dynamicVector.GetMax(j), m_streamType);
             }            
             bstream.WriteUChar ((unsigned char) params.GetQuantBits(), m_streamType);
         }
         return O3DGC_OK;
     }
-    O3DGCErrorCode DynamicVectorEncoder::EncodePayload(const DVEncodeParams & params, 
+    O3DGCErrorCode DynamicVectorEncoder::EncodePayload(const DVEncodeParams & params,
+                                                       const DynamicVector & dynamicVector,
                                                        BinaryStream & bstream)
     {
 #ifdef DEBUG_VERBOSE
         g_fileDebugDVEnc = fopen("dv_enc_main.txt", "w");
 #endif //DEBUG_VERBOSE
-        const unsigned long dim  = params.GetDimVector();
-        const unsigned long num  = params.GetNVector();
+        const unsigned long dim  = dynamicVector.GetDimVector();
+        const unsigned long num  = dynamicVector.GetNVector();
         const unsigned long size = dim * num;
-        Quantize(params.GetVectors(), 
+        Quantize(dynamicVector.GetVectors(), 
                  num, 
                  dim,
-                 params.GetStride(),
-                 params.GetMin(),
-                 params.GetMax(),
+                 dynamicVector.GetStride(),
+                 dynamicVector.GetMin(),
+                 dynamicVector.GetMax(),
                  params.GetQuantBits());
         
         for(unsigned long d = 0; d < dim; ++d)
@@ -213,16 +198,22 @@ namespace o3dgc
         bstream.WriteUInt32(0, m_streamType);
         if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
         {
-            for (unsigned long i=0; i < size; ++i) 
+            for(unsigned long v = 0; v < num; ++v)
             {
-                bstream.WriteIntASCII(m_quantVectors[i]);
+                for(unsigned long d = 0; d < dim; ++d)
+                {
+                    bstream.WriteIntASCII(m_quantVectors[d * num + v]);
+                }
             }
         }
         else
         {
-            for (unsigned long i=0; i < size; ++i) 
+            for(unsigned long v = 0; v < num; ++v)
             {
-                EncodeIntACEGC(m_quantVectors[i], ace, mModelValues, bModel0, bModel1, M);
+                for(unsigned long d = 0; d < dim; ++d)
+                {
+                    EncodeIntACEGC(m_quantVectors[d * num + v], ace, mModelValues, bModel0, bModel1, M);
+                }
             }
         }
         if (m_streamType == O3DGC_STREAM_TYPE_BINARY)

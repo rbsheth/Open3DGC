@@ -59,7 +59,7 @@ namespace o3dgc
             m_streamType = O3DGC_STREAM_TYPE_BINARY;
         }
             
-        m_streamSize = bstream.ReadUInt32(m_iterator, m_streamType); // to be filled later
+        m_streamSize = bstream.ReadUInt32(m_iterator, m_streamType);
         m_params.SetEncodeMode( (O3DGCSC3DMCEncodingMode) bstream.ReadUChar(m_iterator, m_streamType));
 
         ifs.SetCreaseAngle((Real) bstream.ReadFloat32(m_iterator, m_streamType));
@@ -278,34 +278,6 @@ namespace o3dgc
         fclose(g_fileDebugSC3DMCDec);
 #endif //DEBUG_VERBOSE
         return ret;
-    }
-    inline long DecodeIntACEGC(Arithmetic_Codec & acd,
-                               Adaptive_Data_Model & mModelValues,
-                               Static_Bit_Model & bModel0,
-                               Adaptive_Bit_Model & bModel1,
-                               const unsigned long exp_k,
-                               const unsigned long M)
-    {
-        unsigned long uiValue = acd.decode(mModelValues);
-        if (uiValue == M) 
-        {
-            uiValue += acd.ExpGolombDecode(exp_k, bModel0, bModel1);
-        }
-        return UIntToInt(uiValue);
-    }
-    inline unsigned long DecodeUIntACEGC(Arithmetic_Codec & acd,
-                                         Adaptive_Data_Model & mModelValues,
-                                         Static_Bit_Model & bModel0,
-                                         Adaptive_Bit_Model & bModel1,
-                                         const unsigned long exp_k,
-                                         const unsigned long M)
-    {
-        unsigned long uiValue = acd.decode(mModelValues);
-        if (uiValue == M) 
-        {
-            uiValue += acd.ExpGolombDecode(exp_k, bModel0, bModel1);
-        }
-        return uiValue;
     }
     template<class T>
     O3DGCErrorCode SC3DMCDecoder<T>::DecodeIntArray(long * const intArray, 

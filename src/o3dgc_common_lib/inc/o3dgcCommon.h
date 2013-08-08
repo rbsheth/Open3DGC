@@ -51,7 +51,7 @@ namespace o3dgc
 
     const unsigned long O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS = 8;
     const unsigned long O3DGC_SC3DMC_MAX_PREDICTION_SYMBOLS   = 257;
-    const unsigned long O3DGC_DV_MAX_PREDICTION_SYMBOLS       = 1025;
+    const unsigned long O3DGC_DV_MAX_PREDICTION_SYMBOLS       = 17;
 
     enum O3DGCEndianness
     {

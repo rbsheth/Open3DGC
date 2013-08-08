@@ -200,42 +200,6 @@ namespace o3dgc
         }
         return O3DGC_OK;
     }
-    inline void EncodeIntACEGC(long predResidual, 
-                               Arithmetic_Codec & ace,
-                               Adaptive_Data_Model & mModelValues,
-                               Static_Bit_Model & bModel0,
-                               Adaptive_Bit_Model & bModel1,
-                               const unsigned long M)
-    {
-        unsigned long uiValue = IntToUInt(predResidual);
-        if (uiValue < M) 
-        {
-            ace.encode(uiValue, mModelValues);
-        }
-        else 
-        {
-            ace.encode(M, mModelValues);
-            ace.ExpGolombEncode(uiValue-M, 0, bModel0, bModel1);
-        }
-    }
-    inline void EncodeUIntACEGC(long predResidual, 
-                                Arithmetic_Codec & ace,
-                                Adaptive_Data_Model & mModelValues,
-                                Static_Bit_Model & bModel0,
-                                Adaptive_Bit_Model & bModel1,
-                                const unsigned long M)
-    {
-        unsigned long uiValue = (unsigned long) predResidual;
-        if (uiValue < M) 
-        {
-            ace.encode(uiValue, mModelValues);
-        }
-        else 
-        {
-            ace.encode(M, mModelValues);
-            ace.ExpGolombEncode(uiValue-M, 0, bModel0, bModel1);
-        }
-    }
     template <class T>
     O3DGCErrorCode SC3DMCEncoder<T>::EncodeFloatArray(const Real * const floatArray, 
                                                       unsigned long numFloatArray,

@@ -27,6 +27,7 @@ THE SOFTWARE.
 
 #include "o3dgcCommon.h"
 #include "o3dgcBinaryStream.h"
+#include "o3dgcDynamicVector.h"
 
 namespace o3dgc
 {
@@ -40,14 +41,17 @@ namespace o3dgc
                                     ~DynamicVectorEncoder(void);
         //! 
         O3DGCErrorCode              Encode(const DVEncodeParams & params,
+                                           const DynamicVector & dynamicVector,
                                            BinaryStream & bstream);
         O3DGCStreamType             GetStreamType() const { return m_streamType; }
         void                        SetStreamType(O3DGCStreamType streamType) { m_streamType = streamType; }
 
         private:
-        O3DGCErrorCode              EncodeHeader(const DVEncodeParams & params, 
+        O3DGCErrorCode              EncodeHeader(const DVEncodeParams & params,
+                                                 const DynamicVector & dynamicVector,
                                                  BinaryStream & bstream);
         O3DGCErrorCode              EncodePayload(const DVEncodeParams & params, 
+                                                  const DynamicVector & dynamicVector,
                                                   BinaryStream & bstream);
         O3DGCErrorCode              Quantize(const Real * const floatArray, 
                                              unsigned long numFloatArray,

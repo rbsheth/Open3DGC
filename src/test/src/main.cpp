@@ -38,6 +38,7 @@ THE SOFTWARE.
 #include "o3dgcTimer.h"
 #include "o3dgcDVEncodeParams.h"
 #include "o3dgcDynamicVectorEncoder.h"
+#include "o3dgcDynamicVectorDecoder.h"
 
 
 #ifdef WIN32
@@ -369,7 +370,7 @@ enum Mode
 int testDynamicVectorCompression()
 {
     const std::string outFileName("lift.s3d");
-    const unsigned long N = 100;
+    const unsigned long N = 101;
     const unsigned long D = 3;
     const unsigned long S = D*N;
     Real vectors[N*D];
@@ -386,29 +387,46 @@ int testDynamicVectorCompression()
         x += e;
     }
 
+    DynamicVector  dynamicVectorEncoder;
+    dynamicVectorEncoder.SetVectors(vectors);
+    dynamicVectorEncoder.SetDimVector(3);
+    dynamicVectorEncoder.SetMax(max);
+    dynamicVectorEncoder.SetMin(min);
+    dynamicVectorEncoder.SetNVector(N);
+    dynamicVectorEncoder.SetStride(3);
+    dynamicVectorEncoder.ComputeMinMax(O3DGC_SC3DMC_MAX_ALL_DIMS);
+
     DVEncodeParams params;
-    params.SetVectors(vectors);
-    params.SetDimVector(3);
-    params.SetMax(max);
-    params.SetMin(min);
-    params.SetNVector(N);
-    params.SetQuantBits(12);
-    params.SetStride(3);
+    params.SetQuantBits(10);    
     params.SetStreamType(O3DGC_STREAM_TYPE_BINARY);
     
-
-    params.ComputeMinMax(O3DGC_SC3DMC_MAX_ALL_DIMS);
-
-    BinaryStream bstream(params.GetNVector() * params.GetDimVector() * 16);
+    BinaryStream bstream(N*D*16);
 
     DynamicVectorEncoder encoder;
 
     encoder.SetStreamType(O3DGC_STREAM_TYPE_BINARY);
     Timer timer;
     timer.Tic();
-    encoder.Encode(params, bstream);
+    encoder.Encode(params, dynamicVectorEncoder, bstream);
     timer.Toc();
     std::cout << "Encode time (ms) " << timer.GetElapsedTime() << std::endl;
+
+
+    DynamicVector  dynamicVectorDecoder;
+    DynamicVectorDecoder decoder;
+    decoder.DecodeHeader(dynamicVectorDecoder, bstream);
+    dynamicVectorDecoder.SetStride(dynamicVectorDecoder.GetDimVector());
+
+    std::vector<Real> oDV;
+    std::vector<Real> oDVMin;
+    std::vector<Real> oDVMax;
+    oDV.resize(dynamicVectorDecoder.GetNVector() * dynamicVectorDecoder.GetDimVector());
+    oDVMin.resize(dynamicVectorDecoder.GetDimVector());
+    oDVMax.resize(dynamicVectorDecoder.GetDimVector());
+    dynamicVectorDecoder.SetVectors(& oDV[0]);
+    dynamicVectorDecoder.SetMin(& oDVMin[0]);
+    dynamicVectorDecoder.SetMax(& oDVMax[0]);
+    decoder.DecodePlayload(dynamicVectorDecoder, bstream);
 
     FILE * fout = fopen(outFileName.c_str(), "wb");
     if (!fout)
@@ -423,7 +441,7 @@ int testDynamicVectorCompression()
 
 int main(int argc, char * argv[])
 {
-//    return testDynamicVectorCompression();
+    return testDynamicVectorCompression();
     Mode mode = UNKNOWN;
     std::string inputFileName;
     int qcoord    = 12;
