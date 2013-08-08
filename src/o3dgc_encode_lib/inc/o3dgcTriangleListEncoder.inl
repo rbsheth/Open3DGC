@@ -186,7 +186,7 @@ namespace o3dgc
         m_numVertices             = 0;
         m_triangles               = 0;
         m_maxSizeVertexToTriangle = 0;
-        m_streamType              = O3DGC_SC3DMC_STREAM_TYPE_UNKOWN;
+        m_streamType              = O3DGC_STREAM_TYPE_UNKOWN;
     }
     template <class T>
     TriangleListEncoder<T>::~TriangleListEncoder()

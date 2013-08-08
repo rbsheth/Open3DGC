@@ -160,7 +160,7 @@ namespace o3dgc
             }
         }    
         return O3DGC_OK;
-    }    
+    }
     template <class T>
     O3DGCErrorCode SC3DMCEncoder<T>::QuantizeFloatArray(const Real * const floatArray, 
                                                    unsigned long numFloatArray,
@@ -272,7 +272,7 @@ namespace o3dgc
 
         memset(m_freqSymbols, 0, sizeof(unsigned long) * O3DGC_SC3DMC_MAX_PREDICTION_SYMBOLS);
         memset(m_freqPreds  , 0, sizeof(unsigned long) * O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS);
-        if (m_streamType == O3DGC_SC3DMC_STREAM_TYPE_ASCII)
+        if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
         {
             mask += (O3DGC_SC3DMC_BINARIZATION_ASCII & 7)<<4;
             m_predictors.Allocate(nvert);
@@ -305,7 +305,7 @@ namespace o3dgc
         {
             const Real minFloatArray[2] = {(Real)(-2.0),(Real)(-2.0)};
             const Real maxFloatArray[2] = {(Real)(2.0),(Real)(2.0)};
-            if (m_streamType == O3DGC_SC3DMC_STREAM_TYPE_ASCII)
+            if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
             {
                 for(unsigned long i = 0; i < numFloatArray; ++i)
                 {
@@ -460,7 +460,7 @@ namespace o3dgc
                         bestPred = p;
                     }
                 }
-                if (m_streamType == O3DGC_SC3DMC_STREAM_TYPE_ASCII)
+                if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
                 {
                     m_predictors.PushBack((unsigned char) bestPred);
                 }
@@ -484,7 +484,7 @@ namespace o3dgc
                     fprintf(g_fileDebugSC3DMCEnc, "%i \t %i \t [%i]\n", vm*dimFloatArray+i, predResidual, m_neighbors[bestPred].m_pred[i]);
 #endif //DEBUG_VERBOSE
 
-                    if (m_streamType == O3DGC_SC3DMC_STREAM_TYPE_ASCII)
+                    if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
                     {
                         bstream.WriteIntASCII(predResidual);
                     }
@@ -503,7 +503,7 @@ namespace o3dgc
                 for (unsigned long i = 0; i < dimFloatArray; i++) 
                 {
                     predResidual = m_quantFloatArray[v*stride+i] - m_quantFloatArray[prev*stride+i];
-                    if (m_streamType == O3DGC_SC3DMC_STREAM_TYPE_ASCII)
+                    if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
                     {
                         bstream.WriteIntASCII(predResidual);
                     }
@@ -522,7 +522,7 @@ namespace o3dgc
                 for (unsigned long i = 0; i < dimFloatArray; i++) 
                 {
                     predResidual = m_quantFloatArray[v*stride+i];
-                    if (m_streamType == O3DGC_SC3DMC_STREAM_TYPE_ASCII)
+                    if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
                     {
                         bstream.WriteUIntASCII(predResidual);
                     }
@@ -537,7 +537,7 @@ namespace o3dgc
                 }
             }
         }
-        if (m_streamType != O3DGC_SC3DMC_STREAM_TYPE_ASCII)
+        if (m_streamType != O3DGC_STREAM_TYPE_ASCII)
         {
             unsigned long encodedBytes = ace.stop_encoder();
             for(unsigned long i = 0; i < encodedBytes; ++i)
@@ -547,7 +547,7 @@ namespace o3dgc
         }
         bstream.WriteUInt32(start, bstream.GetSize() - start, m_streamType);
 
-        if (m_streamType == O3DGC_SC3DMC_STREAM_TYPE_ASCII)
+        if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
         {
             unsigned long start = bstream.GetSize();
             bstream.WriteUInt32ASCII(0);
@@ -589,7 +589,7 @@ namespace o3dgc
                 minValue = intArray[i];
             }
         }
-        if (m_streamType == O3DGC_SC3DMC_STREAM_TYPE_ASCII)
+        if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
         {
             mask += (O3DGC_SC3DMC_BINARIZATION_ASCII & 7)<<4;
         }
@@ -613,7 +613,7 @@ namespace o3dgc
         bstream.WriteUInt32(minValue + O3DGC_MAX_LONG, m_streamType);
 
         long v;
-        if (m_streamType == O3DGC_SC3DMC_STREAM_TYPE_ASCII)
+        if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
         {
             for (unsigned long vm=0; vm < numIntArray; ++vm) 
             {

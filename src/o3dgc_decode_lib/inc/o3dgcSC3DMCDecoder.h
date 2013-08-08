@@ -47,7 +47,7 @@ namespace o3dgc
                                         m_quantFloatArraySize = 0;
                                         m_normals             = 0;
                                         m_normalsSize         = 0;
-                                        m_streamType          = O3DGC_SC3DMC_STREAM_TYPE_UNKOWN;
+                                        m_streamType          = O3DGC_STREAM_TYPE_UNKOWN;
                                     };
         //! Destructor.
                                     ~SC3DMCDecoder(void)
@@ -99,7 +99,7 @@ namespace o3dgc
         Real *                      m_normals;
         unsigned long               m_normalsSize;
         SC3DMCStats                 m_stats;
-        O3DGCSC3DMCStreamType       m_streamType;
+        O3DGCStreamType       m_streamType;
     };
 }
 #include "o3dgcSC3DMCDecoder.inl"    // template implementation

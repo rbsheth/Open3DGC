@@ -19,44 +19,53 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+#include "o3dgcDVEncodeParams.h"
 #include "o3dgcDynamicVectorEncoder.h"
+#include "o3dgcArithmeticCodec.h"
+#include "o3dgcBinaryStream.h"
+
+#define DEBUG_VERBOSE
 
 namespace o3dgc
 {
-    O3DGCErrorCode Update(long * const data, const long size)
-    {   
+#ifdef DEBUG_VERBOSE
+        FILE * g_fileDebugDVEnc = NULL;
+#endif //DEBUG_VERBOSE
+
+    inline O3DGCErrorCode Update(long * const data, const long size)
+    {
         assert(size > 1);
         const long size1 = size - 1;
         long p = 2;
         data[0] += data[1] >> 1;
         while(p < size1)
         {
-			data[p] += (data[p-1] + data[p+1]) >> 2;
+            data[p] += (data[p-1] + data[p+1] + 2) >> 2;
             p += 2;
-		}
-		if ( p == size1)
-		{
-			data[p] += data[p-1]>>1;
-		}
+        }
+        if ( p == size1)
+        {
+            data[p] += data[p-1]>>1;
+        }
         return O3DGC_OK;
     }
-    O3DGCErrorCode Predict(long * const data, const long size)
+    inline O3DGCErrorCode Predict(long * const data, const long size)
     {   
         assert(size > 1);
         const long size1 = size - 1;
         long p = 1;
         while(p < size1)
         {
-			data[p] -= (data[p-1] + data[p+1]) >> 1;
+            data[p] -= (data[p-1] + data[p+1] + 1) >> 1;
             p += 2;
-		}
-		if ( p == size1)
-		{
-			data[p] -= data[p-1];
-		}
+        }
+        if ( p == size1)
+        {
+            data[p] -= data[p-1];
+        }
         return O3DGC_OK;
     }
-    O3DGCErrorCode Split(long * const data, const long size)
+    inline O3DGCErrorCode Split(long * const data, const long size)
     {   
         assert(size > 1);
         long a = 1;
@@ -72,29 +81,197 @@ namespace o3dgc
         }
         return O3DGC_OK;
     }
+    inline O3DGCErrorCode Transform(long * const data, const unsigned long size)
+    {   
+        unsigned long n = size;
+        while(n > 1)
+        {
+            Predict(data, n);
+            Update (data, n);
+            Split(data, n);
+            n = (n >> 1) + (n & 1);
+        }
+        return O3DGC_OK;
+    }
+    inline void EncodeIntACEGC(long predResidual, 
+                               Arithmetic_Codec & ace,
+                               Adaptive_Data_Model & mModelValues,
+                               Static_Bit_Model & bModel0,
+                               Adaptive_Bit_Model & bModel1,
+                               const unsigned long M)
+    {
+        unsigned long uiValue = IntToUInt(predResidual);
+        if (uiValue < M) 
+        {
+            ace.encode(uiValue, mModelValues);
+        }
+        else 
+        {
+            ace.encode(M, mModelValues);
+            ace.ExpGolombEncode(uiValue-M, 0, bModel0, bModel1);
+        }
+    }
     DynamicVectorEncoder::DynamicVectorEncoder(void)
     {
-        m_maxNumVectors           = 0;
-        m_numVectors              = 0;
-        m_dimVectors              = 0;
-        m_quantVectors            = 0;
-        m_streamType              = O3DGC_SC3DMC_STREAM_TYPE_UNKOWN;
+        m_maxNumVectors = 0;
+        m_numVectors    = 0;
+        m_dimVectors    = 0;
+        m_quantVectors  = 0;
+        m_sizeBufferAC  = 0;
+        m_bufferAC      = 0;
+        m_streamType    = O3DGC_STREAM_TYPE_UNKOWN;
     }
     DynamicVectorEncoder::~DynamicVectorEncoder()
     {
         delete [] m_quantVectors;
+        delete [] m_bufferAC;
     }
-    
-    O3DGCErrorCode DynamicVectorEncoder::Encode(const Real * const vectors,
-                                                const long number,
-                                                const long dim,
-                                                const long stride,
+    O3DGCErrorCode DynamicVectorEncoder::Encode(const DVEncodeParams & params,
                                                 BinaryStream & bstream)
     {
-        assert(number > 0);
-        assert(dim > 0);
-        assert(stride >= dim);
+        assert(params.GetQuantBits() > 0);
+        assert(params.GetNVector()   > 0);
+        assert(params.GetDimVector() > 0);
+        assert(params.GetStride()    >= params.GetDimVector());
+        assert(params.GetVectors() && params.GetMin() && params.GetMax());
+        assert(m_streamType != O3DGC_STREAM_TYPE_UNKOWN);
+        // Encode header
+        unsigned long start = bstream.GetSize();
+        EncodeHeader(params, bstream);
+        // Encode payload
+        EncodePayload(params, bstream);
+        bstream.WriteUInt32(O3DGC_BINARY_STREAM_NUM_SYMBOLS_UINT32, bstream.GetSize() - start, m_streamType);
+        return O3DGC_OK;
+
+    }
+    O3DGCErrorCode DynamicVectorEncoder::EncodeHeader(const DVEncodeParams & params, 
+                                                      BinaryStream & bstream)
+    {
+        m_streamType = params.GetStreamType();
+        bstream.WriteUInt32(O3DGC_DV_START_CODE, m_streamType);
+        bstream.WriteUInt32(0, m_streamType); // to be filled later
+        bstream.WriteUChar((unsigned char) params.GetStreamType(), m_streamType);
+        bstream.WriteUChar((unsigned char) params.GetEncodeMode(), m_streamType);
+        bstream.WriteUInt32(params.GetNVector() , m_streamType);
+        if (params.GetNVector() > 0)
+        {
+            bstream.WriteUInt32(params.GetDimVector(), m_streamType);
+            for(unsigned long j=0 ; j<params.GetDimVector() ; ++j)
+            {
+                bstream.WriteFloat32((float) params.GetMin(j), m_streamType);
+                bstream.WriteFloat32((float) params.GetMax(j), m_streamType);
+            }            
+            bstream.WriteUChar ((unsigned char) params.GetQuantBits(), m_streamType);
+        }
+        return O3DGC_OK;
+    }
+    O3DGCErrorCode DynamicVectorEncoder::EncodePayload(const DVEncodeParams & params, 
+                                                       BinaryStream & bstream)
+    {
+#ifdef DEBUG_VERBOSE
+        g_fileDebugDVEnc = fopen("dv_enc_main.txt", "w");
+#endif //DEBUG_VERBOSE
+        const unsigned long dim  = params.GetDimVector();
+        const unsigned long num  = params.GetNVector();
+        const unsigned long size = dim * num;
+        Quantize(params.GetVectors(), 
+                 num, 
+                 dim,
+                 params.GetStride(),
+                 params.GetMin(),
+                 params.GetMax(),
+                 params.GetQuantBits());
         
+        for(unsigned long d = 0; d < dim; ++d)
+        {
+            Transform(m_quantVectors + d * num, num);
+        }
+
+        Arithmetic_Codec ace;
+        Static_Bit_Model bModel0;
+        Adaptive_Bit_Model bModel1;
+
+        unsigned long         start       = bstream.GetSize();
+        const unsigned long   M           = O3DGC_DV_MAX_PREDICTION_SYMBOLS - 1;
+        unsigned long         nSymbols    = O3DGC_DV_MAX_PREDICTION_SYMBOLS;
+        Adaptive_Data_Model mModelValues(M+2);
+
+        if (m_streamType == O3DGC_STREAM_TYPE_BINARY)
+        {
+            const unsigned int NMAX = num * dim * (3 << params.GetQuantBits()) + 100;
+            if ( m_sizeBufferAC < NMAX )
+            {
+                delete [] m_bufferAC;
+                m_sizeBufferAC = NMAX;
+                m_bufferAC     = new unsigned char [m_sizeBufferAC];
+            }
+            ace.set_buffer(NMAX, m_bufferAC);
+            ace.start_encoder();
+            ace.ExpGolombEncode(0, 0, bModel0, bModel1);
+            ace.ExpGolombEncode(M, 0, bModel0, bModel1);
+        }
+        bstream.WriteUInt32(0, m_streamType);
+        if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
+        {
+            for (unsigned long i=0; i < size; ++i) 
+            {
+                bstream.WriteIntASCII(m_quantVectors[i]);
+            }
+        }
+        else
+        {
+            for (unsigned long i=0; i < size; ++i) 
+            {
+                EncodeIntACEGC(m_quantVectors[i], ace, mModelValues, bModel0, bModel1, M);
+            }
+        }
+        if (m_streamType == O3DGC_STREAM_TYPE_BINARY)
+        {
+            unsigned long encodedBytes = ace.stop_encoder();
+            for(unsigned long i = 0; i < encodedBytes; ++i)
+            {
+                bstream.WriteUChar8Bin(m_bufferAC[i]);
+            }
+        }
+        bstream.WriteUInt32(start, bstream.GetSize() - start, m_streamType);
+#ifdef DEBUG_VERBOSE
+        fclose(g_fileDebugDVEnc);
+#endif //DEBUG_VERBOSE
+        return O3DGC_OK;
+    }
+    O3DGCErrorCode DynamicVectorEncoder::Quantize(const Real * const floatArray, 
+                                                  unsigned long numFloatArray,
+                                                  unsigned long dimFloatArray,
+                                                  unsigned long stride,
+                                                  const Real * const minFloatArray,
+                                                  const Real * const maxFloatArray,
+                                                  unsigned long nQBits)
+    {
+        const unsigned long size = numFloatArray * dimFloatArray;
+        Real r;
+        if (m_maxNumVectors < size)
+        {
+            delete [] m_quantVectors;
+            m_maxNumVectors = size;
+            m_quantVectors = new long [m_maxNumVectors];
+        }
+        Real delta;
+        for(unsigned long d = 0; d < dimFloatArray; ++d)
+        {
+            r = maxFloatArray[d] - minFloatArray[d];
+            if (r > 0.0f)
+            {
+                delta = (float)((1 << nQBits) - 1) / r;
+            }
+            else
+            {
+                delta = 1.0f;
+            }
+            for(unsigned long v = 0; v < numFloatArray; ++v)
+            {
+                m_quantVectors[v + d * numFloatArray] = (long)((floatArray[v * stride + d]-minFloatArray[d]) * delta + 0.5f);
+            }
+        }
         return O3DGC_OK;
     }
 }

@@ -37,7 +37,7 @@ namespace o3dgc
                                     {
                                         memset(this, 0, sizeof(SC3DMCEncodeParams));
                                         m_encodeMode        = O3DGC_SC3DMC_TFAN;
-                                        m_streamTypeMode    = O3DGC_SC3DMC_STREAM_TYPE_ASCII;
+                                        m_streamTypeMode    = O3DGC_STREAM_TYPE_ASCII;
                                         m_coordQuantBits    = 14;
                                         m_normalQuantBits   = 8;
                                         m_colorQuantBits    = 10;
@@ -58,7 +58,7 @@ namespace o3dgc
         //! Destructor.
                                     ~SC3DMCEncodeParams(void) {};
 
-        O3DGCSC3DMCStreamType       GetStreamType()    const { return m_streamTypeMode;}
+        O3DGCStreamType       GetStreamType()    const { return m_streamTypeMode;}
         O3DGCSC3DMCEncodingMode     GetEncodeMode()    const { return m_encodeMode;}
 
         unsigned long               GetNFloatAttributes()  const { return m_numFloatAttributes;}
@@ -103,7 +103,7 @@ namespace o3dgc
                                         return m_intAttributePredMode[a];
                                     }
 
-        void                        SetStreamType(O3DGCSC3DMCStreamType streamTypeMode)  { m_streamTypeMode = streamTypeMode;}
+        void                        SetStreamType(O3DGCStreamType streamTypeMode)  { m_streamTypeMode = streamTypeMode;}
         void                        SetEncodeMode(O3DGCSC3DMCEncodingMode encodeMode)  { m_encodeMode = encodeMode;}
         void                        SetNFloatAttributes(unsigned long numFloatAttributes) 
                                     { 
@@ -153,7 +153,7 @@ namespace o3dgc
         O3DGCSC3DMCPredictionMode   m_colorPredMode; 
         O3DGCSC3DMCPredictionMode   m_floatAttributePredMode[O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES];
         O3DGCSC3DMCPredictionMode   m_intAttributePredMode  [O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES];
-        O3DGCSC3DMCStreamType       m_streamTypeMode;
+        O3DGCStreamType       m_streamTypeMode;
         O3DGCSC3DMCEncodingMode     m_encodeMode;
     };
 }

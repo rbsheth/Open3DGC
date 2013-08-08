@@ -44,8 +44,8 @@ namespace o3dgc
                                            const long dim,
                                            const long stride,
                                            BinaryStream & bstream);
-        O3DGCSC3DMCStreamType       GetStreamType() const { return m_streamType; }
-        void                        SetStreamType(O3DGCSC3DMCStreamType streamType) { m_streamType = streamType; }
+        O3DGCStreamType       GetStreamType() const { return m_streamType; }
+        void                        SetStreamType(O3DGCStreamType streamType) { m_streamType = streamType; }
 
         private:
 
@@ -53,7 +53,7 @@ namespace o3dgc
         long                        m_numVectors;
         long                        m_dimVectors;
         long *                      m_quantVectors;
-        O3DGCSC3DMCStreamType       m_streamType;
+        O3DGCStreamType       m_streamType;
     };
 }
 #endif // O3DGC_DYNAMIC_VECTOR_DECODER_H

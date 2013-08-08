@@ -43,6 +43,7 @@ namespace o3dgc
     const long O3DGC_MAX_TFAN_SIZE = 256;
 
     const unsigned long O3DGC_SC3DMC_START_CODE               = 0x00001F1;
+    const unsigned long O3DGC_DV_START_CODE                   = 0x00001F2;
     const unsigned long O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES = 256;
     const unsigned long O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES   = 256;
     const unsigned long O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES = 8;
@@ -50,6 +51,7 @@ namespace o3dgc
 
     const unsigned long O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS = 8;
     const unsigned long O3DGC_SC3DMC_MAX_PREDICTION_SYMBOLS   = 257;
+    const unsigned long O3DGC_DV_MAX_PREDICTION_SYMBOLS       = 1025;
 
     enum O3DGCEndianness
     {
@@ -75,11 +77,11 @@ namespace o3dgc
         O3DGC_SC3DMC_BINARIZATION_AC_EGC = 4,            // Arithmetic Coding & EGCk
         O3DGC_SC3DMC_BINARIZATION_ASCII  = 5             // Arithmetic Coding & EGCk
     };
-    enum O3DGCSC3DMCStreamType
+    enum O3DGCStreamType
     {
-        O3DGC_SC3DMC_STREAM_TYPE_UNKOWN = 0,
-        O3DGC_SC3DMC_STREAM_TYPE_ASCII  = 1,
-        O3DGC_SC3DMC_STREAM_TYPE_BINARY = 2
+        O3DGC_STREAM_TYPE_UNKOWN = 0,
+        O3DGC_STREAM_TYPE_ASCII  = 1,
+        O3DGC_STREAM_TYPE_BINARY = 2
     };
 
 
@@ -105,6 +107,11 @@ namespace o3dgc
         O3DGC_SC3DMC_SVA        = 1,        // not supported
         O3DGC_SC3DMC_TFAN       = 2,        // supported
     };    
+    enum O3DGCDVEncodingMode
+    {
+        O3DGC_DYNAMIC_VECTOR_LIFT       = 0
+    };    
+
     template<class T> 
     inline const T absolute(const T& a)
     {
@@ -341,6 +348,67 @@ namespace o3dgc
     inline long UIntToInt(unsigned long uiValue)
     {
         return (uiValue & 1)?-((long) ((uiValue+1) >> 1)):((long) (uiValue >> 1));
+    }
+    inline void ComputeVectorMinMax(const Real * const tab, 
+                                    unsigned long size, 
+                                    unsigned long dim,
+                                    unsigned long stride,
+                                    Real * minTab,
+                                    Real * maxTab,
+                                    O3DGCSC3DMCQuantizationMode quantMode)
+    {
+        if (size == 0 || dim == 0)
+        {
+            return;
+        }
+        unsigned long p = 0;
+        for(unsigned long d = 0; d < dim; ++d)
+        {
+            maxTab[d] = minTab[d] = tab[p++];
+        }
+        p = stride;
+        for(unsigned long i = 1; i < size; ++i)
+        {
+            for(unsigned long d = 0; d < dim; ++d)
+            {
+                if (maxTab[d] < tab[p+d]) maxTab[d] = tab[p+d];
+                if (minTab[d] > tab[p+d]) minTab[d] = tab[p+d];
+            }
+            p += stride;
+        }
+
+        if (quantMode == O3DGC_SC3DMC_DIAG_BB)
+        {
+            Real diag = 0.0;
+            Real r;
+            for(unsigned long d = 0; d < dim; ++d)
+            {
+                r     = (maxTab[d] - minTab[d]);
+                diag += r*r;
+            } 
+            diag = sqrt(diag);
+            for(unsigned long d = 0; d < dim; ++d)
+            {
+                 maxTab[d] = minTab[d] + diag;
+            } 
+        }
+        else if (quantMode == O3DGC_SC3DMC_MAX_ALL_DIMS)
+        {            
+            Real maxr = (maxTab[0] - minTab[0]);
+            Real r;
+            for(unsigned long d = 1; d < dim; ++d)
+            {
+                r = (maxTab[d] - minTab[d]);
+                if ( r > maxr)
+                {
+                    maxr = r;
+                }
+            } 
+            for(unsigned long d = 0; d < dim; ++d)
+            {
+                 maxTab[d] = minTab[d] + maxr;
+            } 
+        }
     }
 }
 #endif // O3DGC_COMMON_H

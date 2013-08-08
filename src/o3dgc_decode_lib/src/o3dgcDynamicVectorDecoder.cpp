@@ -80,7 +80,7 @@ namespace o3dgc
         m_numVectors              = 0;
         m_dimVectors              = 0;
         m_quantVectors            = 0;
-        m_streamType              = O3DGC_SC3DMC_STREAM_TYPE_UNKOWN;
+        m_streamType              = O3DGC_STREAM_TYPE_UNKOWN;
     }
     DynamicVectorDecoder::~DynamicVectorDecoder()
     {

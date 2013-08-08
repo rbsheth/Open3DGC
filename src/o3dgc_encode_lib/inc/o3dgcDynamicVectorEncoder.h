@@ -39,21 +39,31 @@ namespace o3dgc
         //! Destructor.
                                     ~DynamicVectorEncoder(void);
         //! 
-        O3DGCErrorCode              Encode(const Real * const vectors,
-                                           const long number,
-                                           const long dim,
-                                           const long stride,
+        O3DGCErrorCode              Encode(const DVEncodeParams & params,
                                            BinaryStream & bstream);
-        O3DGCSC3DMCStreamType       GetStreamType() const { return m_streamType; }
-        void                        SetStreamType(O3DGCSC3DMCStreamType streamType) { m_streamType = streamType; }
+        O3DGCStreamType             GetStreamType() const { return m_streamType; }
+        void                        SetStreamType(O3DGCStreamType streamType) { m_streamType = streamType; }
 
         private:
+        O3DGCErrorCode              EncodeHeader(const DVEncodeParams & params, 
+                                                 BinaryStream & bstream);
+        O3DGCErrorCode              EncodePayload(const DVEncodeParams & params, 
+                                                  BinaryStream & bstream);
+        O3DGCErrorCode              Quantize(const Real * const floatArray, 
+                                             unsigned long numFloatArray,
+                                             unsigned long dimFloatArray,
+                                             unsigned long stride,
+                                             const Real * const minFloatArray,
+                                             const Real * const maxFloatArray,
+                                             unsigned long nQBits);
 
-        long                        m_maxNumVectors;
-        long                        m_numVectors;
-        long                        m_dimVectors;
+        unsigned long               m_sizeBufferAC;
+        unsigned long               m_maxNumVectors;
+        unsigned long               m_numVectors;
+        unsigned long               m_dimVectors;
+        unsigned char *             m_bufferAC;
         long *                      m_quantVectors;
-        O3DGCSC3DMCStreamType       m_streamType;
+        O3DGCStreamType             m_streamType;
     };
 }
 #endif // O3DGC_DYNAMIC_VECTOR_ENCODER_H

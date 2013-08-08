@@ -40,23 +40,23 @@ namespace o3dgc
                                                   const BinaryStream & bstream)
     {
         unsigned long iterator0 = m_iterator;
-        unsigned long start_code = bstream.ReadUInt32(m_iterator, O3DGC_SC3DMC_STREAM_TYPE_BINARY);
+        unsigned long start_code = bstream.ReadUInt32(m_iterator, O3DGC_STREAM_TYPE_BINARY);
         if (start_code != O3DGC_SC3DMC_START_CODE)
         {
             m_iterator = iterator0;
-            start_code = bstream.ReadUInt32(m_iterator, O3DGC_SC3DMC_STREAM_TYPE_ASCII);
+            start_code = bstream.ReadUInt32(m_iterator, O3DGC_STREAM_TYPE_ASCII);
             if (start_code != O3DGC_SC3DMC_START_CODE)
             {
                 return O3DGC_ERROR_CORRUPTED_STREAM;
             }
             else
             {
-                m_streamType = O3DGC_SC3DMC_STREAM_TYPE_ASCII;
+                m_streamType = O3DGC_STREAM_TYPE_ASCII;
             }
         }
         else
         {
-            m_streamType = O3DGC_SC3DMC_STREAM_TYPE_BINARY;
+            m_streamType = O3DGC_STREAM_TYPE_BINARY;
         }
             
         m_streamSize = bstream.ReadUInt32(m_iterator, m_streamType); // to be filled later
@@ -330,7 +330,7 @@ namespace o3dgc
         long minValue = bstream.ReadUInt32(m_iterator, m_streamType) - O3DGC_MAX_LONG;
         sizeSize -= (m_iterator - start);
         
-        if (m_streamType != O3DGC_SC3DMC_STREAM_TYPE_ASCII)
+        if (m_streamType != O3DGC_STREAM_TYPE_ASCII)
         {
             bstream.GetBuffer(m_iterator, buffer);
             m_iterator += sizeSize;
@@ -345,7 +345,7 @@ namespace o3dgc
         printf("IntArray (%i, %i)\n", numIntArray, dimIntArray);
         fprintf(g_fileDebugSC3DMCDec, "IntArray (%i, %i)\n", numIntArray, dimIntArray);
 #endif //DEBUG_VERBOSE
-        if (m_streamType == O3DGC_SC3DMC_STREAM_TYPE_ASCII)
+        if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
         {
             for (long v=0; v < nvert; ++v) 
             {
@@ -489,7 +489,7 @@ namespace o3dgc
         unsigned long       iteratorPred     = m_iterator + streamSize;
         unsigned int        exp_k            = 0;
         unsigned int        M                = 0;        
-        if (m_streamType != O3DGC_SC3DMC_STREAM_TYPE_ASCII)
+        if (m_streamType != O3DGC_STREAM_TYPE_ASCII)
         {
             if (binarization != O3DGC_SC3DMC_BINARIZATION_AC_EGC)
             {
@@ -517,7 +517,7 @@ namespace o3dgc
         {
             m_orientation.Allocate(size);
             m_orientation.Clear();
-            if (m_streamType == O3DGC_SC3DMC_STREAM_TYPE_ASCII)
+            if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
             {
                 for(unsigned long i = 0; i < numFloatArray; ++i)
                 {
@@ -661,7 +661,7 @@ namespace o3dgc
                 }
 #endif //DEBUG_VERBOSE
                 unsigned long bestPred;
-                if (m_streamType == O3DGC_SC3DMC_STREAM_TYPE_ASCII)
+                if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
                 {
                     bestPred = bstream.ReadUCharASCII(iteratorPred);
                 }
@@ -675,7 +675,7 @@ namespace o3dgc
 #endif //DEBUG_VERBOSE
                 for (unsigned long i = 0; i < dimFloatArray; i++) 
                 {
-                    if (m_streamType == O3DGC_SC3DMC_STREAM_TYPE_ASCII)
+                    if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
                     {
                         predResidual = bstream.ReadIntASCII(m_iterator);
                     }
@@ -694,7 +694,7 @@ namespace o3dgc
             {
                 for (unsigned long i = 0; i < dimFloatArray; i++) 
                 {
-                    if (m_streamType == O3DGC_SC3DMC_STREAM_TYPE_ASCII)
+                    if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
                     {
                         predResidual = bstream.ReadIntASCII(m_iterator);
                     }
@@ -713,7 +713,7 @@ namespace o3dgc
             {
                 for (unsigned long i = 0; i < dimFloatArray; i++) 
                 {
-                    if (m_streamType == O3DGC_SC3DMC_STREAM_TYPE_ASCII)
+                    if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
                     {
                         predResidual = bstream.ReadUIntASCII(m_iterator);
                     }

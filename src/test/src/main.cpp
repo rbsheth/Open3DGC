@@ -36,7 +36,8 @@ THE SOFTWARE.
 #include "o3dgcSC3DMCEncoder.h"
 #include "o3dgcSC3DMCDecoder.h"
 #include "o3dgcTimer.h"
-
+#include "o3dgcDVEncodeParams.h"
+#include "o3dgcDynamicVectorEncoder.h"
 
 
 #ifdef WIN32
@@ -110,7 +111,7 @@ bool SaveMaterials(const std::string & fileName,
                    const std::string & materialLib);
 
 
-int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnormal, O3DGCSC3DMCStreamType streamType)
+int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnormal, O3DGCStreamType streamType)
 {
     std::string folder;
     long found = (long) fileName.find_last_of(PATH_SEP);
@@ -365,14 +366,70 @@ enum Mode
     DECODE  = 2
 };
 
+int testDynamicVectorCompression()
+{
+    const std::string outFileName("lift.s3d");
+    const unsigned long N = 100;
+    const unsigned long D = 3;
+    const unsigned long S = D*N;
+    Real vectors[N*D];
+    Real max[D];
+    Real min[D];
+    const Real e = Real(6.30) / N;
+    Real x = Real(0.0);
+    long p = 0;
+    for(long n = 0; n < N; ++n)
+    {
+        vectors[p++] = cos(x);
+        vectors[p++] = sin(x);
+        vectors[p++] = sin(x) * cos(x);
+        x += e;
+    }
+
+    DVEncodeParams params;
+    params.SetVectors(vectors);
+    params.SetDimVector(3);
+    params.SetMax(max);
+    params.SetMin(min);
+    params.SetNVector(N);
+    params.SetQuantBits(12);
+    params.SetStride(3);
+    params.SetStreamType(O3DGC_STREAM_TYPE_BINARY);
+    
+
+    params.ComputeMinMax(O3DGC_SC3DMC_MAX_ALL_DIMS);
+
+    BinaryStream bstream(params.GetNVector() * params.GetDimVector() * 16);
+
+    DynamicVectorEncoder encoder;
+
+    encoder.SetStreamType(O3DGC_STREAM_TYPE_BINARY);
+    Timer timer;
+    timer.Tic();
+    encoder.Encode(params, bstream);
+    timer.Toc();
+    std::cout << "Encode time (ms) " << timer.GetElapsedTime() << std::endl;
+
+    FILE * fout = fopen(outFileName.c_str(), "wb");
+    if (!fout)
+    {
+        return -1;
+    }
+    fwrite(bstream.GetBuffer(), 1, bstream.GetSize(), fout);
+    fclose(fout);
+    std::cout << "Bitstream size (bytes) " << bstream.GetSize() << std::endl;
+    return 0;
+}
+
 int main(int argc, char * argv[])
 {
+    return testDynamicVectorCompression();
     Mode mode = UNKNOWN;
     std::string inputFileName;
     int qcoord    = 12;
     int qtexCoord = 10;
     int qnormal   = 8;
-    O3DGCSC3DMCStreamType streamType = O3DGC_SC3DMC_STREAM_TYPE_BINARY;
+    O3DGCStreamType streamType = O3DGC_STREAM_TYPE_BINARY;
     for(int i = 1; i < argc; ++i)
     {
         if ( !strcmp(argv[i], "-c"))
@@ -422,7 +479,7 @@ int main(int argc, char * argv[])
             {
                 if (!strcmp(argv[i], "ascii"))
                 {
-                    streamType = O3DGC_SC3DMC_STREAM_TYPE_ASCII;
+                    streamType = O3DGC_STREAM_TYPE_ASCII;
                 }
             }
         }
@@ -454,7 +511,7 @@ int main(int argc, char * argv[])
         std::cout << "   Coord Quant.    \t "<< qcoord << std::endl;
         std::cout << "   Normal Quant.   \t "<< qnormal << std::endl;
         std::cout << "   TexCoord Quant. \t "<< qtexCoord << std::endl;
-        std::cout << "   Stream Type     \t "<< ((streamType == O3DGC_SC3DMC_STREAM_TYPE_ASCII)? "ASCII" : "Binary") << std::endl;
+        std::cout << "   Stream Type     \t "<< ((streamType == O3DGC_STREAM_TYPE_ASCII)? "ASCII" : "Binary") << std::endl;
         ret = testEncode(inputFileName, qcoord, qtexCoord, qnormal, streamType);
     }
     else
