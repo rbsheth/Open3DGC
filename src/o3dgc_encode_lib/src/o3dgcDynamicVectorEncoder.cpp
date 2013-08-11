@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include "o3dgcArithmeticCodec.h"
 #include "o3dgcBinaryStream.h"
 
-#define DEBUG_VERBOSE
+//#define DEBUG_VERBOSE
 
 namespace o3dgc
 {
