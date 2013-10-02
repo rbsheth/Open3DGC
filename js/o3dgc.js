@@ -166,6 +166,20 @@ var o3dgc = (function (module) {
         return pos;
     }
     // Timer class
+    (function () {
+        if (typeof window.performance === 'undefined') {
+            window.performance = {};
+        }
+        if (!window.performance.now) {
+            var nowOffset = Date.now();
+            if (performance.timing && performance.timing.navigationStart) {
+                nowOffset = performance.timing.navigationStart
+            }
+            window.performance.now = function now() {
+                return Date.now() - nowOffset;
+            }
+        }
+    })();
     module.Timer = function () {
         this.m_start = 0;
         this.m_end = 0;

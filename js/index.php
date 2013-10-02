@@ -178,12 +178,12 @@
             render();
         }
         function render() {
-            if (mesh !== undefined) {
+            if (typeof mesh !== "undefined") {
                 var time = Date.now() * 0.001;
                 mesh.rotation.x = time * 0.25;
                 mesh.rotation.y = time * 0.5;
             }
-            else if (compressedStream !== undefined && compressedStream) {
+            else if (typeof compressedStream !== "undefined" && compressedStream) {
                 decode(compressedStream);
                 var n = 3 * ifs.GetNCoord();
                 geometry = new THREE.BufferGeometry();
