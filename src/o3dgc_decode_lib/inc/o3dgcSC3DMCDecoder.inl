@@ -368,7 +368,6 @@ namespace o3dgc
         Real rna0, rnb0, norm0;
         char ni0 = 0, ni1 = 0;
         long a, b, c;
-        m_orientation.Clear();
         for (long v=0; v < nvert; ++v) 
         {
             n0.X() = 0;

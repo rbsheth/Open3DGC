@@ -440,7 +440,9 @@ namespace o3dgc
         }
                                                                // compute products
         x = M.distribution[s] * length;
-        if (s != M.last_symbol) y = M.distribution[s+1] * length;
+        if (s != M.last_symbol) {
+            y = M.distribution[s+1] * length;
+        }
       }
 
       else {                                  // decode using only multiplications

@@ -808,7 +808,7 @@ bool SaveOBJ(const std::string & fileName,
         if (useMaterial)
         {
             matID = matIDs[0];
-            fout <<"usemtl " << materials[matID].m_name << std::endl;                 
+            fout <<"usemtl " << materials[matID].m_name << std::endl;
         }
         if (nt > 0 && nn >0)
         {
@@ -817,7 +817,7 @@ bool SaveOBJ(const std::string & fileName,
                 if (useMaterial && matID != matIDs[i])
                 {
                     matID = matIDs[i];
-                    fout <<"usemtl " << materials[matID].m_name << std::endl;                 
+                    fout <<"usemtl " << materials[matID].m_name << std::endl;
                 }
                 fout << "f " << triangles[i].X()+1 << "/" << triangles[i].X()+1 << "/" << triangles[i].X()+1;
                 fout << " "  << triangles[i].Y()+1 << "/" << triangles[i].Y()+1 << "/" << triangles[i].Y()+1;
@@ -831,7 +831,7 @@ bool SaveOBJ(const std::string & fileName,
                 if (useMaterial && matID != matIDs[i])
                 {
                     matID = matIDs[i];
-                    fout <<"usemtl " << materials[matID].m_name << std::endl;                 
+                    fout <<"usemtl " << materials[matID].m_name << std::endl;
                 }
                 fout << "f " << triangles[i].X()+1 << "//" << triangles[i].X()+1;
                 fout << " "  << triangles[i].Y()+1 << "//" << triangles[i].Y()+1;
@@ -845,7 +845,7 @@ bool SaveOBJ(const std::string & fileName,
                 if (useMaterial && matID != matIDs[i])
                 {
                     matID = matIDs[i];
-                    fout <<"usemtl " << materials[matID].m_name << std::endl;                 
+                    fout <<"usemtl " << materials[matID].m_name << std::endl;
                 }
                 fout << "f " << triangles[i].X()+1 << "/" << triangles[i].X()+1;
                 fout << " "  << triangles[i].Y()+1 << "/" << triangles[i].Y()+1;
