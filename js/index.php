@@ -26,13 +26,14 @@
             }
         </style>
 
-        <script type="text/javascript" src="o3dgc.js"></script>
         <script>
         var container;
         var camera, scene, renderer;
         var geometry, mesh, ifs, material;
         var oReq = new XMLHttpRequest();
         var D = 100;
+        var compressedStream;
+        var resType = "arraybuffer";
 <?php
     if (isset($_GET["model"]) && $_GET["model"] != ''){
         echo "        var fileName = '".$_GET["model"]."';\n";
@@ -42,15 +43,34 @@
         echo "        var fileName = 'duck.s3d';\n";
     }
 ?>
+        if (fileName.indexOf("ascii") !== -1){
+            resType = "text";
+        }
         oReq.open("GET", fileName, true);
-        oReq.responseType = "arraybuffer";
+        oReq.responseType = resType;
         oReq.onload = function (oEvent) {
-            decode(oReq.response);
+            compressedStream = oReq.response;
         };
         oReq.send(null);
+        </script>
+        <script type="text/javascript" src="o3dgc.js"></script>
+        <script>
         function decode(arrayBuffer) {
             if (arrayBuffer) {
-                var bstream = new o3dgc.BinaryStream(arrayBuffer);
+                function str2ab(str) {
+                    var buf = new ArrayBuffer(str.length);
+                    var bufView = new Uint8Array(buf);
+                    for (var i=0, strLen=str.length; i<strLen; i++) {
+                        bufView[i] = str.charCodeAt(i);
+                    }
+                    return buf;
+                }
+                if (resType === "text") {
+                    var bstream = new o3dgc.BinaryStream(str2ab(arrayBuffer));
+                }
+                else{
+                    var bstream = new o3dgc.BinaryStream(arrayBuffer);
+                }
                 var decoder = new o3dgc.SC3DMCDecoder();
                 var timer = new o3dgc.Timer();
                 ifs = new o3dgc.IndexedFaceSet();
@@ -111,8 +131,8 @@
                 //SaveOBJ(ifs, fileName);
             }
         }
-		</script>
-		<script src="three.min.js"></script>
+        </script>
+        <script src="three.min.js"></script>
     </head>
     <body>
 
@@ -163,7 +183,8 @@
                 mesh.rotation.x = time * 0.25;
                 mesh.rotation.y = time * 0.5;
             }
-            else if (ifs !== undefined) {
+            else if (compressedStream !== undefined && compressedStream) {
+                decode(compressedStream);
                 var n = 3 * ifs.GetNCoord();
                 geometry = new THREE.BufferGeometry();
                 geometry.attributes = [];
