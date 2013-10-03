@@ -110,6 +110,8 @@ bool LoadMaterials(const std::string & fileName,
 bool SaveMaterials(const std::string & fileName, 
                    const std::vector< Material > & materials, 
                    const std::string & materialLib);
+bool SaveIFS(const std::string & fileName, 
+             const IndexedFaceSet<Index> & ifs);
 
 
 int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnormal, O3DGCStreamType streamType)
@@ -203,7 +205,7 @@ int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnor
 
     BinaryStream bstream((unsigned long)points.size()*8);
 
-    
+    SaveIFS("debug.txt", ifs);
     SC3DMCEncoder<Index> encoder;
     Timer timer;
     timer.Tic();
@@ -937,4 +939,73 @@ bool LoadMaterials(const std::string & fileName, std::vector< Material > & mater
     }
     return false;
 }
+void SaveIFSIntArray(std::ofstream & fout, const std::string & name, unsigned int a, const long * const tab, unsigned long nElement, unsigned long dim)
+{
+    if (tab)
+    {
+        fout << name << "\t" << a << "\t" << nElement << "\t" << dim << std::endl;
+    }
+    else
+    {
+        fout << name << "\t" << a << "\t" << 0 << "\t" << 0 << std::endl;
+        return;
+    }
+    if (!tab) return;
+    for (unsigned long i = 0; i < nElement; ++i){
+        fout << "[" << i << "]\t";
+        for (unsigned long j = 0; j < dim; ++j){
+            fout << tab[i*dim + j] << "\t";
+        }
+        fout << std::endl;
+    }
+}
+void SaveIFSFloatArray(std::ofstream & fout, const std::string & name, unsigned int a, const Real * const tab, unsigned long nElement, unsigned long dim)
+{
+    if (tab)
+    {
+        fout << name << "\t" << a << "\t" << nElement << "\t" << dim << std::endl;
+    }
+    else
+    {
+        fout << name << "\t" << a << "\t" << 0 << "\t" << 0 << std::endl;
+        return;
+    }
+    for (unsigned long i = 0; i < nElement; ++i){
+        fout << "[" << i << "]\t";
+        for (unsigned long j = 0; j < dim; ++j){
+            fout << tab[i*dim + j] << "\t";
+        }
+        fout << std::endl;
+    }
+}
+bool SaveIFS(const std::string & fileName, const IndexedFaceSet<Index> & ifs)
+{
+    std::ofstream fout;
+    fout.open(fileName.c_str());
+    if (!fout.fail()) 
+    {
+        SaveIFSIntArray(fout, "* CoordIndex", 0, (const long * const) ifs.GetCoordIndex(), ifs.GetNCoordIndex(), 3);
+        SaveIFSIntArray(fout, "* MatID", 0, (const long * const) ifs.GetMatID(), ifs.GetNCoordIndex(), 1);
+        SaveIFSFloatArray(fout, "* Coord", 0, ifs.GetCoord(), ifs.GetNCoord(), 3);
+        SaveIFSFloatArray(fout, "* Normal", 0, ifs.GetNormal(), ifs.GetNNormal(), 3);
+        SaveIFSFloatArray(fout, "* Color", 0, ifs.GetColor(), ifs.GetNColor(), 3);
+        SaveIFSFloatArray(fout, "* TexCoord", 0, ifs.GetTexCoord(), ifs.GetNTexCoord(), 2);
+        for(unsigned long a = 0; a < ifs.GetNumFloatAttributes(); ++a)
+        {
+            SaveIFSFloatArray(fout, "* FloatAttribute", a, ifs.GetFloatAttribute(a), ifs.GetNFloatAttribute(a), ifs.GetFloatAttributeDim(a));
+        }
+        for(unsigned long a = 0; a < ifs.GetNumIntAttributes(); ++a)
+        {
+            SaveIFSIntArray(fout, "* IntAttribute", a, ifs.GetIntAttribute(a), ifs.GetNIntAttribute(a), ifs.GetIntAttributeDim(a));
+        }
+        fout.close();
+    }
+    else 
+    {
+        std::cout << "Not able to create file" << std::endl;
+        return false;
+    }
+    return true;
+}
+
 
