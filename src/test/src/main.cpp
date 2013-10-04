@@ -179,13 +179,14 @@ int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnor
         std::cout << "Error: SaveMatrials()\n" << std::endl;
         return -1;
     }
+/*
     ret = SaveOBJ("debug.obj", points, texCoords, normals, triangles, materials, matIDs, materialLib);
     if (!ret)
     {
         std::cout << "Error: SaveOBJ()\n" << std::endl;
         return -1;
     }
-
+*/
     SC3DMCEncodeParams params;
     params.SetStreamType(streamType);
     IndexedFaceSet<Index> ifs;
@@ -224,7 +225,7 @@ int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnor
 
     BinaryStream bstream((unsigned long)points.size()*8);
 
-    SaveIFS("debug.txt", ifs);
+//    SaveIFS("debug.txt", ifs);
     SC3DMCEncoder<Index> encoder;
     Timer timer;
     timer.Tic();

@@ -35,6 +35,12 @@
         var compressedStream;
         var resType = "arraybuffer";
 <?php
+    if (isset($_GET["obj"]) && $_GET["obj"] == 'true'){
+        echo "        var dumpObj = true;\n";
+    }
+    else{
+        echo "        var dumpObj = false;\n";
+    }
     if (isset($_GET["model"]) && $_GET["model"] != ''){
         echo "        var fileName = '".$_GET["model"]."';\n";
     }
@@ -116,7 +122,9 @@
                 console.log("\t Float Attributes   " + stats.m_timeFloatAttribute + " ms, " + stats.m_streamSizeFloatAttribute + " bytes (" + (8.0 * stats.m_streamSizeFloatAttribute / ifs.GetNCoord()) + " bpv)");
                 console.log("\t Integer Attributes " + stats.m_timeFloatAttribute + " ms, " + stats.m_streamSizeFloatAttribute + " bytes (" + (8.0 * stats.m_streamSizeFloatAttribute / ifs.GetNCoord()) + " bpv)");
                 console.log("\t Reorder            " + stats.m_timeReorder + " ms,  " + 0 + " bytes (" + 0.0 + " bpv)");
-//                SaveOBJ(ifs, fileName);
+                if (dumpObj){
+                    SaveOBJ(ifs, fileName);
+                }
             }
         }
         </script>
