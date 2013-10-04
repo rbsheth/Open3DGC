@@ -67,9 +67,11 @@
                 }
                 if (resType === "text") {
                     var bstream = new o3dgc.BinaryStream(str2ab(arrayBuffer));
+                    var size = arrayBuffer.length;
                 }
                 else{
                     var bstream = new o3dgc.BinaryStream(arrayBuffer);
+                    var size = arrayBuffer.byteLength;
                 }
                 var decoder = new o3dgc.SC3DMCDecoder();
                 var timer = new o3dgc.Timer();
@@ -79,33 +81,20 @@
                 timer.Toc();
                 console.log("DecodeHeader time (ms) " + timer.GetElapsedTime());
                 // allocate memory
-                var byteSize = 3 * 2 * ifs.GetNCoordIndex() +
-                               3 * 4 * ifs.GetNCoord() +
-                               3 * 4 * ifs.GetNNormal() +
-                               3 * 4 * ifs.GetNColor() +
-                               2 * 4 * ifs.GetNTexCoord();
-                var buffer = new ArrayBuffer(byteSize);
-                var shift = 0;
                 if (ifs.GetNCoordIndex() > 0) {
-                    ifs.SetCoordIndex(new Int16Array(buffer, shift, 3 * ifs.GetNCoordIndex()));
-                    shift += 6 * ifs.GetNCoordIndex();
+                    ifs.SetCoordIndex(new Uint16Array(3 * ifs.GetNCoordIndex()));
                 }
                 if (ifs.GetNCoord() > 0) {
-                    var nc = 3 * ifs.GetNCoord();
-                    ifs.SetCoord(new Float32Array(buffer, shift, nc));
-                    shift += 12 * ifs.GetNCoord();
+                    ifs.SetCoord(new Float32Array(3 * ifs.GetNCoord()));
                 }
                 if (ifs.GetNNormal() > 0) {
-                    ifs.SetNormal(new Float32Array(buffer, shift, 3 * ifs.GetNNormal()));
-                    shift += 12 * ifs.GetNNormal();
+                    ifs.SetNormal(new Float32Array(3 * ifs.GetNNormal()));
                 }
                 if (ifs.GetNColor() > 0) {
-                    ifs.SetColor(new Float32Array(buffer, shift, 3 * ifs.GetNColor()));
-                    shift += 12 * ifs.GetNColor();
+                    ifs.SetColor(new Float32Array(3 * ifs.GetNColor()));
                 }
                 if (ifs.GetNTexCoord() > 0) {
-                    ifs.GetTexCoord(new Float32Array(buffer, shift, 2 * ifs.GetNTexCoord()));
-                    shift += 8 * ifs.GetNTexCoord();
+                    ifs.GetTexCoord(new Float32Array(ifs.GetNTexCoord()));
                 }
                 console.log("Mesh info ");
                 console.log("\t# coords    " + ifs.GetNCoord());
@@ -116,7 +105,6 @@
                 timer.Tic();
                 decoder.DecodePlayload(ifs, bstream);
                 timer.Toc();
-                var size = arrayBuffer.byteLength;
                 console.log("DecodePlayload time " + timer.GetElapsedTime() + " ms, " + size + " bytes (" + (8.0 * size / ifs.GetNCoord()) + " bpv)");
                 console.log("Details");
                 var stats = decoder.GetStats();
@@ -128,7 +116,7 @@
                 console.log("\t Float Attributes   " + stats.m_timeFloatAttribute + " ms, " + stats.m_streamSizeFloatAttribute + " bytes (" + (8.0 * stats.m_streamSizeFloatAttribute / ifs.GetNCoord()) + " bpv)");
                 console.log("\t Integer Attributes " + stats.m_timeFloatAttribute + " ms, " + stats.m_streamSizeFloatAttribute + " bytes (" + (8.0 * stats.m_streamSizeFloatAttribute / ifs.GetNCoord()) + " bpv)");
                 console.log("\t Reorder            " + stats.m_timeReorder + " ms,  " + 0 + " bytes (" + 0.0 + " bpv)");
-                //SaveOBJ(ifs, fileName);
+//                SaveOBJ(ifs, fileName);
             }
         }
         </script>

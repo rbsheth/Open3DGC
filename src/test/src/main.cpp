@@ -94,6 +94,13 @@ bool LoadOBJ(const std::string & fileName,
              std::vector< Material > & materials,
              std::string & materialLib);
 
+bool LoadIFS(const std::string & fileName, 
+             std::vector< Vec3<Real> > & points,
+             std::vector< Vec2<Real> > & texCoords,
+             std::vector< Vec3<Real> > & normals,
+             std::vector< Vec3<Index> > & triangles,
+             std::vector< unsigned long > & matIDs);
+
 bool SaveOBJ(const std::string & fileName, 
              const std::vector< Vec3<Real> > & points,
              const std::vector< Vec2<Real> > & texCoords,
@@ -136,11 +143,24 @@ int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnor
     std::vector< Material > materials;
     std::string materialLib;
     std::cout << "Loading " << fileName << " ..." << std::endl;
-    bool ret = LoadOBJ(fileName, points, texCoords, normals, triangles, matIDs, materials, materialLib);
-    if (!ret)
+    bool ret;
+    if (fileName.find(".obj") != std::string::npos )
     {
-        std::cout << "Error: LoadOBJ()\n" << std::endl;
-        return -1;
+        ret = LoadOBJ(fileName, points, texCoords, normals, triangles, matIDs, materials, materialLib);
+        if (!ret)
+        {
+            std::cout << "Error: LoadOBJ()\n" << std::endl;
+            return -1;
+        }
+    }
+    else
+    {
+        ret = LoadIFS(fileName, points, texCoords, normals, triangles, matIDs);
+        if (!ret)
+        {
+            std::cout << "Error: LoadIFS()\n" << std::endl;
+            return -1;
+        }
     }
     if (points.size() == 0 || triangles.size() == 0)
     {
@@ -159,14 +179,13 @@ int testEncode(const std::string & fileName, int qcoord, int qtexCoord, int qnor
         std::cout << "Error: SaveMatrials()\n" << std::endl;
         return -1;
     }
-/*
     ret = SaveOBJ("debug.obj", points, texCoords, normals, triangles, materials, matIDs, materialLib);
     if (!ret)
     {
         std::cout << "Error: SaveOBJ()\n" << std::endl;
         return -1;
     }
-*/
+
     SC3DMCEncodeParams params;
     params.SetStreamType(streamType);
     IndexedFaceSet<Index> ifs;
@@ -861,7 +880,7 @@ bool SaveOBJ(const std::string & fileName,
                 if (useMaterial && matID != matIDs[i])
                 {
                     matID = matIDs[i];
-                    fout <<"usemtl " << materials[matID].m_name << std::endl;                 
+                    fout <<"usemtl " << materials[matID].m_name << std::endl;
                 }
                 fout << "f " << triangles[i].X()+1;
                 fout << " "  << triangles[i].Y()+1;
@@ -939,7 +958,8 @@ bool LoadMaterials(const std::string & fileName, std::vector< Material > & mater
     }
     return false;
 }
-void SaveIFSIntArray(std::ofstream & fout, const std::string & name, unsigned int a, const long * const tab, unsigned long nElement, unsigned long dim)
+template <class T>
+void SaveIFSArray(std::ofstream & fout, const std::string & name, unsigned int a, const T * const tab, unsigned long nElement, unsigned long dim)
 {
     if (tab)
     {
@@ -959,44 +979,25 @@ void SaveIFSIntArray(std::ofstream & fout, const std::string & name, unsigned in
         fout << std::endl;
     }
 }
-void SaveIFSFloatArray(std::ofstream & fout, const std::string & name, unsigned int a, const Real * const tab, unsigned long nElement, unsigned long dim)
-{
-    if (tab)
-    {
-        fout << name << "\t" << a << "\t" << nElement << "\t" << dim << std::endl;
-    }
-    else
-    {
-        fout << name << "\t" << a << "\t" << 0 << "\t" << 0 << std::endl;
-        return;
-    }
-    for (unsigned long i = 0; i < nElement; ++i){
-        fout << "[" << i << "]\t";
-        for (unsigned long j = 0; j < dim; ++j){
-            fout << tab[i*dim + j] << "\t";
-        }
-        fout << std::endl;
-    }
-}
 bool SaveIFS(const std::string & fileName, const IndexedFaceSet<Index> & ifs)
 {
     std::ofstream fout;
     fout.open(fileName.c_str());
     if (!fout.fail()) 
     {
-        SaveIFSIntArray(fout, "* CoordIndex", 0, (const long * const) ifs.GetCoordIndex(), ifs.GetNCoordIndex(), 3);
-        SaveIFSIntArray(fout, "* MatID", 0, (const long * const) ifs.GetMatID(), ifs.GetNCoordIndex(), 1);
-        SaveIFSFloatArray(fout, "* Coord", 0, ifs.GetCoord(), ifs.GetNCoord(), 3);
-        SaveIFSFloatArray(fout, "* Normal", 0, ifs.GetNormal(), ifs.GetNNormal(), 3);
-        SaveIFSFloatArray(fout, "* Color", 0, ifs.GetColor(), ifs.GetNColor(), 3);
-        SaveIFSFloatArray(fout, "* TexCoord", 0, ifs.GetTexCoord(), ifs.GetNTexCoord(), 2);
+        SaveIFSArray(fout, "* CoordIndex", 0, ifs.GetCoordIndex(), ifs.GetNCoordIndex(), 3);
+        SaveIFSArray(fout, "* MatID", 0, (const long * const) ifs.GetMatID(), ifs.GetNCoordIndex(), 1);
+        SaveIFSArray(fout, "* Coord", 0, ifs.GetCoord(), ifs.GetNCoord(), 3);
+        SaveIFSArray(fout, "* Normal", 0, ifs.GetNormal(), ifs.GetNNormal(), 3);
+        SaveIFSArray(fout, "* Color", 0, ifs.GetColor(), ifs.GetNColor(), 3);
+        SaveIFSArray(fout, "* TexCoord", 0, ifs.GetTexCoord(), ifs.GetNTexCoord(), 2);
         for(unsigned long a = 0; a < ifs.GetNumFloatAttributes(); ++a)
         {
-            SaveIFSFloatArray(fout, "* FloatAttribute", a, ifs.GetFloatAttribute(a), ifs.GetNFloatAttribute(a), ifs.GetFloatAttributeDim(a));
+            SaveIFSArray(fout, "* FloatAttribute", a, ifs.GetFloatAttribute(a), ifs.GetNFloatAttribute(a), ifs.GetFloatAttributeDim(a));
         }
         for(unsigned long a = 0; a < ifs.GetNumIntAttributes(); ++a)
         {
-            SaveIFSIntArray(fout, "* IntAttribute", a, ifs.GetIntAttribute(a), ifs.GetNIntAttribute(a), ifs.GetIntAttributeDim(a));
+            SaveIFSArray(fout, "* IntAttribute", a, ifs.GetIntAttribute(a), ifs.GetNIntAttribute(a), ifs.GetIntAttributeDim(a));
         }
         fout.close();
     }
@@ -1007,5 +1008,97 @@ bool SaveIFS(const std::string & fileName, const IndexedFaceSet<Index> & ifs)
     }
     return true;
 }
+template <class T>
+void LoadIFSArray(std::ifstream fin, T * const tab)
+{
 
+}
+bool LoadIFS(const std::string & fileName, 
+             std::vector< Vec3<Real> > & points,
+             std::vector< Vec2<Real> > & texCoords,
+             std::vector< Vec3<Real> > & normals,
+             std::vector< Vec3<Index> > & triangles,
+             std::vector< unsigned long > & matIDs)
+{
+    std::ifstream fin;
+    fin.open(fileName.c_str());
+    if (!fin.fail()) 
+    {
+        unsigned long a, n, dim;
+        std::string tmp;
+        while(!fin.eof())
+        {
+            fin >> tmp;
+            if (tmp == "MatID")
+            {
+                fin >> a >> n >> dim;
+                matIDs.resize(n);
+                for(unsigned long i = 0, p = 0; i < n; ++i)
+                {
+                    fin >> tmp;
+                    fin >> matIDs[i];
+                }
+            }
+            else if (tmp == "CoordIndex")
+            {
+                fin >> a >> n >> dim;
+                triangles.resize(n);
+                for(unsigned long i = 0, p = 0; i < n; ++i)
+                {
+                    fin >> tmp;
+                    for(unsigned long d = 0; d < dim; ++d)
+                    {
+                        fin >> triangles[i][d];
+                    }
+                }
+            }
+            else if (tmp == "Coord")
+            {
+                fin >> a >> n >> dim;
+                points.resize(n);
+                for(unsigned long i = 0, p = 0; i < n; ++i)
+                {
+                    fin >> tmp;
+                    for(unsigned long d = 0; d < dim; ++d)
+                    {
+                        fin >> points[i][d];
+                    }
+                }
+            }
+            else if (tmp == "Normal")
+            {
+                fin >> a >> n >> dim;
+                normals.resize(n);
+                for(unsigned long i = 0, p = 0; i < n; ++i)
+                {
+                    fin >> tmp;
+                    for(unsigned long d = 0; d < dim; ++d)
+                    {
+                        fin >> normals[i][d];
+                    }
+                }
+            }
+            else if (tmp == "TexCoord")
+            {
+                fin >> a >> n >> dim;
+                texCoords.resize(n);
+                for(unsigned long i = 0, p = 0; i < n; ++i)
+                {
+                    fin >> tmp;
+                    for(unsigned long d = 0; d < dim; ++d)
+                    {
+                        fin >> texCoords[i][d];
+                    }
+                }
+            }
+        }
+        fin.close();
+        return true;
+    }
+    else 
+    {
+        std::cout << "Not able to load file" << std::endl;
+        return false;
+    }
+}
 
