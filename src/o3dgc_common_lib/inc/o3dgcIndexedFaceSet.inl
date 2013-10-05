@@ -32,8 +32,6 @@ namespace o3dgc
     {
         ComputeVectorMinMax(m_coord   , m_nCoord   , 3, 3, m_coordMin   , m_coordMax   , quantMode);
         ComputeVectorMinMax(m_normal  , m_nNormal  , 3, 3, m_normalMin  , m_normalMax  , quantMode);
-        ComputeVectorMinMax(m_color   , m_nColor   , 3, 3, m_colorMin   , m_colorMax   , quantMode);
-        ComputeVectorMinMax(m_texCoord, m_nTexCoord, 2, 2, m_texCoordMin, m_texCoordMax, quantMode);
         unsigned long numFloatAttributes = GetNumFloatAttributes();
         for(unsigned long a = 0; a < numFloatAttributes; ++a)
         {

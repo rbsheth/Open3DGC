@@ -47,8 +47,8 @@ namespace o3dgc
     const unsigned long O3DGC_DV_START_CODE                   = 0x00001F2;
     const unsigned long O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES = 256;
     const unsigned long O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES   = 256;
-    const unsigned long O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES = 8;
-    const unsigned long O3DGC_SC3DMC_MAX_DIM_INT_ATTRIBUTES   = 8;
+    const unsigned long O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES = 32;
+    const unsigned long O3DGC_SC3DMC_MAX_DIM_INT_ATTRIBUTES   = 32;
 
     const unsigned long O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS = 8;
     const unsigned long O3DGC_SC3DMC_MAX_PREDICTION_SYMBOLS   = 257;
@@ -83,8 +83,6 @@ namespace o3dgc
         O3DGC_STREAM_TYPE_ASCII  = 1,
         O3DGC_STREAM_TYPE_BINARY = 2
     };
-
-
     enum O3DGCSC3DMCQuantizationMode
     {
         O3DGC_SC3DMC_DIAG_BB             = 0, // supported
@@ -93,24 +91,41 @@ namespace o3dgc
     };
     enum O3DGCSC3DMCPredictionMode
     {
-        O3DGC_SC3DMC_NO_PREDICTION                   = 0, // supported
-        O3DGC_SC3DMC_DIFFERENTIAL_PREDICTION         = 1, // supported
-//      O3DGC_SC3DMC_XORPrediction                  = 2, // not supported
-//      O3DGC_SC3DMC_AdaptiveDifferentialPrediction = 3, // not supported
-//      O3DGC_SC3DMC_CircularDifferentialPrediction = 4, // not supported
-        O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION        = 5,  // supported
-        O3DGC_SC3DMC_SURF_NORMALS_PREDICTION         = 6   // supported
+        O3DGC_SC3DMC_NO_PREDICTION                    = 0, // supported
+        O3DGC_SC3DMC_DIFFERENTIAL_PREDICTION          = 1, // supported
+        O3DGC_SC3DMC_XOR_PREDICTION                   = 2, // not supported
+        O3DGC_SC3DMC_ADAPTIVE_DIFFERENTIAL_PREDICTION = 3, // not supported
+        O3DGC_SC3DMC_CIRCULAR_DIFFERENTIAL_PREDICTION = 4, // not supported
+        O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION         = 5,  // supported
+        O3DGC_SC3DMC_SURF_NORMALS_PREDICTION          = 6   // supported
     };
     enum O3DGCSC3DMCEncodingMode
     {
         O3DGC_SC3DMC_QBCR       = 0,        // not supported
         O3DGC_SC3DMC_SVA        = 1,        // not supported
         O3DGC_SC3DMC_TFAN       = 2,        // supported
-    };    
+    };
     enum O3DGCDVEncodingMode
     {
         O3DGC_DYNAMIC_VECTOR_LIFT       = 0
-    };    
+    };
+    enum O3DGCIFSFloatAttributeType
+    {
+        O3DGC_IFS_FLOAT_ATTRIBUTE_TYPE_UNKOWN   = 0,
+        O3DGC_IFS_FLOAT_ATTRIBUTE_TYPE_POSITION = 1,
+        O3DGC_IFS_FLOAT_ATTRIBUTE_TYPE_NORMAL   = 2,
+        O3DGC_IFS_FLOAT_ATTRIBUTE_TYPE_COLOR    = 3,
+        O3DGC_IFS_FLOAT_ATTRIBUTE_TYPE_TEXCOORD = 4,
+        O3DGC_IFS_FLOAT_ATTRIBUTE_TYPE_WEIGHT   = 5
+        
+    };
+    enum O3DGCIFSIntAttributeType
+    {
+        O3DGC_IFS_INT_ATTRIBUTE_TYPE_UNKOWN   = 0,
+        O3DGC_IFS_INT_ATTRIBUTE_TYPE_INDEX    = 1,
+        O3DGC_IFS_INT_ATTRIBUTE_TYPE_JOINT_ID = 2,
+        O3DGC_IFS_INT_ATTRIBUTE_TYPE_INDEX_BUFFER_ID = 3
+    };
 
     template<class T> 
     inline const T absolute(const T& a)
@@ -149,40 +164,22 @@ namespace o3dgc
     public: 
                                     SC3DMCStats(void)
                                     {
-                                        m_timeCoord                = 0.0;
-                                        m_timeNormal               = 0.0;
-                                        m_timeTexCoord             = 0.0;
-                                        m_timeColor                = 0.0;
-                                        m_timeCoordIndex           = 0.0;
-                                        m_timeFloatAttribute       = 0.0;
-                                        m_timeIntAttribute         = 0.0;
-                                        m_timeReorder              = 0.0;
-                                        m_streamSizeCoord          = 0;
-                                        m_streamSizeNormal         = 0;
-                                        m_streamSizeTexCoord       = 0;
-                                        m_streamSizeColor          = 0;
-                                        m_streamSizeCoordIndex     = 0;
-                                        m_streamSizeFloatAttribute = 0;
-                                        m_streamSizeIntAttribute   = 0;
+                                        memset(this, 0, sizeof(SC3DMCStats));
                                     };
                                     ~SC3DMCStats(void){};
         
         double                      m_timeCoord;
         double                      m_timeNormal;
-        double                      m_timeTexCoord;
-        double                      m_timeColor;
         double                      m_timeCoordIndex;
-        double                      m_timeFloatAttribute;
-        double                      m_timeIntAttribute;
+        double                      m_timeFloatAttribute[O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES];
+        double                      m_timeIntAttribute  [O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES  ];
         double                      m_timeReorder;
 
         unsigned long               m_streamSizeCoord;
         unsigned long               m_streamSizeNormal;
-        unsigned long               m_streamSizeTexCoord;
-        unsigned long               m_streamSizeColor;
         unsigned long               m_streamSizeCoordIndex;
-        unsigned long               m_streamSizeFloatAttribute;
-        unsigned long               m_streamSizeIntAttribute;
+        unsigned long               m_streamSizeFloatAttribute[O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES];
+        unsigned long               m_streamSizeIntAttribute  [O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES  ];
 
     };
     typedef struct 

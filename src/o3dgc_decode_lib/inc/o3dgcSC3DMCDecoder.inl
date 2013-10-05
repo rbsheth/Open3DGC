@@ -77,8 +77,6 @@ namespace o3dgc
        
         ifs.SetNCoord         (bstream.ReadUInt32(m_iterator, m_streamType));
         ifs.SetNNormal        (bstream.ReadUInt32(m_iterator, m_streamType));
-        ifs.SetNColor         (bstream.ReadUInt32(m_iterator, m_streamType));
-        ifs.SetNTexCoord      (bstream.ReadUInt32(m_iterator, m_streamType));
 
 
         ifs.SetNumFloatAttributes(bstream.ReadUInt32(m_iterator, m_streamType));
@@ -105,27 +103,6 @@ namespace o3dgc
             ifs.SetNormalPerVertex(bstream.ReadUChar(m_iterator, m_streamType) == 1);
             m_params.SetNormalQuantBits(bstream.ReadUChar(m_iterator, m_streamType));
         }
-        if (ifs.GetNColor() > 0)
-        {
-            ifs.SetNColorIndex(bstream.ReadUInt32(m_iterator, m_streamType));
-            for(int j=0 ; j<3 ; ++j)
-            {
-                ifs.SetColorMin(j, (Real) bstream.ReadFloat32(m_iterator, m_streamType));
-                ifs.SetColorMax(j, (Real) bstream.ReadFloat32(m_iterator, m_streamType));
-            }
-            ifs.SetColorPerVertex(bstream.ReadUChar(m_iterator, m_streamType)==1);
-            m_params.SetColorQuantBits(bstream.ReadUChar(m_iterator, m_streamType));
-        }
-        if (ifs.GetNTexCoord() > 0)
-        {
-            ifs.SetNTexCoordIndex(bstream.ReadUInt32(m_iterator, m_streamType));
-            for(int j=0 ; j<2 ; ++j)
-            {
-                ifs.SetTexCoordMin(j, (Real) bstream.ReadFloat32(m_iterator, m_streamType));
-                ifs.SetTexCoordMax(j, (Real) bstream.ReadFloat32(m_iterator, m_streamType));
-            }
-            m_params.SetTexCoordQuantBits(bstream.ReadUChar(m_iterator, m_streamType));
-        }
 
         for(unsigned long a = 0; a < ifs.GetNumFloatAttributes(); ++a)
         {
@@ -141,6 +118,7 @@ namespace o3dgc
                     ifs.SetFloatAttributeMax(a, j, (Real) bstream.ReadFloat32(m_iterator, m_streamType));
                 }
                 ifs.SetFloatAttributePerVertex(a, bstream.ReadUChar(m_iterator, m_streamType) == 1);
+                ifs.SetFloatAttributeType(a, (O3DGCIFSFloatAttributeType) bstream.ReadUChar(m_iterator, m_streamType));
                 m_params.SetFloatAttributeQuantBits(a, bstream.ReadUChar(m_iterator, m_streamType));
             }
         }
@@ -152,6 +130,7 @@ namespace o3dgc
                 ifs.SetNIntAttributeIndex(a, bstream.ReadUInt32(m_iterator, m_streamType));
                 ifs.SetIntAttributeDim(a, bstream.ReadUChar(m_iterator, m_streamType));
                 ifs.SetIntAttributePerVertex(a, bstream.ReadUChar(m_iterator, m_streamType) == 1);
+                ifs.SetIntAttributeType(a, (O3DGCIFSIntAttributeType) bstream.ReadUChar(m_iterator, m_streamType));
             }
         }    
         return O3DGC_OK;
@@ -206,68 +185,37 @@ namespace o3dgc
         m_stats.m_timeNormal       = timer.GetElapsedTime();
         m_stats.m_streamSizeNormal = m_iterator - m_stats.m_streamSizeNormal;
 
-        // decode Color
-        m_stats.m_streamSizeColor = m_iterator;
-        timer.Tic();
-        if (ifs.GetNColor() > 0)
-        {
-            DecodeFloatArray(ifs.GetColor(), ifs.GetNColor(), 3, 3, ifs.GetColorMin(), ifs.GetColorMax(),
-                                m_params.GetColorQuantBits(), ifs, m_params.GetColorPredMode(), bstream);
-        }
-        if (ret != O3DGC_OK)
-        {
-            return ret;
-        }
-        timer.Toc();
-        m_stats.m_timeColor       = timer.GetElapsedTime();
-        m_stats.m_streamSizeColor = m_iterator - m_stats.m_streamSizeColor;
-
-        // decode TexCoord
-        m_stats.m_streamSizeTexCoord = m_iterator;
-        timer.Tic();
-        if (ifs.GetNTexCoord() > 0)
-        {
-            DecodeFloatArray(ifs.GetTexCoord(), ifs.GetNTexCoord(), 2, 2, ifs.GetTexCoordMin(), ifs.GetTexCoordMax(), 
-                                m_params.GetTexCoordQuantBits(), ifs, m_params.GetTexCoordPredMode(), bstream);
-        }
-        if (ret != O3DGC_OK)
-        {
-            return ret;
-        }
-        timer.Toc();
-        m_stats.m_timeTexCoord       = timer.GetElapsedTime();
-        m_stats.m_streamSizeTexCoord = m_iterator - m_stats.m_streamSizeTexCoord;
-
-        m_stats.m_streamSizeFloatAttribute = m_iterator;
-        timer.Tic();
+        // decode FloatAttributes
         for(unsigned long a = 0; a < ifs.GetNumFloatAttributes(); ++a)
         {
+            m_stats.m_streamSizeFloatAttribute[a] = m_iterator;
+            timer.Tic();
             DecodeFloatArray(ifs.GetFloatAttribute(a), ifs.GetNFloatAttribute(a), ifs.GetFloatAttributeDim(a), ifs.GetFloatAttributeDim(a), 
                                 ifs.GetFloatAttributeMin(a), ifs.GetFloatAttributeMax(a), 
                                 m_params.GetFloatAttributeQuantBits(a), ifs, m_params.GetFloatAttributePredMode(a), bstream);
+            timer.Toc();
+            m_stats.m_timeFloatAttribute[a]       = timer.GetElapsedTime();
+            m_stats.m_streamSizeFloatAttribute[a] = m_iterator - m_stats.m_streamSizeFloatAttribute[a];
         }
         if (ret != O3DGC_OK)
         {
             return ret;
         }
-        timer.Toc();
-        m_stats.m_timeFloatAttribute       = timer.GetElapsedTime();
-        m_stats.m_streamSizeFloatAttribute = m_iterator - m_stats.m_streamSizeFloatAttribute;
 
-        m_stats.m_streamSizeIntAttribute = m_iterator;
-        timer.Tic();
+        // decode IntAttributes
         for(unsigned long a = 0; a < ifs.GetNumIntAttributes(); ++a)
         {
+            m_stats.m_streamSizeIntAttribute[a] = m_iterator;
+            timer.Tic();
             DecodeIntArray(ifs.GetIntAttribute(a), ifs.GetNIntAttribute(a), ifs.GetIntAttributeDim(a), ifs.GetIntAttributeDim(a), bstream);
+            timer.Toc();
+            m_stats.m_timeIntAttribute[a]       = timer.GetElapsedTime();
+            m_stats.m_streamSizeIntAttribute[a] = m_iterator - m_stats.m_streamSizeIntAttribute[a];
         }
         if (ret != O3DGC_OK)
         {
             return ret;
         }
-        timer.Toc();
-        m_stats.m_timeIntAttribute       = timer.GetElapsedTime();
-        m_stats.m_streamSizeIntAttribute = m_iterator - m_stats.m_streamSizeIntAttribute;
-
 
         timer.Tic();
         m_triangleListDecoder.Reorder();
@@ -417,7 +365,7 @@ namespace o3dgc
             m_normals[2*v]   = rna0;
             m_normals[2*v+1] = rnb0;
 
-#ifdef DEBUG_VERBOSE
+#ifdef DEBUG_VERBOSE1
             printf("n0 \t %i \t %i \t %i \t %i (%f, %f)\n", v, n0.X(), n0.Y(), n0.Z(), rna0, rnb0);
             fprintf(g_fileDebugSC3DMCDec, "n0 \t %i \t %i \t %i \t %i (%f, %f)\n", v, n0.X(), n0.Y(), n0.Z(), rna0, rnb0);
 #endif //DEBUG_VERBOSE
@@ -459,7 +407,7 @@ namespace o3dgc
         streamSize                          -= (m_iterator - start);
         unsigned long       iteratorPred     = m_iterator + streamSize;
         unsigned int        exp_k            = 0;
-        unsigned int        M                = 0;        
+        unsigned int        M                = 0;
         if (m_streamType != O3DGC_STREAM_TYPE_ASCII)
         {
             if (binarization != O3DGC_SC3DMC_BINARIZATION_AC_EGC)
@@ -722,7 +670,7 @@ namespace o3dgc
                              floatArray[stride*v+1], 
                              floatArray[stride*v+2]);
 
-#ifdef DEBUG_VERBOSE
+#ifdef DEBUG_VERBOSE1
                 printf("normal \t %i \t %f \t %f \t %f \t (%i, %f, %f) \t (%f, %f)\n", 
                                                v, 
                                                floatArray[stride*v], 
