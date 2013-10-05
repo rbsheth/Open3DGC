@@ -41,8 +41,8 @@ var o3dgc = (function (module) {
     var O3DGC_DV_START_CODE = 0x00001F2;
     var O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES = 256;
     var O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES = 256;
-    var O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES = 8;
-    var O3DGC_SC3DMC_MAX_DIM_INT_ATTRIBUTES = 8;
+    var O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES = 32;
+    var O3DGC_SC3DMC_MAX_DIM_INT_ATTRIBUTES = 32;
     var O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS = 8;
     var O3DGC_OK = 0;
     var O3DGC_ERROR_BUFFER_FULL = 1;
@@ -60,9 +60,9 @@ var o3dgc = (function (module) {
     var O3DGC_STREAM_TYPE_BINARY = 2;
     var O3DGC_SC3DMC_NO_PREDICTION = 0; // supported
     var O3DGC_SC3DMC_DIFFERENTIAL_PREDICTION = 1; // supported
-    var O3DGC_SC3DMC_XORPrediction = 2; // not supported
-    var O3DGC_SC3DMC_AdaptiveDifferentialPrediction = 3; // not supported
-    var O3DGC_SC3DMC_CircularDifferentialPrediction = 4; // not supported
+    var O3DGC_SC3DMC_XOR_PREDICTION = 2; // not supported
+    var O3DGC_SC3DMC_ADAPTIVE_DIFFERENTIAL_PREDICTION = 3; // not supported
+    var O3DGC_SC3DMC_CIRCULAR_DIFFERENTIAL_PREDICTION = 4; // not supported
     var O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION = 5; // supported
     var O3DGC_SC3DMC_SURF_NORMALS_PREDICTION = 6; // supported
     var O3DGC_SC3DMC_QBCR = 0; // not supported
@@ -74,6 +74,16 @@ var o3dgc = (function (module) {
     var O3DGC_TFANS_MIN_SIZE_ALLOCATED_VERTICES_BUFFER = 128;
     var O3DGC_TFANS_MIN_SIZE_TFAN_SIZE_BUFFER = 8;
     var O3DGC_DEFAULT_VECTOR_SIZE = 32;
+    module.O3DGC_IFS_FLOAT_ATTRIBUTE_TYPE_UNKOWN = 0;
+    module.O3DGC_IFS_FLOAT_ATTRIBUTE_TYPE_POSITION = 1;
+    module.O3DGC_IFS_FLOAT_ATTRIBUTE_TYPE_NORMAL = 2;
+    module.O3DGC_IFS_FLOAT_ATTRIBUTE_TYPE_COLOR = 3;
+    module.O3DGC_IFS_FLOAT_ATTRIBUTE_TYPE_TEXCOORD = 4;
+    module.O3DGC_IFS_FLOAT_ATTRIBUTE_TYPE_WEIGHT = 5;
+    module.O3DGC_IFS_INT_ATTRIBUTE_TYPE_UNKOWN = 0;
+    module.O3DGC_IFS_INT_ATTRIBUTE_TYPE_INDEX = 1;
+    module.O3DGC_IFS_INT_ATTRIBUTE_TYPE_JOINT_ID = 2;
+    module.O3DGC_IFS_INT_ATTRIBUTE_TYPE_INDEX_BUFFER_ID = 3;
 
     function SystemEndianness() {
         var b = new ArrayBuffer(4);
@@ -91,19 +101,15 @@ var o3dgc = (function (module) {
     module.SC3DMCStats = function () {
         this.m_timeCoord = 0;
         this.m_timeNormal = 0;
-        this.m_timeTexCoord = 0;
-        this.m_timeColor = 0;
         this.m_timeCoordIndex = 0;
-        this.m_timeFloatAttribute = 0;
-        this.m_timeIntAttribute = 0;
+        this.m_timeFloatAttribute = new Float32Array(O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
+        this.m_timeIntAttribute = new Float32Array(O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
         this.m_timeReorder = 0;
         this.m_streamSizeCoord = 0;
         this.m_streamSizeNormal = 0;
-        this.m_streamSizeTexCoord = 0;
-        this.m_streamSizeColor = 0;
         this.m_streamSizeCoordIndex = 0;
-        this.m_streamSizeFloatAttribute = 0;
-        this.m_streamSizeIntAttribute = 0;
+        this.m_streamSizeFloatAttribute = new Uint32Array(O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
+        this.m_streamSizeIntAttribute = new Uint32Array(O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
     }
     // SC3DMCTriplet class
     module.SC3DMCTriplet = function (a, b, c) {
@@ -810,8 +816,6 @@ var o3dgc = (function (module) {
         this.m_nCoordIndex = 0;
         this.m_nCoord = 0;
         this.m_nNormal = 0;
-        this.m_nColor = 0;
-        this.m_nTexCoord = 0;
         this.m_numFloatAttributes = 0;
         this.m_numIntAttributes = 0;
         this.m_creaseAngle = 30.0;
@@ -819,31 +823,25 @@ var o3dgc = (function (module) {
         this.m_solid = true;
         this.m_convex = true;
         this.m_isTriangularMesh = true;
-        this.m_buffer = new ArrayBuffer(4 * (22 +
-                                          2 * O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES + 2 * O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES +
-                                          O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES +
-                                          O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES));
+        this.m_buffer = new ArrayBuffer(48 + 12 * O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES + 12 * O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
         var shift = 0;
         this.m_coordMin = new Float32Array(this.m_buffer, shift, 3); shift += 12;
         this.m_coordMax = new Float32Array(this.m_buffer, shift, 3); shift += 12;
         this.m_normalMin = new Float32Array(this.m_buffer, shift, 3); shift += 12;
         this.m_normalMax = new Float32Array(this.m_buffer, shift, 3); shift += 12;
-        this.m_colorMin = new Float32Array(this.m_buffer, shift, 3); shift += 12;
-        this.m_colorMax = new Float32Array(this.m_buffer, shift, 3); shift += 12;
-        this.m_texCoordMin = new Float32Array(this.m_buffer, shift, 2); shift += 8;
-        this.m_texCoordMax = new Float32Array(this.m_buffer, shift, 2); shift += 8;
         this.m_nFloatAttribute = new Uint32Array(this.m_buffer, shift, O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES); shift += 4 * O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES;
         this.m_nIntAttribute = new Uint32Array(this.m_buffer, shift, O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES); shift += 4 * O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES;
         this.m_dimFloatAttribute = new Uint32Array(this.m_buffer, shift, O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES); shift += 4 * O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES;
         this.m_dimIntAttribute = new Uint32Array(this.m_buffer, shift, O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES); shift += 4 * O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES;
-        this.m_minFloatAttribute = new Float32Array(this.m_buffer, shift, O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES); shift += 4 * O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES;
-        this.m_maxFloatAttribute = new Float32Array(this.m_buffer, shift, O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES); shift += 4 * O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES;
+        this.m_typeFloatAttribute = new Uint32Array(this.m_buffer, shift, O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES); shift += 4 * O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES;
+        this.m_typeIntAttribute = new Uint32Array(this.m_buffer, shift, O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES); shift += 4 * O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES;
+        this.m_minFloatAttributeBuffer = new ArrayBuffer(O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES);
+        this.m_minFloatAttribute = new Float32Array(this.m_minFloatAttributeBuffer);
+        this.m_maxFloatAttributeBuffer = new ArrayBuffer(O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES);
+        this.m_maxFloatAttribute = new Float32Array(this.m_maxFloatAttributeBuffer);
         this.m_coordIndex = {};
-        this.m_matID = {};
         this.m_coord = {};
         this.m_normal = {};
-        this.m_color = {};
-        this.m_texCoord = {};
         this.m_floatAttribute = new Array(O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
         this.m_intAttribute = new Array(O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
     }
@@ -859,16 +857,10 @@ var o3dgc = (function (module) {
     module.IndexedFaceSet.prototype.GetNNormal = function () {
         return this.m_nNormal;
     }
-    module.IndexedFaceSet.prototype.GetNColor = function () {
-        return this.m_nColor;
-    }
-    module.IndexedFaceSet.prototype.GetNTexCoord = function () {
-        return this.m_nTexCoord;
-    }
     module.IndexedFaceSet.prototype.GetNFloatAttribute = function (a) {
         return this.m_nFloatAttribute[a];
     }
-    module.IndexedFaceSet.prototype.GetNFloatAttribute = function (a) {
+    module.IndexedFaceSet.prototype.GetNIntAttribute = function (a) {
         return this.m_nIntAttribute[a];
     }
     module.IndexedFaceSet.prototype.GetNumFloatAttributes = function () {
@@ -889,44 +881,20 @@ var o3dgc = (function (module) {
     module.IndexedFaceSet.prototype.GetNormalMaxArray = function () {
         return this.m_normalMax;
     }
-    module.IndexedFaceSet.prototype.GetColorMinArray = function () {
-        return this.m_colorMin;
+    module.IndexedFaceSet.prototype.GetFloatAttributeMinArray = function (a) {
+        return (new Float32Array(this.m_minFloatAttributeBuffer, a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES * 4, this.GetFloatAttributeDim(a)));
     }
-    module.IndexedFaceSet.prototype.GetColorMaxArray = function () {
-        return this.m_colorMax;
-    }
-    module.IndexedFaceSet.prototype.GetTexCoordMinArray = function () {
-        return this.m_texCoordMin;
-    }
-    module.IndexedFaceSet.prototype.GetTexCoordMaxArray = function () {
-        return this.m_texCoordMax;
-    }
-    module.IndexedFaceSet.prototype.GetCoordMin = function (j) {
-        return this.m_coordMin[j];
-    }
-    module.IndexedFaceSet.prototype.GetCoordMax = function (j) {
-        return this.m_coordMax[j];
-    }
-    module.IndexedFaceSet.prototype.GetNormalMin = function (j) {
-        return this.m_normalMin[j];
-    }
-    module.IndexedFaceSet.prototype.GetNormalMax = function (j) {
-        return this.m_normalMax[j];
-    }
-    module.IndexedFaceSet.prototype.GetColorMin = function (j) {
-        return this.m_colorMin[j];
-    }
-    module.IndexedFaceSet.prototype.GetColorMax = function (j) {
-        return this.m_colorMax[j];
-    }
-    module.IndexedFaceSet.prototype.GetTexCoordMin = function (j) {
-        return this.m_texCoordMin[j];
-    }
-    module.IndexedFaceSet.prototype.GetTexCoordMax = function (j) {
-        return this.m_texCoordMax[j];
+    module.IndexedFaceSet.prototype.GetFloatAttributeMaxArray = function (a) {
+        return (new Float32Array(this.m_maxFloatAttributeBuffer, a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES * 4, this.GetFloatAttributeDim(a)));
     }
     module.IndexedFaceSet.prototype.GetFloatAttributeDim = function (a) {
         return this.m_dimFloatAttribute[a];
+    }
+    module.IndexedFaceSet.prototype.GetFloatAttributeType = function (a) {
+        return this.m_typeFloatAttribute[a];
+    }
+    module.IndexedFaceSet.prototype.GetIntAttributeType = function (a) {
+        return this.m_typeIntAttribute[a];
     }
     module.IndexedFaceSet.prototype.GetIntAttributeDim = function (a) {
         return this.m_minFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES + dim];
@@ -952,9 +920,6 @@ var o3dgc = (function (module) {
     module.IndexedFaceSet.prototype.GetIsTriangularMesh = function () {
         return this.m_isTriangularMesh;
     }
-    module.IndexedFaceSet.prototype.GetMatID = function () {
-        return this.m_matID;
-    }
     module.IndexedFaceSet.prototype.GetCoordIndex = function () {
         return this.m_coordIndex;
     }
@@ -967,12 +932,6 @@ var o3dgc = (function (module) {
     module.IndexedFaceSet.prototype.GetNormal = function () {
         return this.m_normal;
     }
-    module.IndexedFaceSet.prototype.GetColor = function () {
-        return this.m_color;
-    }
-    module.IndexedFaceSet.prototype.GetTexCoord = function () {
-        return this.m_texCoord;
-    }
     module.IndexedFaceSet.prototype.GetFloatAttribute = function (a) {
         return this.m_floatAttribute[a];
     }
@@ -984,26 +943,21 @@ var o3dgc = (function (module) {
     }
     module.IndexedFaceSet.prototype.SetNNormalIndex = function (nNormalIndex) {
     }
-    module.IndexedFaceSet.prototype.SetNColorIndex = function (nColorIndex) {
-    }
-    module.IndexedFaceSet.prototype.SetNTexCoordIndex = function (nTexCoordIndex) {
-    }
     module.IndexedFaceSet.prototype.SetNormalPerVertex = function (perVertex) {
     }
-    module.IndexedFaceSet.prototype.SetColorPerVertex = function (perVertex) {
+    module.IndexedFaceSet.prototype.SetNFloatAttributeIndex = function (nFloatAttributeIndex) {
     }
-
+    module.IndexedFaceSet.prototype.SetNIntAttributeIndex = function (nIntAttributeIndex) {
+    }
+    module.IndexedFaceSet.prototype.SetFloatAttributePerVertex = function (perVertex) {
+    }
+    module.IndexedFaceSet.prototype.SetIntAttributePerVertex = function (perVertex) {
+    }
     module.IndexedFaceSet.prototype.SetNCoord = function (nCoord) {
         this.m_nCoord = nCoord;
     }
     module.IndexedFaceSet.prototype.SetNNormal = function (nNormal) {
         this.m_nNormal = nNormal;
-    }
-    module.IndexedFaceSet.prototype.SetNColor = function (nColor) {
-        this.m_nColor = nColor;
-    }
-    module.IndexedFaceSet.prototype.SetNTexCoord = function (nTexCoord) {
-        this.m_nTexCoord = nTexCoord;
     }
     module.IndexedFaceSet.prototype.SetNumFloatAttributes = function (numFloatAttributes) {
         this.m_numFloatAttributes = numFloatAttributes;
@@ -1038,18 +992,6 @@ var o3dgc = (function (module) {
     module.IndexedFaceSet.prototype.SetNormalMax = function (j, max) {
         this.m_normalMax[j] = max;
     }
-    module.IndexedFaceSet.prototype.SetColorMin = function (j, min) {
-        this.m_colorMin[j] = min;
-    }
-    module.IndexedFaceSet.prototype.SetColorMax = function (j, max) {
-        this.m_colorMax[j] = max;
-    }
-    module.IndexedFaceSet.prototype.SetTexCoordMin = function (j, min) {
-        this.m_texCoordMin[j] = min;
-    }
-    module.IndexedFaceSet.prototype.SetTexCoordMax = function (j, max) {
-        this.m_texCoordMax[j] = max;
-    }
     module.IndexedFaceSet.prototype.SetNFloatAttribute = function (a, nFloatAttribute) {
         this.m_nFloatAttribute[a] = nFloatAttribute;
     }
@@ -1062,14 +1004,17 @@ var o3dgc = (function (module) {
     module.IndexedFaceSet.prototype.SetIntAttributeDim = function (a, d) {
         this.m_dimIntAttribute[a] = d;
     }
+    module.IndexedFaceSet.prototype.SetFloatAttributeType = function (a, d) {
+        this.m_typeFloatAttribute[a] = d;
+    }
+    module.IndexedFaceSet.prototype.SetIntAttributeType = function (a, d) {
+        this.m_typeIntAttribute[a] = d;
+    }
     module.IndexedFaceSet.prototype.SetFloatAttributeMin = function (a, dim, min) {
         this.m_minFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES + dim] = min;
     }
     module.IndexedFaceSet.prototype.SetFloatAttributeMax = function (a, dim, max) {
         this.m_maxFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES + dim] = max;
-    }
-    module.IndexedFaceSet.prototype.SetMatID = function (matID) {
-        this.m_matID = matID;
     }
     module.IndexedFaceSet.prototype.SetCoordIndex = function (coordIndex) {
         this.m_coordIndex = coordIndex;
@@ -1079,12 +1024,6 @@ var o3dgc = (function (module) {
     }
     module.IndexedFaceSet.prototype.SetNormal = function (normal) {
         this.m_normal = normal;
-    }
-    module.IndexedFaceSet.prototype.SetColor = function (color) {
-        this.m_color = color;
-    }
-    module.IndexedFaceSet.prototype.SetTexCoord = function (texCoord) {
-        this.m_texCoord = texCoord;
     }
     module.IndexedFaceSet.prototype.SetFloatAttribute = function (a, floatAttribute) {
         this.m_floatAttribute[a] = floatAttribute;
@@ -1104,14 +1043,10 @@ var o3dgc = (function (module) {
         this.m_streamTypeMode = O3DGC_STREAM_TYPE_ASCII;
         this.m_coordQuantBits = 14;
         this.m_normalQuantBits = 8;
-        this.m_colorQuantBits = 10;
-        this.m_texCoordQuantBits = 10;
         this.m_coordPredMode = O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION;
-        this.m_texCoordPredMode = O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION;
         this.m_normalPredMode = O3DGC_SC3DMC_SURF_NORMALS_PREDICTION;
-        this.m_colorPredMode = O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION;
         for (var a = 0; a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES; ++a) {
-            this.m_floatAttributePredMode[a] = O3DGC_SC3DMC_DIFFERENTIAL_PREDICTION;
+            this.m_floatAttributePredMode[a] = O3DGC_SC3DMC_PARALLELOGRAM_PREDICTION;
         }
         for (var a = 0; a < O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES; ++a) {
             this.m_intAttributePredMode[a] = O3DGC_SC3DMC_NO_PREDICTION;
@@ -1123,10 +1058,10 @@ var o3dgc = (function (module) {
     module.SC3DMCEncodeParams.prototype.GetEncodeMode = function () {
         return this.m_encodeMode;
     }
-    module.SC3DMCEncodeParams.prototype.GetNFloatAttributes = function () {
+    module.SC3DMCEncodeParams.prototype.GetNumFloatAttributes = function () {
         return this.m_numFloatAttributes;
     }
-    module.SC3DMCEncodeParams.prototype.GetNIntAttributes = function () {
+    module.SC3DMCEncodeParams.prototype.GetNumIntAttributes = function () {
         return this.m_numIntAttributes;
     }
     module.SC3DMCEncodeParams.prototype.GetCoordQuantBits = function () {
@@ -1134,12 +1069,6 @@ var o3dgc = (function (module) {
     }
     module.SC3DMCEncodeParams.prototype.GetNormalQuantBits = function () {
         return this.m_normalQuantBits;
-    }
-    module.SC3DMCEncodeParams.prototype.GetColorQuantBits = function () {
-        return this.m_colorQuantBits;
-    }
-    module.SC3DMCEncodeParams.prototype.GetTexCoordQuantBits = function () {
-        return this.m_texCoordQuantBits;
     }
     module.SC3DMCEncodeParams.prototype.GetFloatAttributeQuantBits = function (a) {
         return this.m_floatAttributeQuantBits[a];
@@ -1149,12 +1078,6 @@ var o3dgc = (function (module) {
     }
     module.SC3DMCEncodeParams.prototype.GetNormalPredMode = function () {
         return this.m_normalPredMode;
-    }
-    module.SC3DMCEncodeParams.prototype.GetColorPredMode = function () {
-        return this.m_colorPredMode;
-    }
-    module.SC3DMCEncodeParams.prototype.GetTexCoordPredMode = function () {
-        return this.m_texCoordPredMode;
     }
     module.SC3DMCEncodeParams.prototype.GetFloatAttributePredMode = function (a) {
         return this.m_floatAttributePredMode[a];
@@ -1167,12 +1090,6 @@ var o3dgc = (function (module) {
     }
     module.SC3DMCEncodeParams.prototype.GetNormalPredMode = function () {
         return this.m_normalPredMode;
-    }
-    module.SC3DMCEncodeParams.prototype.GetColorPredMode = function () {
-        return this.m_colorPredMode;
-    }
-    module.SC3DMCEncodeParams.prototype.GetTexCoordPredMode = function () {
-        return this.m_texCoordPredMode;
     }
     module.SC3DMCEncodeParams.prototype.GetFloatAttributePredMode = function (a) {
         return this.m_floatAttributePredMode[a];
@@ -1186,10 +1103,10 @@ var o3dgc = (function (module) {
     module.SC3DMCEncodeParams.prototype.SetEncodeMode = function (encodeMode) {
         this.m_encodeMode = encodeMode;
     }
-    module.SC3DMCEncodeParams.prototype.SetNFloatAttributes = function (numFloatAttributes) {
+    module.SC3DMCEncodeParams.prototype.SetNumFloatAttributes = function (numFloatAttributes) {
         this.m_numFloatAttributes = numFloatAttributes;
     }
-    module.SC3DMCEncodeParams.prototype.SetNIntAttributes = function (numIntAttributes) {
+    module.SC3DMCEncodeParams.prototype.SetNumIntAttributes = function (numIntAttributes) {
         this.m_numIntAttributes = numIntAttributes;
     }
     module.SC3DMCEncodeParams.prototype.SetCoordQuantBits = function (coordQuantBits) {
@@ -1197,12 +1114,6 @@ var o3dgc = (function (module) {
     }
     module.SC3DMCEncodeParams.prototype.SetNormalQuantBits = function (normalQuantBits) {
         this.m_normalQuantBits = normalQuantBits;
-    }
-    module.SC3DMCEncodeParams.prototype.SetColorQuantBits = function (colorQuantBits) {
-        this.m_colorQuantBits = colorQuantBits;
-    }
-    module.SC3DMCEncodeParams.prototype.SetTexCoordQuantBits = function (texCoordQuantBits) {
-        this.m_texCoordQuantBits = texCoordQuantBits;
     }
     module.SC3DMCEncodeParams.prototype.SetFloatAttributeQuantBits = function (a, q) {
         this.m_floatAttributeQuantBits[a] = q;
@@ -1212,12 +1123,6 @@ var o3dgc = (function (module) {
     }
     module.SC3DMCEncodeParams.prototype.SetNormalPredMode = function (normalPredMode) {
         this.m_normalPredMode = normalPredMode;
-    }
-    module.SC3DMCEncodeParams.prototype.SetColorPredMode = function (colorPredMode) {
-        this.m_colorPredMode = colorPredMode;
-    }
-    module.SC3DMCEncodeParams.prototype.SetTexCoordPredMode = function (texCoordPredMode) {
-        this.m_texCoordPredMode = texCoordPredMode;
     }
     module.SC3DMCEncodeParams.prototype.SetFloatAttributePredMode = function (a, p) {
         this.m_floatAttributePredMode[a] = p;
@@ -1658,8 +1563,6 @@ var o3dgc = (function (module) {
         this.m_numConqueredTriangles = 0;
         this.m_numVisitedVertices = 0;
         this.m_triangles = {};
-        this.m_tempTrianglesBuffer = {}
-        this.m_tempTriangles = {};
         this.m_visitedVerticesBuffer = {}
         this.m_visitedVertices = {};
         this.m_visitedVerticesValence = {};
@@ -1797,17 +1700,16 @@ var o3dgc = (function (module) {
     }
     module.TriangleListDecoder.prototype.Reorder = function () {
         if (this.m_decodeTrianglesOrder) {
+            var _triangles = this.m_triangles;
             var itTriangleIndex = 0;
             var prevTriangleIndex = 0;
             var numIndices = this.m_numTriangles * 3;
-            for (var i = 0; i < numIndices; ++i) {
-                this.m_tempTriangles[i] = this.m_triangles[i];
-            }
+            var tempTriangles = new Int32Array(_triangles);
             for (var i = 0; i < this.m_numTriangles; ++i) {
                 var t = this.m_ctfans.ReadTriangleIndex(itTriangleIndex) + prevTriangleIndex;
-                this.m_triangles[3 * t] = this.m_tempTriangles[3 * i];
-                this.m_triangles[3 * t + 1] = this.m_tempTriangles[3 * i + 1];
-                this.m_triangles[3 * t + 2] = this.m_tempTriangles[3 * i + 2];
+                _triangles[3 * t] = tempTriangles[3 * i];
+                _triangles[3 * t + 1] = tempTriangles[3 * i + 1];
+                _triangles[3 * t + 2] = tempTriangles[3 * i + 2];
                 prevTriangleIndex = t + 1;
             }
         }
@@ -2028,9 +1930,6 @@ var o3dgc = (function (module) {
 
         ifs.SetNCoord(bstream.ReadUInt32(this.m_iterator, this.m_streamType));
         ifs.SetNNormal(bstream.ReadUInt32(this.m_iterator, this.m_streamType));
-        ifs.SetNColor(bstream.ReadUInt32(this.m_iterator, this.m_streamType));
-        ifs.SetNTexCoord(bstream.ReadUInt32(this.m_iterator, this.m_streamType));
-
         ifs.SetNumFloatAttributes(bstream.ReadUInt32(this.m_iterator, this.m_streamType));
         ifs.SetNumIntAttributes(bstream.ReadUInt32(this.m_iterator, this.m_streamType));
 
@@ -2051,23 +1950,6 @@ var o3dgc = (function (module) {
             ifs.SetNormalPerVertex(bstream.ReadUChar(this.m_iterator, this.m_streamType) === 1);
             this.m_params.SetNormalQuantBits(bstream.ReadUChar(this.m_iterator, this.m_streamType));
         }
-        if (ifs.GetNColor() > 0) {
-            ifs.SetNColorIndex(bstream.ReadUInt32(this.m_iterator, this.m_streamType));
-            for (var j = 0; j < 3; ++j) {
-                ifs.SetColorMin(j, bstream.ReadFloat32(this.m_iterator, this.m_streamType));
-                ifs.SetColorMax(j, bstream.ReadFloat32(this.m_iterator, this.m_streamType));
-            }
-            ifs.SetColorPerVertex(bstream.ReadUChar(this.m_iterator, this.m_streamType) === 1);
-            this.m_params.SetColorQuantBits(bstream.ReadUChar(this.m_iterator, this.m_streamType));
-        }
-        if (ifs.GetNTexCoord() > 0) {
-            ifs.SetNTexCoordIndex(bstream.ReadUInt32(this.m_iterator, this.m_streamType));
-            for (var j = 0; j < 2; ++j) {
-                ifs.SetTexCoordMin(j, bstream.ReadFloat32(this.m_iterator, this.m_streamType));
-                ifs.SetTexCoordMax(j, bstream.ReadFloat32(this.m_iterator, this.m_streamType));
-            }
-            this.m_params.SetTexCoordQuantBits(bstream.ReadUChar(this.m_iterator, this.m_streamType));
-        }
         for (var a = 0; a < ifs.GetNumFloatAttributes(); ++a) {
             ifs.SetNFloatAttribute(a, bstream.ReadUInt32(this.m_iterator, this.m_streamType));
             if (ifs.GetNFloatAttribute(a) > 0) {
@@ -2079,6 +1961,7 @@ var o3dgc = (function (module) {
                     ifs.SetFloatAttributeMax(a, j, bstream.ReadFloat32(this.m_iterator, this.m_streamType));
                 }
                 ifs.SetFloatAttributePerVertex(a, bstream.ReadUChar(this.m_iterator, this.m_streamType) === 1);
+                ifs.SetFloatAttributeType(a, bstream.ReadUChar(this.m_iterator, this.m_streamType));
                 this.m_params.SetFloatAttributeQuantBits(a, bstream.ReadUChar(this.m_iterator, this.m_streamType));
             }
         }
@@ -2088,6 +1971,7 @@ var o3dgc = (function (module) {
                 ifs.SetNIntAttributeIndex(a, bstream.ReadUInt32(this.m_iterator, this.m_streamType));
                 ifs.SetIntAttributeDim(a, bstream.ReadUChar(this.m_iterator, this.m_streamType));
                 ifs.SetIntAttributePerVertex(a, bstream.ReadUChar(this.m_iterator, this.m_streamType) === 1);
+                ifs.SetIntAttributeType(a, bstream.ReadUChar(this.m_iterator, this.m_streamType));
             }
         }
         return O3DGC_OK;
@@ -2642,62 +2526,34 @@ var o3dgc = (function (module) {
         _stats.m_timeNormal = timer.GetElapsedTime();
         _stats.m_streamSizeNormal = _iterator.m_count - _stats.m_streamSizeNormal;
 
-        // decode Color
-        _stats.m_streamSizeColor = _iterator.m_count;
-        timer.Tic();
-        if (ifs.GetNColor() > 0) {
-            ret = this.DecodeFloatArray(ifs.GetColor(), ifs.GetNColor(), 3, 3, ifs.GetColorMinArray(), ifs.GetColorMaxArray(),
-                                _params.GetColorQuantBits(), ifs, predMode, bstream);
-            _params.GetColorPredMode(predMode.m_value);
-        }
-        if (ret !== O3DGC_OK) {
-            return ret;
-        }
-        timer.Toc();
-        _stats.m_timeColor = timer.GetElapsedTime();
-        _stats.m_streamSizeColor = _iterator.m_count - _stats.m_streamSizeColor;
-
-        // decode TexCoord
-        _stats.m_streamSizeTexCoord = _iterator.m_count;
-        timer.Tic();
-        if (ifs.GetNTexCoord() > 0) {
-            ret = this.DecodeFloatArray(ifs.GetTexCoord(), ifs.GetNTexCoord(), 2, 2, ifs.GetTexCoordMinArray(), ifs.GetTexCoordMaxArray(),
-                                _params.GetTexCoordQuantBits(), ifs, predMode, bstream);
-            _params.GetTexCoordPredMode(predMode.m_value);
-        }
-        if (ret !== O3DGC_OK) {
-            return ret;
-        }
-        timer.Toc();
-        _stats.m_timeTexCoord = timer.GetElapsedTime();
-        _stats.m_streamSizeTexCoord = _iterator.m_count - _stats.m_streamSizeTexCoord;
-
-        _stats.m_streamSizeFloatAttribute = _iterator.m_count;
-        timer.Tic();
+        // decode FloatAttributes
         for (var a = 0; a < ifs.GetNumFloatAttributes(); ++a) {
+            _stats.m_streamSizeFloatAttribute[a] = _iterator.m_count;
+            timer.Tic();
             ret = this.DecodeFloatArray(ifs.GetFloatAttribute(a), ifs.GetNFloatAttribute(a), ifs.GetFloatAttributeDim(a), ifs.GetFloatAttributeDim(a),
                                 ifs.GetFloatAttributeMinArray(a), ifs.GetFloatAttributeMaxArray(a),
                                 _params.GetFloatAttributeQuantBits(a), ifs, predMode, bstream);
             _params.SetFloatAttributePredMode(a, predMode.m_value);
+            timer.Toc();
+            _stats.m_timeFloatAttribute[a] = timer.GetElapsedTime();
+            _stats.m_streamSizeFloatAttribute[a] = _iterator.m_count - _stats.m_streamSizeFloatAttribute[a];
         }
         if (ret !== O3DGC_OK) {
             return ret;
         }
-        timer.Toc();
-        _stats.m_timeFloatAttribute = timer.GetElapsedTime();
-        _stats.m_streamSizeFloatAttribute = _iterator.m_count - _stats.m_streamSizeFloatAttribute;
 
-        _stats.m_streamSizeIntAttribute = _iterator.m_count;
-        timer.Tic();
+        // decode FloatAttributes
         for (var a = 0; a < ifs.GetNumIntAttributes(); ++a) {
+            _stats.m_streamSizeIntAttribute[a] = _iterator.m_count;
+            timer.Tic();
             ret = this.DecodeIntArray(ifs.GetIntAttribute(a), ifs.GetNIntAttribute(a), ifs.GetIntAttributeDim(a), ifs.GetIntAttributeDim(a), bstream);
+            timer.Toc();
+            _stats.m_timeIntAttribute[a] = timer.GetElapsedTime();
+            _stats.m_streamSizeIntAttribute[a] = _iterator.m_count - _stats.m_streamSizeIntAttribute[a];
         }
         if (ret !== O3DGC_OK) {
             return ret;
         }
-        timer.Toc();
-        _stats.m_timeIntAttribute = timer.GetElapsedTime();
-        _stats.m_streamSizeIntAttribute = _iterator.m_count - _stats.m_streamSizeIntAttribute;
 
         timer.Tic();
         this.m_triangleListDecoder.Reorder();

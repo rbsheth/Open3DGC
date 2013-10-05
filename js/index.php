@@ -4,28 +4,30 @@
     <head>
         <title> o3dgc decoding</title>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-        <style>
-            body {
-                color: #cccccc;
-                font-family:Monospace;
-                font-size:13px;
-                text-align:center;
-
-                background-color: #050505;
-                margin: 0px;
-                overflow: hidden;
-            }
-            #info {
-                position: absolute;
-                top: 0px; width: 100%;
-                padding: 5px;
-            }
-            a {
-                color: #0080ff;
-            }
-        </style>
-
+<?php
+    if (!isset($_GET["obj"]) || $_GET["obj"] != 'true'){
+        echo '<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">';
+        echo '<style>';
+        echo '    body {';
+        echo '        color: #cccccc;';
+        echo '        font-family:Monospace;';
+        echo '        font-size:13px;';
+        echo '        text-align:center;';
+        echo '        background-color: #050505;';
+        echo '        margin: 0px;';
+        echo '        overflow: hidden;';
+        echo '    }';
+        echo '    #info {';
+        echo '        position: absolute;';
+        echo '        top: 0px; width: 100%;';
+        echo '        padding: 5px;';
+        echo '    }';
+        echo '    a {';
+        echo '        color: #0080ff;';
+        echo '    }';
+        echo '</style>';
+    }
+?>
         <script>
         var container;
         var camera, scene, renderer;
@@ -96,16 +98,27 @@
                 if (ifs.GetNNormal() > 0) {
                     ifs.SetNormal(new Float32Array(3 * ifs.GetNNormal()));
                 }
-                if (ifs.GetNColor() > 0) {
-                    ifs.SetColor(new Float32Array(3 * ifs.GetNColor()));
+                var numNumFloatAttributes = ifs.GetNumFloatAttributes();
+                for (var a = 0; a < numNumFloatAttributes; ++a){
+                    if (ifs.GetNFloatAttribute(a) > 0){
+                        ifs.SetFloatAttribute(a, new Float32Array(ifs.GetFloatAttributeDim(a) * ifs.GetNFloatAttribute(a)));
+                    }
                 }
-                if (ifs.GetNTexCoord() > 0) {
-                    ifs.GetTexCoord(new Float32Array(ifs.GetNTexCoord()));
+                var numNumIntAttributes = ifs.GetNumIntAttributes();
+                for (var a = 0; a < numNumIntAttributes; ++a){
+                    if (ifs.GetNIntAttribute(a) > 0){
+                        ifs.SetIntAttribute(a, new Int32Array(ifs.GetIntAttributeDim(a) * ifs.GetNIntAttribute(a)));
+                    }
                 }
                 console.log("Mesh info ");
                 console.log("\t# coords    " + ifs.GetNCoord());
                 console.log("\t# normals   " + ifs.GetNNormal());
-                console.log("\t# texcoords " + ifs.GetNTexCoord());
+                for (var a = 0; a < numNumFloatAttributes; ++a){
+                    console.log("\t# FloatAttribute[" + a + "] " + ifs.GetNFloatAttribute(a) + "(" + ifs.GetFloatAttributeType(a)+")");
+                }
+                for (var a = 0; a < numNumIntAttributes; ++a){
+                    console.log("\t# IntAttribute[" + a + "] " + ifs.GetNIntAttribute(a) + "(" + ifs.GetIntAttributeType(a)+")");
+                }
                 console.log("\t# triangles " + ifs.GetNCoordIndex());
                 // decode mesh
                 timer.Tic();
@@ -117,10 +130,12 @@
                 console.log("\t CoordIndex         " + stats.m_timeCoordIndex + " ms, " + stats.m_streamSizeCoordIndex + " bytes (" + (8.0 * stats.m_streamSizeCoordIndex / ifs.GetNCoord()) + " bpv)");
                 console.log("\t Coord              " + stats.m_timeCoord + " ms, " + stats.m_streamSizeCoord + " bytes (" + (8.0 * stats.m_streamSizeCoord / ifs.GetNCoord()) + " bpv)");
                 console.log("\t Normal             " + stats.m_timeNormal + " ms, " + stats.m_streamSizeNormal + " bytes (" + (8.0 * stats.m_streamSizeNormal / ifs.GetNCoord()) + " bpv)");
-                console.log("\t TexCoord           " + stats.m_timeTexCoord + " ms, " + stats.m_streamSizeTexCoord + " bytes (" + (8.0 * stats.m_streamSizeTexCoord / ifs.GetNCoord()) + " bpv)");
-                console.log("\t Color              " + stats.m_timeColor + " ms, " + stats.m_streamSizeColor + " bytes (" + (8.0 * stats.m_streamSizeColor / ifs.GetNCoord()) + " bpv)");
-                console.log("\t Float Attributes   " + stats.m_timeFloatAttribute + " ms, " + stats.m_streamSizeFloatAttribute + " bytes (" + (8.0 * stats.m_streamSizeFloatAttribute / ifs.GetNCoord()) + " bpv)");
-                console.log("\t Integer Attributes " + stats.m_timeFloatAttribute + " ms, " + stats.m_streamSizeFloatAttribute + " bytes (" + (8.0 * stats.m_streamSizeFloatAttribute / ifs.GetNCoord()) + " bpv)");
+                for (var a = 0; a < numNumFloatAttributes; ++a){
+                    console.log("\t Float Attributes   " + stats.m_timeFloatAttribute[a] + " ms, " + stats.m_streamSizeFloatAttribute[a] + " bytes (" + (8.0 * stats.m_streamSizeFloatAttribute[a] / ifs.GetNCoord()) + " bpv)");
+                }
+                for (var a = 0; a < numNumIntAttributes; ++a){
+                    console.log("\t Int Attributes   " + stats.m_timeIntAttribute[a] + " ms, " + stats.m_streamSizeIntAttribute[a] + " bytes (" + (8.0 * stats.m_streamSizeIntAttribute[a] / ifs.GetNCoord()) + " bpv)");
+                }
                 console.log("\t Reorder            " + stats.m_timeReorder + " ms,  " + 0 + " bytes (" + 0.0 + " bpv)");
                 if (dumpObj){
                     SaveOBJ(ifs, fileName);
@@ -135,8 +150,15 @@
         <div id="container"></div>
         <div id="info"><a href="https://github.com/amd/rest3d/tree/master/server/o3dgc" target="_blank">o3dgc</a> compressed stream decoding </div>
         <script>
-        init();
-        animate();
+        if (dumpObj){
+            while (typeof compressedStream === "undefined" && !compressedStream) {
+            }
+            decode(compressedStream);
+        }
+        else {
+            init();
+            animate();
+        }
         function init() {
             container = document.getElementById('container');
             camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000.0);
@@ -194,18 +216,13 @@
                 if (ifs.GetNNormal() > 0) {
                     geometry.attributes.normal = { itemSize: 3, array: ifs.GetNormal(), numItems: ifs.GetNNormal() * 3 };
                 }
-                if (ifs.GetNColor() > 0) {
-                    geometry.attributes.color = { itemSize: 3, array: ifs.GetColor(), numItems: ifs.GetNColor() * 3 };
+                var colors = new Float32Array(n);
+                for(var i = 0; i < n; i+=3){
+                    colors[i] = 1.0;
+                    colors[i+1] = 1.0;
+                    colors[i+2] = 0.0;
                 }
-                else {
-                    var colors = new Float32Array(n);
-                    for(var i = 0; i < n; i+=3){
-                        colors[i] = 1.0;
-                        colors[i+1] = 1.0;
-                        colors[i+2] = 0.0;
-                    }
-                    geometry.attributes.color = { itemSize: 3, array: colors, numItems: n };
-                }
+                geometry.attributes.color = { itemSize: 3, array: colors, numItems: n };
                 geometry.computeBoundingSphere();
                 // center and scale
                 var c = geometry.boundingSphere.center;
@@ -223,13 +240,19 @@
             renderer.render(scene, camera);
         }
         function SaveOBJ(ifs, fileName) {
-            triangles = ifs.GetCoordIndex();
-            points = ifs.GetCoord();
-            normals = ifs.GetNormal();
-            texCoords = ifs.GetTexCoord();
+            var triangles = ifs.GetCoordIndex();
+            var points = ifs.GetCoord();
+            var normals = ifs.GetNormal();
             var np = ifs.GetNCoord();
             var nn = ifs.GetNNormal();
-            var nt = ifs.GetNTexCoord();
+            var nt = 0;
+            var numNumFloatAttributes = ifs.GetNumFloatAttributes();
+            for (var a = 0; a < numNumFloatAttributes; ++a){
+                if (ifs.GetFloatAttributeType(a) === o3dgc.O3DGC_IFS_FLOAT_ATTRIBUTE_TYPE_TEXCOORD){
+                    texCoords = ifs.GetFloatAttribute(a);
+                    nt = ifs.GetNFloatAttribute(a);
+                }
+            }
             var nf = ifs.GetNCoordIndex();
             document.writeln("#### <br>");
             document.writeln("# <br>");
