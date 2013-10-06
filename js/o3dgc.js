@@ -1701,12 +1701,15 @@ var o3dgc = (function (module) {
     module.TriangleListDecoder.prototype.Reorder = function () {
         if (this.m_decodeTrianglesOrder) {
             var _triangles = this.m_triangles;
-            var itTriangleIndex = 0;
+            var _numTriangles = this.m_numTriangles;
+            var _order = this.m_ctfans.m_trianglesOrder.m_data;
+            var it = 0;
             var prevTriangleIndex = 0;
             var numIndices = this.m_numTriangles * 3;
             var tempTriangles = new Int32Array(_triangles);
-            for (var i = 0; i < this.m_numTriangles; ++i) {
-                var t = this.m_ctfans.ReadTriangleIndex(itTriangleIndex) + prevTriangleIndex;
+            var t;
+            for (var i = 0; i < _numTriangles; ++i) {
+                t = UIntToInt(_order[it++]) + prevTriangleIndex;
                 _triangles[3 * t] = tempTriangles[3 * i];
                 _triangles[3 * t + 1] = tempTriangles[3 * i + 1];
                 _triangles[3 * t + 2] = tempTriangles[3 * i + 2];
