@@ -492,9 +492,9 @@ int main(int argc, char * argv[])
 //    return testDynamicVectorCompression();
     Mode mode = UNKNOWN;
     std::string inputFileName;
-    int qcoord    = 12;
-    int qtexCoord = 10;
-    int qnormal   = 8;
+    int qcoord    = 14;
+    int qtexCoord = 14;
+    int qnormal   = 14;
     O3DGCStreamType streamType = O3DGC_STREAM_TYPE_BINARY;
     for(int i = 1; i < argc; ++i)
     {

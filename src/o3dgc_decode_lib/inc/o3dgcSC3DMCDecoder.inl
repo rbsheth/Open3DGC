@@ -725,6 +725,7 @@ namespace o3dgc
         {
             for(unsigned long d = 0; d < dimFloatArray; ++d)
             {
+//                floatArray[v * stride + d] = m_quantFloatArray[v * stride + d];
                 floatArray[v * stride + d] = m_quantFloatArray[v * stride + d] * idelta[d] + minFloatArray[d];
             }
         }

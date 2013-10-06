@@ -140,11 +140,6 @@ var o3dgc = (function (module) {
         var foundOrInserted = false;
         var j1 = nPred.m_value;
         var j0 = 0;
-        if (j1 > 1) {
-            if (!e.Less(list[j1 - 1].m_id)) {
-                j0 = j1;
-            }
-        }
         for (var j = j0; j < j1; ++j) {
             if (e.Equal(list[j].m_id)) {
                 foundOrInserted = true;
@@ -1713,8 +1708,10 @@ var o3dgc = (function (module) {
             var it = 0;
             var prevTriangleIndex = 0;
             var numIndices = this.m_numTriangles * 3;
-            var tempTriangles = new Int32Array(_triangles);
+            //            var tempTriangles = new Int32Array(_triangles);
+            var tempTriangles = new Int32Array(numIndices);
             var t;
+            tempTriangles.set(_triangles);
             for (var i = 0; i < _numTriangles; ++i) {
                 t = UIntToInt(_order[it++]) + prevTriangleIndex;
                 _triangles[3 * t] = tempTriangles[3 * i];
@@ -2334,9 +2331,10 @@ var o3dgc = (function (module) {
         bstream.ReadUInt32(iteratorPred, _streamType);        // predictors bitsream size
 
         if (predMode.m_value === O3DGC_SC3DMC_SURF_NORMALS_PREDICTION) {
-            if (this.m_orientationSize < size) {
+            if (this.m_orientationSize < numFloatArray) {
                 this.m_orientationBuffer = new ArrayBuffer(numFloatArray);
                 this.m_orientation = new Int8Array(this.m_orientationBuffer);
+                this.m_orientationSize = numFloatArray;
                 _orientation = this.m_orientation;
             }
             for (var i = 0; i < numFloatArray; ++i) {
@@ -2349,6 +2347,7 @@ var o3dgc = (function (module) {
         if (this.m_quantFloatArraySize < size) {
             this.m_quantFloatArrayBuffer = new ArrayBuffer(4 * size);
             this.m_quantFloatArray = new Int32Array(this.m_quantFloatArrayBuffer);
+            this.m_quantFloatArraySize = size;
         }
         var _quantFloatArray = this.m_quantFloatArray;
         var _neighbors = this.m_neighbors;
@@ -2503,6 +2502,7 @@ var o3dgc = (function (module) {
         }
         for (var v = 0; v < numFloatArray; ++v) {
             for (var d = 0; d < dimFloatArray; ++d) {
+//                floatArray[v * stride + d] = _quantFloatArray[v * stride + d];
                 floatArray[v * stride + d] = _quantFloatArray[v * stride + d] * _idelta[d] + minFloatArray[d];
             }
         }
@@ -2524,14 +2524,13 @@ var o3dgc = (function (module) {
 
         _stats.m_timeCoordIndex = timer.GetElapsedTime();
         _stats.m_streamSizeCoordIndex = _iterator.m_count - _stats.m_streamSizeCoordIndex;
-
         // decode coord
         _stats.m_streamSizeCoord = _iterator.m_count;
         timer.Tic();
         if (ifs.GetNCoord() > 0) {
-            ret = this.DecodeFloatArray(ifs.GetCoord(), ifs.GetNCoord(), 3, 3, ifs.GetCoordMinArray(), ifs.GetCoordMaxArray(),
-                                   _params.GetCoordQuantBits(), ifs, predMode, bstream);
-            _params.SetCoordPredMode(predMode.m_value);
+        ret = this.DecodeFloatArray(ifs.GetCoord(), ifs.GetNCoord(), 3, 3, ifs.GetCoordMinArray(), ifs.GetCoordMaxArray(),
+        _params.GetCoordQuantBits(), ifs, predMode, bstream);
+        _params.SetCoordPredMode(predMode.m_value);
         }
         if (ret !== O3DGC_OK) {
             return ret;
@@ -2545,7 +2544,7 @@ var o3dgc = (function (module) {
         timer.Tic();
         if (ifs.GetNNormal() > 0) {
             ret = this.DecodeFloatArray(ifs.GetNormal(), ifs.GetNNormal(), 3, 3, ifs.GetNormalMinArray(), ifs.GetNormalMaxArray(),
-                                _params.GetNormalQuantBits(), ifs, predMode, bstream);
+            _params.GetNormalQuantBits(), ifs, predMode, bstream);
             _params.SetNormalPredMode(predMode.m_value);
         }
         if (ret !== O3DGC_OK) {
@@ -2560,15 +2559,15 @@ var o3dgc = (function (module) {
             _stats.m_streamSizeFloatAttribute[a] = _iterator.m_count;
             timer.Tic();
             ret = this.DecodeFloatArray(ifs.GetFloatAttribute(a), ifs.GetNFloatAttribute(a), ifs.GetFloatAttributeDim(a), ifs.GetFloatAttributeDim(a),
-                                ifs.GetFloatAttributeMinArray(a), ifs.GetFloatAttributeMaxArray(a),
-                                _params.GetFloatAttributeQuantBits(a), ifs, predMode, bstream);
+            ifs.GetFloatAttributeMinArray(a), ifs.GetFloatAttributeMaxArray(a),
+            _params.GetFloatAttributeQuantBits(a), ifs, predMode, bstream);
             _params.SetFloatAttributePredMode(a, predMode.m_value);
             timer.Toc();
             _stats.m_timeFloatAttribute[a] = timer.GetElapsedTime();
             _stats.m_streamSizeFloatAttribute[a] = _iterator.m_count - _stats.m_streamSizeFloatAttribute[a];
         }
         if (ret !== O3DGC_OK) {
-            return ret;
+        return ret;
         }
 
         // decode FloatAttributes
@@ -2581,9 +2580,8 @@ var o3dgc = (function (module) {
             _stats.m_streamSizeIntAttribute[a] = _iterator.m_count - _stats.m_streamSizeIntAttribute[a];
         }
         if (ret !== O3DGC_OK) {
-            return ret;
+        return ret;
         }
-
         timer.Tic();
         this.m_triangleListDecoder.Reorder();
         timer.Toc();
