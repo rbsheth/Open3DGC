@@ -138,7 +138,14 @@ var o3dgc = (function (module) {
     function InsertPredictor(e, nPred, list, dimFloatArray) {
         var pos = 0xFFFFFFFF;
         var foundOrInserted = false;
-        for (var j = 0; j < nPred.m_value; ++j) {
+        var j1 = nPred.m_value;
+        var j0 = 0;
+        if (j1 > 1) {
+            if (!e.Less(list[j1 - 1].m_id)) {
+                j0 = j1;
+            }
+        }
+        for (var j = j0; j < j1; ++j) {
             if (e.Equal(list[j].m_id)) {
                 foundOrInserted = true;
                 break;
@@ -1719,42 +1726,48 @@ var o3dgc = (function (module) {
         return O3DGC_OK;
     }
     module.TriangleListDecoder.prototype.CompueLocalConnectivityInfo = function (focusVertex) {
+        var _visitedVertices = this.m_visitedVertices;
+        var _visitedVerticesValence = this.m_visitedVerticesValence;
+        var _triangles = this.m_triangles;
+        var _vertexToTriangle = this.m_vertexToTriangle;
+        var beginV2T = _vertexToTriangle.Begin(focusVertex);
+        var endV2T = _vertexToTriangle.End(focusVertex);
         var t = 0;
         var p, v;
-        this.m_numConqueredTriangles = 0;
-        this.m_numVisitedVertices = 0;
-        for (var i = this.m_vertexToTriangle.Begin(focusVertex); (t >= 0) && (i < this.m_vertexToTriangle.End(focusVertex)); ++i) {
-            t = this.m_vertexToTriangle.GetNeighbor(i);
+        var numConqueredTriangles = 0;
+        var numVisitedVertices = 0;
+        for (var i = beginV2T; (t >= 0) && (i < endV2T); ++i) {
+            t = _vertexToTriangle.GetNeighbor(i);
             if (t >= 0) {
-                ++this.m_numConqueredTriangles;
+                ++numConqueredTriangles;
                 p = 3 * t;
                 // extract visited vertices
                 for (var k = 0; k < 3; ++k) {
-                    v = this.m_triangles[p + k];
+                    v = _triangles[p + k];
                     if (v > focusVertex) { // vertices are insertices by increasing traversal order
                         var foundOrInserted = false;
-                        for (var j = 0; j < this.m_numVisitedVertices; ++j) {
-                            if (v === this.m_visitedVertices[j]) {
-                                this.m_visitedVerticesValence[j]++;
+                        for (var j = 0; j < numVisitedVertices; ++j) {
+                            if (v === _visitedVertices[j]) {
+                                _visitedVerticesValence[j]++;
                                 foundOrInserted = true;
                                 break;
                             }
-                            else if (v < this.m_visitedVertices[j]) {
-                                ++this.m_numVisitedVertices;
-                                for (var h = this.m_numVisitedVertices - 1; h > j; --h) {
-                                    this.m_visitedVertices[h] = this.m_visitedVertices[h - 1];
-                                    this.m_visitedVerticesValence[h] = this.m_visitedVerticesValence[h - 1];
+                            else if (v < _visitedVertices[j]) {
+                                ++numVisitedVertices;
+                                for (var h = numVisitedVertices - 1; h > j; --h) {
+                                    _visitedVertices[h] = _visitedVertices[h - 1];
+                                    _visitedVerticesValence[h] = _visitedVerticesValence[h - 1];
                                 }
-                                this.m_visitedVertices[j] = v;
-                                this.m_visitedVerticesValence[j] = 1;
+                                _visitedVertices[j] = v;
+                                _visitedVerticesValence[j] = 1;
                                 foundOrInserted = true;
                                 break;
                             }
                         }
                         if (!foundOrInserted) {
-                            this.m_visitedVertices[this.m_numVisitedVertices] = v;
-                            this.m_visitedVerticesValence[this.m_numVisitedVertices] = 1;
-                            this.m_numVisitedVertices++;
+                            _visitedVertices[numVisitedVertices] = v;
+                            _visitedVerticesValence[numVisitedVertices] = 1;
+                            numVisitedVertices++;
                         }
                     }
                 }
@@ -1762,57 +1775,68 @@ var o3dgc = (function (module) {
         }
         // re-order visited vertices by taking into account their valence (i.e., # of conquered triangles incident to each vertex)
         // in order to avoid config. 9
-        if (this.m_numVisitedVertices > 2) {
+        if (numVisitedVertices > 2) {
             var y;
-            for (var x = 1; x < this.m_numVisitedVertices; ++x) {
-                if (this.m_visitedVerticesValence[x] === 1) {
+            for (var x = 1; x < numVisitedVertices; ++x) {
+                if (_visitedVerticesValence[x] === 1) {
                     y = x;
-                    while ((y > 0) && (this.m_visitedVerticesValence[y] < this.m_visitedVerticesValence[y - 1])) {
-                        var tmp = this.m_visitedVerticesValence[y];
-                        this.m_visitedVerticesValence[y] = this.m_visitedVerticesValence[y - 1];
-                        this.m_visitedVerticesValence[y - 1] = tmp;
-                        tmp = this.m_visitedVertices[y];
-                        this.m_visitedVertices[y] = this.m_visitedVertices[y - 1];
-                        this.m_visitedVertices[y - 1] = tmp;
+                    while ((y > 0) && (_visitedVerticesValence[y] < _visitedVerticesValence[y - 1])) {
+                        var tmp = _visitedVerticesValence[y];
+                        _visitedVerticesValence[y] = _visitedVerticesValence[y - 1];
+                        _visitedVerticesValence[y - 1] = tmp;
+                        tmp = _visitedVertices[y];
+                        _visitedVertices[y] = _visitedVertices[y - 1];
+                        _visitedVertices[y - 1] = tmp;
                         --y;
                     }
                 }
             }
         }
+        this.m_numConqueredTriangles = numConqueredTriangles;
+        this.m_numVisitedVertices = numVisitedVertices;
         return O3DGC_OK;
     }
     module.TriangleListDecoder.prototype.DecompressTFAN = function (focusVertex) {
+        var _vertexToTriangle = this.m_vertexToTriangle;
+        var _triangles = this.m_triangles;
+        var _itDegree = this.m_itDegree;
+        var _itConfig = this.m_itConfig;
+        var _tfans = this.m_tfans;
+        var _processConfig = this.m_processConfig;
+        var _ctfans = this.m_ctfans;
+        var _triangleCount = this.m_triangleCount;
+        var _numConqueredTriangles = this.m_numConqueredTriangles;
         var degree, config;
         var op;
         var index;
         var k0, k1;
         var b, c, t;
-        var ntfans = this.m_ctfans.ReadNumTFans(this.m_itNumTFans);
+        var ntfans = _ctfans.ReadNumTFans(this.m_itNumTFans);
         if (ntfans > 0) {
             for (var f = 0; f != ntfans; ++f) {
-                this.m_tfans.AddTFAN();
-                degree = this.m_ctfans.ReadDegree(this.m_itDegree) + 2 - this.m_numConqueredTriangles;
-                config = this.m_ctfans.ReadConfig(this.m_itConfig);
-                k0 = this.m_tfans.GetNumVertices();
-                this.m_tfans.AddVertex(focusVertex);
-                this.m_processConfig[config](this, degree, focusVertex);
-                k1 = this.m_tfans.GetNumVertices();
-                b = this.m_tfans.GetVertex(k0 + 1);
+                _tfans.AddTFAN();
+                degree = _ctfans.ReadDegree(_itDegree) + 2 - _numConqueredTriangles;
+                config = _ctfans.ReadConfig(_itConfig);
+                k0 = _tfans.GetNumVertices();
+                _tfans.AddVertex(focusVertex);
+                _processConfig[config](this, degree, focusVertex);
+                k1 = _tfans.GetNumVertices();
+                b = _tfans.GetVertex(k0 + 1);
                 for (var k = k0 + 2; k < k1; ++k) {
-                    c = this.m_tfans.GetVertex(k);
-                    t = this.m_triangleCount * 3;
-                    this.m_triangles[t++] = focusVertex;
-                    this.m_triangles[t++] = b;
-                    this.m_triangles[t] = c;
-
-                    this.m_vertexToTriangle.AddNeighbor(focusVertex, this.m_triangleCount);
-                    this.m_vertexToTriangle.AddNeighbor(b, this.m_triangleCount);
-                    this.m_vertexToTriangle.AddNeighbor(c, this.m_triangleCount);
+                    c = _tfans.GetVertex(k);
+                    t = _triangleCount * 3;
+                    _triangles[t++] = focusVertex;
+                    _triangles[t++] = b;
+                    _triangles[t] = c;
+                    _vertexToTriangle.AddNeighbor(focusVertex, _triangleCount);
+                    _vertexToTriangle.AddNeighbor(b, _triangleCount);
+                    _vertexToTriangle.AddNeighbor(c, _triangleCount);
                     b = c;
-                    this.m_triangleCount++;
+                    _triangleCount++;
                 }
             }
         }
+        this.m_triangleCount = _triangleCount;
         return O3DGC_OK;
     }
     module.TriangleListDecoder.prototype.Decompress = function () {
@@ -2099,6 +2123,7 @@ var o3dgc = (function (module) {
         var mModelPreds = new module.AdaptiveDataModel();
         mModelPreds.SetAlphabet(O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS + 1);
         var v2T = this.m_triangleListDecoder.GetVertexToTriangle();
+        var v2TNeighbors = v2T.m_neighbors;
         var triangles = ifs.GetCoordIndex();
         var nvert = numFloatArray;
         var size = numFloatArray * dimFloatArray;
@@ -2158,7 +2183,7 @@ var o3dgc = (function (module) {
                 var u_begin = v2T.Begin(v);
                 var u_end = v2T.End(v);
                 for (var u = u_begin; u < u_end; ++u) {
-                    var ta = v2T.GetNeighbor(u);
+                    var ta = v2TNeighbors[u]; // v2T.GetNeighbor(u);
                     if (ta < 0) {
                         break;
                     }
@@ -2180,7 +2205,7 @@ var o3dgc = (function (module) {
                             var u1_begin = v2T.Begin(a);
                             var u1_end = v2T.End(a);
                             for (var u1 = u1_begin; u1 < u1_end; ++u1) {
-                                var tb = v2T.GetNeighbor(u1);
+                                var tb = v2TNeighbors[u1]; // v2T.GetNeighbor(u1);
                                 if (tb < 0) {
                                     break;
                                 }
@@ -2287,6 +2312,7 @@ var o3dgc = (function (module) {
         var _streamType = this.m_streamType;
         var predResidual;
         var v2T = this.m_triangleListDecoder.GetVertexToTriangle();
+        var v2TNeighbors = v2T.m_neighbors;
         var triangles = ifs.GetCoordIndex();
         var nvert = numFloatArray;
         var size = numFloatArray * dimFloatArray;
@@ -2335,7 +2361,7 @@ var o3dgc = (function (module) {
                 var u_begin = v2T.Begin(v);
                 var u_end = v2T.End(v);
                 for (var u = u_begin; u < u_end; ++u) {
-                    var ta = v2T.GetNeighbor(u);
+                    var ta = v2TNeighbors[u]; // v2T.GetNeighbor(u);
                     if (ta < 0) {
                         break;
                     }
@@ -2357,7 +2383,7 @@ var o3dgc = (function (module) {
                             var u1_begin = v2T.Begin(a);
                             var u1_end = v2T.End(a);
                             for (var u1 = u1_begin; u1 < u1_end; ++u1) {
-                                var tb = v2T.GetNeighbor(u1);
+                                var tb = v2TNeighbors[u1]; // v2T.GetNeighbor(u1);
                                 if (tb < 0) {
                                     break;
                                 }
