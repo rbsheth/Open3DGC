@@ -47,8 +47,7 @@ namespace o3dgc
     const unsigned long O3DGC_DV_START_CODE                   = 0x00001F2;
     const unsigned long O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES = 256;
     const unsigned long O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES   = 256;
-    const unsigned long O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES = 32;
-    const unsigned long O3DGC_SC3DMC_MAX_DIM_INT_ATTRIBUTES   = 32;
+    const unsigned long O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES = 32;
 
     const unsigned long O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS = 8;
     const unsigned long O3DGC_SC3DMC_MAX_PREDICTION_SYMBOLS   = 257;
@@ -192,7 +191,7 @@ namespace o3dgc
     typedef struct 
     {
         SC3DMCTriplet m_id;
-        long          m_pred[O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES];
+        long          m_pred[O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES];
     } SC3DMCPredictor;
 
     inline bool operator< (const SC3DMCTriplet& lhs, const SC3DMCTriplet& rhs)

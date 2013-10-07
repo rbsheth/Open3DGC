@@ -94,24 +94,24 @@ namespace o3dgc
         const Real * const               GetFloatAttributeMin(unsigned long a) const
                                          { 
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
-                                             return &(m_minFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES]);
+                                             return &(m_minFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES]);
                                          }
         const Real * const               GetFloatAttributeMax(unsigned long a) const
                                          { 
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
-                                             return &(m_maxFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES]);
+                                             return &(m_maxFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES]);
                                          }
         Real                             GetFloatAttributeMin(unsigned long a, unsigned long dim) const
                                          { 
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
-                                             assert(dim < O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES);
-                                             return m_minFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES + dim];
+                                             assert(dim < O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
+                                             return m_minFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES + dim];
                                          }
         Real                             GetFloatAttributeMax(unsigned long a, unsigned long dim) const
                                          { 
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
-                                             assert(dim < O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES);
-                                             return m_maxFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES + dim];
+                                             assert(dim < O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
+                                             return m_maxFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES + dim];
                                          }
         Real                             GetCreaseAngle()      const { return m_creaseAngle     ;}
         bool                             GetCCW()              const { return m_ccw             ;}
@@ -198,14 +198,14 @@ namespace o3dgc
         void                             SetFloatAttributeMin(unsigned long a, unsigned long dim, Real min) 
                                          { 
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
-                                             assert(dim < O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES);
-                                             m_minFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES + dim] = min;
+                                             assert(dim < O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
+                                             m_minFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES + dim] = min;
                                          }
         void                             SetFloatAttributeMax(unsigned long a, unsigned long dim, Real max) 
                                          { 
                                              assert(a < O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
-                                             assert(dim < O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES);
-                                             m_maxFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES + dim] = max;
+                                             assert(dim < O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
+                                             m_maxFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES + dim] = max;
                                          }
         void                             SetIndexBufferID  (unsigned long * const indexBufferID) { m_indexBufferID = indexBufferID;}
         void                             SetCoordIndex     (T * const coordIndex)    { m_coordIndex = coordIndex;}
@@ -246,8 +246,8 @@ namespace o3dgc
         unsigned long                    m_nIntAttribute      [O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES  ];
         unsigned long                    m_dimFloatAttribute  [O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES];
         unsigned long                    m_dimIntAttribute    [O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES  ];
-        Real                             m_minFloatAttribute  [O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES];
-        Real                             m_maxFloatAttribute  [O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES];
+        Real                             m_minFloatAttribute  [O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES];
+        Real                             m_maxFloatAttribute  [O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES];
         Real *                           m_floatAttribute     [O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES];
         long *                           m_intAttribute       [O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES];
         // mesh info                     

@@ -41,8 +41,8 @@ var o3dgc = (function (module) {
     var O3DGC_DV_START_CODE = 0x00001F2;
     var O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES = 256;
     var O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES = 256;
-    var O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES = 32;
-    var O3DGC_SC3DMC_MAX_DIM_INT_ATTRIBUTES = 32;
+    var O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES = 32;
+    var O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES = 32;
     var O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS = 8;
     var O3DGC_OK = 0;
     var O3DGC_ERROR_BUFFER_FULL = 1;
@@ -132,7 +132,7 @@ var o3dgc = (function (module) {
     // SC3DMCPredictor class
     module.SC3DMCPredictor = function () {
         this.m_id = new module.SC3DMCTriplet(-1, -1, -1);
-        this.m_pred = new Float32Array(O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES);
+        this.m_pred = new Float32Array(O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
     }
     // fix me: optimize this function (e.g., binary search)
     function InsertPredictor(e, nPred, list, dimFloatArray) {
@@ -837,9 +837,9 @@ var o3dgc = (function (module) {
         this.m_dimIntAttribute = new Uint32Array(this.m_buffer, shift, O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES); shift += 4 * O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES;
         this.m_typeFloatAttribute = new Uint32Array(this.m_buffer, shift, O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES); shift += 4 * O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES;
         this.m_typeIntAttribute = new Uint32Array(this.m_buffer, shift, O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES); shift += 4 * O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES;
-        this.m_minFloatAttributeBuffer = new ArrayBuffer(O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES);
+        this.m_minFloatAttributeBuffer = new ArrayBuffer(O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
         this.m_minFloatAttribute = new Float32Array(this.m_minFloatAttributeBuffer);
-        this.m_maxFloatAttributeBuffer = new ArrayBuffer(O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES);
+        this.m_maxFloatAttributeBuffer = new ArrayBuffer(O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
         this.m_maxFloatAttribute = new Float32Array(this.m_maxFloatAttributeBuffer);
         this.m_coordIndex = {};
         this.m_coord = {};
@@ -884,13 +884,16 @@ var o3dgc = (function (module) {
         return this.m_normalMax;
     }
     module.IndexedFaceSet.prototype.GetFloatAttributeMinArray = function (a) {
-        return (new Float32Array(this.m_minFloatAttributeBuffer, a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES * 4, this.GetFloatAttributeDim(a)));
+        return (new Float32Array(this.m_minFloatAttributeBuffer, a * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES * 4, this.GetFloatAttributeDim(a)));
     }
     module.IndexedFaceSet.prototype.GetFloatAttributeMaxArray = function (a) {
-        return (new Float32Array(this.m_maxFloatAttributeBuffer, a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES * 4, this.GetFloatAttributeDim(a)));
+        return (new Float32Array(this.m_maxFloatAttributeBuffer, a * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES * 4, this.GetFloatAttributeDim(a)));
     }
     module.IndexedFaceSet.prototype.GetFloatAttributeDim = function (a) {
         return this.m_dimFloatAttribute[a];
+    }
+    module.IndexedFaceSet.prototype.GetIntAttributeDim = function (a) {
+        return this.m_dimIntAttribute[a];
     }
     module.IndexedFaceSet.prototype.GetFloatAttributeType = function (a) {
         return this.m_typeFloatAttribute[a];
@@ -898,11 +901,8 @@ var o3dgc = (function (module) {
     module.IndexedFaceSet.prototype.GetIntAttributeType = function (a) {
         return this.m_typeIntAttribute[a];
     }
-    module.IndexedFaceSet.prototype.GetIntAttributeDim = function (a) {
-        return this.m_minFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES + dim];
-    }
     module.IndexedFaceSet.prototype.GetFloatAttributeMax = function (a, dim) {
-        return this.m_maxFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES + dim];
+        return this.m_maxFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES + dim];
     }
     module.IndexedFaceSet.prototype.GetCreaseAngle = function () {
         return this.m_creaseAngle;
@@ -1013,10 +1013,10 @@ var o3dgc = (function (module) {
         this.m_typeIntAttribute[a] = d;
     }
     module.IndexedFaceSet.prototype.SetFloatAttributeMin = function (a, dim, min) {
-        this.m_minFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES + dim] = min;
+        this.m_minFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES + dim] = min;
     }
     module.IndexedFaceSet.prototype.SetFloatAttributeMax = function (a, dim, max) {
-        this.m_maxFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES + dim] = max;
+        this.m_maxFloatAttribute[a * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES + dim] = max;
     }
     module.IndexedFaceSet.prototype.SetCoordIndex = function (coordIndex) {
         this.m_coordIndex = coordIndex;
@@ -1912,14 +1912,14 @@ var o3dgc = (function (module) {
         this.m_stats = new module.SC3DMCStats();
         this.m_streamType = O3DGC_STREAM_TYPE_UNKOWN;
         this.m_neighbors = new Array(O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS);
-        this.m_ideltaBuffer = new ArrayBuffer(4 * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES);
+        this.m_ideltaBuffer = new ArrayBuffer(4 * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
         this.m_idelta = new Float32Array(this.m_ideltaBuffer);
         var m_minMaxBuffer = new ArrayBuffer(32);
         this.m_minNormal = new Float32Array(m_minMaxBuffer, 0, 2);
         this.m_maxNormal = new Float32Array(m_minMaxBuffer, 8, 2);
         this.m_minNormal[0] = this.m_minNormal[1] = -2;
         this.m_maxNormal[0] = this.m_maxNormal[1] = 2;
-        for (var i = 0; i < O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES; ++i) {
+        for (var i = 0; i < O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES; ++i) {
             this.m_neighbors[i] = new module.SC3DMCPredictor();
         }
     }
@@ -2000,47 +2000,194 @@ var o3dgc = (function (module) {
         }
         return O3DGC_OK;
     }
+    module.SC3DMCDecoder.prototype.DecodeIntArrayBinary = function (intArray,
+                                                                    numIntArray,
+                                                                    dimIntArray,
+                                                                    stride,
+                                                                    ifs,
+                                                                    predMode,
+                                                                    bstream) {
+        var _iterator = this.m_iterator;
+        var _streamType = this.m_streamType;
+        var predResidual;
+        var acd = new module.ArithmeticDecoder();
+        var bModel0 = new module.StaticBitModel();
+        var bModel1 = new module.AdaptiveBitModel();
+        var mModelPreds = new module.AdaptiveDataModel();
+        mModelPreds.SetAlphabet(O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS + 1);
+        var v2T = this.m_triangleListDecoder.GetVertexToTriangle();
+        var v2TNeighbors = v2T.m_neighbors;
+        var triangles = ifs.GetCoordIndex();
+        var nvert = numIntArray;
+        var size = numIntArray * dimIntArray;
+        var start = _iterator.m_count;
+        var streamSize = bstream.ReadUInt32(_iterator, _streamType);        // bitsream size
+        var mask = bstream.ReadUChar(_iterator, _streamType);
+        var binarization = (mask >>> 4) & 7;
+        predMode.m_value = mask & 7;
+        streamSize -= (_iterator.m_count - start);
+        var iteratorPred = new module.Iterator();
+        iteratorPred.m_count = _iterator.m_count + streamSize;
+        var exp_k = 0;
+        var M = 0;
+        var id = new module.SC3DMCTriplet(-1, -1, -1);
+        if (binarization !== O3DGC_SC3DMC_BINARIZATION_AC_EGC) {
+            return O3DGC_ERROR_CORRUPTED_STREAM;
+        }
+        buffer = bstream.GetBuffer(_iterator, streamSize);
+        _iterator.m_count += streamSize;
+        acd.SetBuffer(streamSize, buffer);
+        acd.StartDecoder();
+        exp_k = acd.ExpGolombDecode(0, bModel0, bModel1);
+        M = acd.ExpGolombDecode(0, bModel0, bModel1);
+        var mModelValues = new module.AdaptiveDataModel();
+        mModelValues.SetAlphabet(M + 2);
+        var _neighbors = this.m_neighbors;
+        var _normals = this.m_normals;
+        var nPred = new module.NumberRef();
+        for (var v = 0; v < nvert; ++v) {
+            nPred.m_value = 0;
+            if (v2T.GetNumNeighbors(v) > 0 &&
+                predMode.m_value !== O3DGC_SC3DMC_NO_PREDICTION) {
+                var u_begin = v2T.Begin(v);
+                var u_end = v2T.End(v);
+                for (var u = u_begin; u < u_end; ++u) {
+                    var ta = v2TNeighbors[u];
+                    if (ta < 0) {
+                        break;
+                    }
+                    for (var k = 0; k < 3; ++k) {
+                        var w = triangles[ta * 3 + k];
+                        if (w < v) {
+                            id.m_a = -1;
+                            id.m_b = -1;
+                            id.m_c = w;
+                            var p = InsertPredictor(id, nPred, _neighbors, dimIntArray);
+                            if (p !== 0xFFFFFFFF) {
+                                for (var i = 0; i < dimIntArray; ++i) {
+                                    _neighbors[p].m_pred[i] = intArray[w * stride + i];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (nPred.m_value > 1) {
+                var bestPred = acd.DecodeAdaptiveDataModel(mModelPreds);
+                for (var i = 0; i < dimIntArray; ++i) {
+                    predResidual = acd.DecodeIntACEGC(mModelValues, bModel0, bModel1, exp_k, M);
+                    intArray[v * stride + i] = predResidual + _neighbors[bestPred].m_pred[i];
+                }
+            }
+            else if (v > 0 && predMode.m_value !== O3DGC_SC3DMC_NO_PREDICTION) {
+                for (var i = 0; i < dimIntArray; ++i) {
+                    predResidual = acd.DecodeIntACEGC(mModelValues, bModel0, bModel1, exp_k, M);
+                    intArray[v * stride + i] = predResidual + intArray[(v - 1) * stride + i];
+                }
+            }
+            else {
+                for (var i = 0; i < dimIntArray; ++i) {
+                    predResidual = acd.DecodeUIntACEGC(mModelValues, bModel0, bModel1, exp_k, M);
+                    intArray[v * stride + i] = predResidual;
+                }
+            }
+        }
+        _iterator.m_count = iteratorPred.m_count;
+        return O3DGC_OK;
+    }
+    module.SC3DMCDecoder.prototype.DecodeIntArrayASCII = function (intArray,
+                                                                   numIntArray,
+                                                                   dimIntArray,
+                                                                   stride,
+                                                                   ifs,
+                                                                   predMode,
+                                                                   bstream) {
+        var _iterator = this.m_iterator;
+        var _streamType = this.m_streamType;
+        var predResidual;
+        var v2T = this.m_triangleListDecoder.GetVertexToTriangle();
+        var v2TNeighbors = v2T.m_neighbors;
+        var triangles = ifs.GetCoordIndex();
+        var nvert = numIntArray;
+        var size = numIntArray * dimIntArray;
+        var start = _iterator.m_count;
+        var streamSize = bstream.ReadUInt32(_iterator, _streamType);        // bitsream size
+        var mask = bstream.ReadUChar(_iterator, _streamType);
+        var binarization = (mask >>> 4) & 7;
+        predMode.m_value = mask & 7;
+        streamSize -= (_iterator.m_count - start);
+        var iteratorPred = new module.Iterator();
+        iteratorPred.m_count = _iterator.m_count + streamSize;
+        var id = new module.SC3DMCTriplet(-1, -1, -1);
+        if (binarization !== O3DGC_SC3DMC_BINARIZATION_ASCII) {
+            return O3DGC_ERROR_CORRUPTED_STREAM;
+        }
+        bstream.ReadUInt32(iteratorPred, _streamType);        // predictors bitsream size
+        var _neighbors = this.m_neighbors;
+        var _normals = this.m_normals;
+        var nPred = new module.NumberRef();
+        for (var v = 0; v < nvert; ++v) {
+            nPred.m_value = 0;
+            if (v2T.GetNumNeighbors(v) > 0 &&
+                predMode.m_value !== O3DGC_SC3DMC_NO_PREDICTION) {
+                var u_begin = v2T.Begin(v);
+                var u_end = v2T.End(v);
+                for (var u = u_begin; u < u_end; ++u) {
+                    var ta = v2TNeighbors[u];
+                    if (ta < 0) {
+                        break;
+                    }
+                    for (var k = 0; k < 3; ++k) {
+                        var w = triangles[ta * 3 + k];
+                        if (w < v) {
+                            id.m_a = -1;
+                            id.m_b = -1;
+                            id.m_c = w;
+                            var p = InsertPredictor(id, nPred, _neighbors, dimIntArray);
+                            if (p !== 0xFFFFFFFF) {
+                                for (var i = 0; i < dimIntArray; ++i) {
+                                    _neighbors[p].m_pred[i] = intArray[w * stride + i];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            if (nPred.m_value > 1) {
+                var bestPred = bstream.ReadUCharASCII(iteratorPred);
+                for (var i = 0; i < dimIntArray; ++i) {
+                    predResidual = bstream.ReadIntASCII(_iterator);
+                    intArray[v * stride + i] = predResidual + _neighbors[bestPred].m_pred[i];
+                }
+            }
+            else if (v > 0 && predMode.m_value !== O3DGC_SC3DMC_NO_PREDICTION) {
+                for (var i = 0; i < dimIntArray; ++i) {
+                    predResidual = bstream.ReadIntASCII(_iterator);
+                    intArray[v * stride + i] = predResidual + intArray[(v - 1) * stride + i];
+                }
+            }
+            else {
+                for (var i = 0; i < dimIntArray; ++i) {
+                    predResidual = bstream.ReadUIntASCII(_iterator);
+                    intArray[v * stride + i] = predResidual;
+                }
+            }
+        }
+        _iterator.m_count = iteratorPred.m_count;
+        return O3DGC_OK;
+    }
     module.SC3DMCDecoder.prototype.DecodeIntArray = function (intArray,
                                                               numIntArray,
                                                               dimIntArray,
                                                               stride,
+                                                              ifs,
+                                                              predMode,
                                                               bstream) {
-        var _iterator = this.m_iterator;
-        var _streamType = this.m_streamType;
-        var nvert = numIntArray;
-        var acd = new module.ArithmeticDecoder();
-        var bModel0 = new module.StaticBitModel();
-        var bModel1 = new module.AdaptiveBitModel();
-        var start = _iterator.m_count;
-        var sizeSize = bstream.ReadUInt32(_iterator, _streamType); // bitsream size
-        bstream.ReadUChar(_iterator, _streamType); // unsigned char mask = bstream.ReadUChar(_iterator, _streamType);
-        var exp_k;
-        var M = 0;
-        var minValue = bstream.ReadUInt32(_iterator, _streamType) - O3DGC_MAX_LONG;
-        sizeSize -= (_iterator.m_count - start);
-        if (_streamType !== O3DGC_STREAM_TYPE_ASCII) {
-            var buffer = bstream.GetBuffer(_iterator, sizeSize);
-            _iterator.m_count += sizeSize;
-            acd.SetBuffer(sizeSize, buffer);
-            acd.StartDecoder();
-            exp_k = acd.ExpGolombDecode(0, bModel0, bModel1);
-            M = acd.ExpGolombDecode(0, bModel0, bModel1);
-        }
-        var mModelValues = new module.AdaptiveDataModel();
-        mModelValues.SetAlphabet(M + 2);
-        if (_streamType === O3DGC_STREAM_TYPE_ASCII) {
-            for (var v = 0; v < nvert; ++v) {
-                for (var i = 0; i < dimIntArray; ++i) {
-                    intArray[v * stride + i] = bstream.ReadUIntASCII(_iterator) + minValue;
-                }
-            }
+        if (this.m_streamType === O3DGC_STREAM_TYPE_ASCII) {
+            return this.DecodeIntArrayASCII(intArray, numIntArray, dimIntArray, stride, ifs, predMode, bstream);
         }
         else {
-            for (var v = 0; v < nvert; ++v) {
-                for (var i = 0; i < dimIntArray; ++i) {
-                    intArray[v * stride + i] = acd.DecodeUIntACEGC(mModelValues, bModel0, bModel1, exp_k, M) + minValue;
-                }
-            }
+            return this.DecodeIntArrayBinary(intArray, numIntArray, dimIntArray, stride, ifs, predMode, bstream);
         }
         return O3DGC_OK;
     }
@@ -2559,8 +2706,8 @@ var o3dgc = (function (module) {
             _stats.m_streamSizeFloatAttribute[a] = _iterator.m_count;
             timer.Tic();
             ret = this.DecodeFloatArray(ifs.GetFloatAttribute(a), ifs.GetNFloatAttribute(a), ifs.GetFloatAttributeDim(a), ifs.GetFloatAttributeDim(a),
-            ifs.GetFloatAttributeMinArray(a), ifs.GetFloatAttributeMaxArray(a),
-            _params.GetFloatAttributeQuantBits(a), ifs, predMode, bstream);
+                                        ifs.GetFloatAttributeMinArray(a), ifs.GetFloatAttributeMaxArray(a),
+                                        _params.GetFloatAttributeQuantBits(a), ifs, predMode, bstream);
             _params.SetFloatAttributePredMode(a, predMode.m_value);
             timer.Toc();
             _stats.m_timeFloatAttribute[a] = timer.GetElapsedTime();
@@ -2570,11 +2717,12 @@ var o3dgc = (function (module) {
         return ret;
         }
 
-        // decode FloatAttributes
+        // decode IntAttributes
         for (var a = 0; a < ifs.GetNumIntAttributes(); ++a) {
             _stats.m_streamSizeIntAttribute[a] = _iterator.m_count;
             timer.Tic();
-            ret = this.DecodeIntArray(ifs.GetIntAttribute(a), ifs.GetNIntAttribute(a), ifs.GetIntAttributeDim(a), ifs.GetIntAttributeDim(a), bstream);
+            ret = this.DecodeIntArray(ifs.GetIntAttribute(a), ifs.GetNIntAttribute(a), ifs.GetIntAttributeDim(a), ifs.GetIntAttributeDim(a), ifs, predMode, bstream);
+            _params.SetIntAttributePredMode(a, predMode.m_value);
             timer.Toc();
             _stats.m_timeIntAttribute[a] = timer.GetElapsedTime();
             _stats.m_streamSizeIntAttribute[a] = _iterator.m_count - _stats.m_streamSizeIntAttribute[a];

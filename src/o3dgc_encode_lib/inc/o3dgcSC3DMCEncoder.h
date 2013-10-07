@@ -91,6 +91,7 @@ namespace o3dgc
                                                    unsigned long numIntArray,
                                                    unsigned long dimIntArray,
                                                    unsigned long stride,
+                                                   const IndexedFaceSet<T> & ifs,
                                                    O3DGCSC3DMCPredictionMode predMode,
                                                    BinaryStream & bstream);
         O3DGCErrorCode              ProcessNormals(const IndexedFaceSet<T> & ifs);

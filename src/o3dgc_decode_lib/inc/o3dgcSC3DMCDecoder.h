@@ -85,10 +85,12 @@ namespace o3dgc
                                                        const Real * const maxfloatArray,
                                                        unsigned long nQBits);
         O3DGCErrorCode              DecodeIntArray(long * const intArray, 
-                                                 unsigned long numIntArraySize,
-                                                 unsigned long dimIntArraySize,
-                                                 unsigned long stride,
-                                                 const BinaryStream & bstream);
+                                                   unsigned long numIntArraySize,
+                                                   unsigned long dimIntArraySize,
+                                                   unsigned long stride,
+                                                   const IndexedFaceSet<T> & ifs,
+                                                   O3DGCSC3DMCPredictionMode & predMode,
+                                                   const BinaryStream & bstream);
         O3DGCErrorCode              ProcessNormals(const IndexedFaceSet<T> & ifs);
 
         unsigned long               m_iterator;

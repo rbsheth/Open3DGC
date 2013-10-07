@@ -207,7 +207,8 @@ namespace o3dgc
         {
             m_stats.m_streamSizeIntAttribute[a] = m_iterator;
             timer.Tic();
-            DecodeIntArray(ifs.GetIntAttribute(a), ifs.GetNIntAttribute(a), ifs.GetIntAttributeDim(a), ifs.GetIntAttributeDim(a), bstream);
+            DecodeIntArray(ifs.GetIntAttribute(a), ifs.GetNIntAttribute(a), ifs.GetIntAttributeDim(a), ifs.GetIntAttributeDim(a), 
+                           ifs, m_params.GetIntAttributePredMode(a), bstream);
             timer.Toc();
             m_stats.m_timeIntAttribute[a]       = timer.GetElapsedTime();
             m_stats.m_streamSizeIntAttribute[a] = m_iterator - m_stats.m_streamSizeIntAttribute[a];
@@ -229,35 +230,56 @@ namespace o3dgc
     }
     template<class T>
     O3DGCErrorCode SC3DMCDecoder<T>::DecodeIntArray(long * const intArray, 
-                                                 unsigned long numIntArray,
-                                                 unsigned long dimIntArray,
-                                                 unsigned long stride,
-                                                 const BinaryStream & bstream)
-    {        
-        const long nvert = (long) numIntArray;
-
-        unsigned char * buffer = 0;
+                                                    unsigned long numIntArray,
+                                                    unsigned long dimIntArray,
+                                                    unsigned long stride,
+                                                    const IndexedFaceSet<T> & ifs,
+                                                    O3DGCSC3DMCPredictionMode & predMode,
+                                                    const BinaryStream & bstream)
+    {
+        assert(dimIntArray <  O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
+        long predResidual;
+        SC3DMCPredictor m_neighbors  [O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS];
         Arithmetic_Codec acd;
         Static_Bit_Model bModel0;
         Adaptive_Bit_Model bModel1;
-        
-        unsigned long start    = m_iterator;
-        unsigned long sizeSize = bstream.ReadUInt32(m_iterator, m_streamType);  // bitsream size
-        bstream.ReadUChar(m_iterator, m_streamType);                            // unsigned char mask = bstream.ReadUChar(m_iterator, m_streamType);
-        unsigned int exp_k;
-        unsigned int M = 0;
+        Adaptive_Data_Model mModelPreds(O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS+1);
+        unsigned long nPred;
 
-        long minValue = bstream.ReadUInt32(m_iterator, m_streamType) - O3DGC_MAX_LONG;
-        sizeSize -= (m_iterator - start);
-        
+        const AdjacencyInfo & v2T            = m_triangleListDecoder.GetVertexToTriangle();
+        const T * const     triangles        = ifs.GetCoordIndex();
+        const long          nvert            = (long) numIntArray;
+        const unsigned long size             = numIntArray * dimIntArray;
+        unsigned char *     buffer           = 0;
+        unsigned long       start            = m_iterator;
+        unsigned long       streamSize       = bstream.ReadUInt32(m_iterator, m_streamType);        // bitsream size
+        unsigned char mask                   = bstream.ReadUChar(m_iterator, m_streamType);
+        O3DGCSC3DMCBinarization binarization = (O3DGCSC3DMCBinarization)((mask >> 4) & 7);
+        predMode                             = (O3DGCSC3DMCPredictionMode)(mask & 7);
+        streamSize                          -= (m_iterator - start);
+        unsigned long       iteratorPred     = m_iterator + streamSize;
+        unsigned int        exp_k            = 0;
+        unsigned int        M                = 0;
         if (m_streamType != O3DGC_STREAM_TYPE_ASCII)
         {
+            if (binarization != O3DGC_SC3DMC_BINARIZATION_AC_EGC)
+            {
+                return O3DGC_ERROR_CORRUPTED_STREAM;
+            }
             bstream.GetBuffer(m_iterator, buffer);
-            m_iterator += sizeSize;
-            acd.set_buffer(sizeSize, buffer);
+            m_iterator += streamSize;
+            acd.set_buffer(streamSize, buffer);
             acd.start_decoder();
             exp_k = acd.ExpGolombDecode(0, bModel0, bModel1);
             M     = acd.ExpGolombDecode(0, bModel0, bModel1);
+        }
+        else
+        {
+            if (binarization != O3DGC_SC3DMC_BINARIZATION_ASCII)
+            {
+                return O3DGC_ERROR_CORRUPTED_STREAM;
+            }
+            bstream.ReadUInt32(iteratorPred, m_streamType);        // predictors bitsream size
         }
         Adaptive_Data_Model mModelValues(M+2);
 
@@ -265,34 +287,126 @@ namespace o3dgc
         printf("IntArray (%i, %i)\n", numIntArray, dimIntArray);
         fprintf(g_fileDebugSC3DMCDec, "IntArray (%i, %i)\n", numIntArray, dimIntArray);
 #endif //DEBUG_VERBOSE
-        if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
+
+        for (long v=0; v < nvert; ++v) 
         {
-            for (long v=0; v < nvert; ++v) 
+            nPred = 0;
+            if ( v2T.GetNumNeighbors(v) > 0 && 
+                 predMode != O3DGC_SC3DMC_NO_PREDICTION)
+            {
+                int u0 = v2T.Begin(v);
+                int u1 = v2T.End(v);
+                for (long u = u0; u < u1; u++) 
+                {
+                    long ta = v2T.GetNeighbor(u);
+                    if (ta < 0)
+                    {
+                        break;
+                    }
+                    for(long k = 0; k < 3; ++k)
+                    {
+                        long w = triangles[ta*3 + k];
+                        if ( w < v )
+                        {
+                            SC3DMCTriplet id = {-1, -1, w};
+                            unsigned long p = Insert(id, nPred, m_neighbors);
+                            if (p != 0xFFFFFFFF)
+                            {
+                                for (unsigned long i = 0; i < dimIntArray; i++) 
+                                {
+                                    m_neighbors[p].m_pred[i] = intArray[w*stride+i];
+                                } 
+                            }
+                        }
+                    }
+                }
+            }
+            if (nPred > 1)
+            {
+#ifdef DEBUG_VERBOSE1
+                printf("\t\t vm %i\n", v);
+                fprintf(g_fileDebugSC3DMCDec, "\t\t vm %i\n", v);
+                for (unsigned long p = 0; p < nPred; ++p)
+                {
+                    printf("\t\t pred a = %i b = %i c = %i \n", m_neighbors[p].m_id.m_a, m_neighbors[p].m_id.m_b, m_neighbors[p].m_id.m_c);
+                    fprintf(g_fileDebugSC3DMCDec, "\t\t pred a = %i b = %i c = %i \n", m_neighbors[p].m_id.m_a, m_neighbors[p].m_id.m_b, m_neighbors[p].m_id.m_c);
+                    for (unsigned long i = 0; i < dimIntArray; ++i) 
+                    {
+                        printf("\t\t\t %i\n", m_neighbors[p].m_pred[i]);
+                        fprintf(g_fileDebugSC3DMCDec, "\t\t\t %i\n", m_neighbors[p].m_pred[i]);
+                    }
+                }
+#endif //DEBUG_VERBOSE
+                unsigned long bestPred;
+                if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
+                {
+                    bestPred = bstream.ReadUCharASCII(iteratorPred);
+                }
+                else
+                {
+                    bestPred = acd.decode(mModelPreds);
+                }
+#ifdef DEBUG_VERBOSE1
+                    printf("best (%i, %i, %i) \t pos %i\n", m_neighbors[bestPred].m_id.m_a, m_neighbors[bestPred].m_id.m_b, m_neighbors[bestPred].m_id.m_c, bestPred);
+                    fprintf(g_fileDebugSC3DMCDec, "best (%i, %i, %i) \t pos %i\n", m_neighbors[bestPred].m_id.m_a, m_neighbors[bestPred].m_id.m_b, m_neighbors[bestPred].m_id.m_c, bestPred);
+#endif //DEBUG_VERBOSE
+                for (unsigned long i = 0; i < dimIntArray; i++) 
+                {
+                    if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
+                    {
+                        predResidual = bstream.ReadIntASCII(m_iterator);
+                    }
+                    else
+                    {
+                        predResidual = DecodeIntACEGC(acd, mModelValues, bModel0, bModel1, exp_k, M);
+                    }
+                    intArray[v*stride+i] = predResidual + m_neighbors[bestPred].m_pred[i];
+#ifdef DEBUG_VERBOSE
+                    printf("%i \t %i \t [%i]\n", v*dimIntArray+i, predResidual, m_neighbors[bestPred].m_pred[i]);
+                    fprintf(g_fileDebugSC3DMCDec, "%i \t %i \t [%i]\n", v*dimIntArray+i, predResidual, m_neighbors[bestPred].m_pred[i]);
+#endif //DEBUG_VERBOSE
+                }
+            }
+            else if (v > 0 && predMode != O3DGC_SC3DMC_NO_PREDICTION)
             {
                 for (unsigned long i = 0; i < dimIntArray; i++) 
                 {
-                    intArray[v*stride+i] = bstream.ReadUIntASCII(m_iterator) + minValue;
+                    if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
+                    {
+                        predResidual = bstream.ReadIntASCII(m_iterator);
+                    }
+                    else
+                    {
+                        predResidual = DecodeIntACEGC(acd, mModelValues, bModel0, bModel1, exp_k, M);
+                    }
+                    intArray[v*stride+i] = predResidual + intArray[(v-1)*stride+i];
 #ifdef DEBUG_VERBOSE
-                    printf("%i\n", intArray[v*dimIntArray+i]);
-                    fprintf(g_fileDebugSC3DMCDec, "%i\n", intArray[v*dimIntArray+i]);
+                    printf("%i \t %i\n", v*dimIntArray+i, predResidual);
+                    fprintf(g_fileDebugSC3DMCDec, "%i \t %i\n", v*dimIntArray+i, predResidual);
+#endif //DEBUG_VERBOSE
+                }
+            }
+            else
+            {
+                for (unsigned long i = 0; i < dimIntArray; i++) 
+                {
+                    if (m_streamType == O3DGC_STREAM_TYPE_ASCII)
+                    {
+                        predResidual = bstream.ReadUIntASCII(m_iterator);
+                    }
+                    else
+                    {
+                        predResidual = DecodeUIntACEGC(acd, mModelValues, bModel0, bModel1, exp_k, M);
+                    }
+                    intArray[v*stride+i] = predResidual;
+#ifdef DEBUG_VERBOSE
+                    printf("%i \t %i\n", v*dimIntArray+i, predResidual);
+                    fprintf(g_fileDebugSC3DMCDec, "%i \t %i\n", v*dimIntArray+i, predResidual);
 #endif //DEBUG_VERBOSE
                 }
             }
         }
-        else
-        {
-            for (long v=0; v < nvert; ++v) 
-            {
-                for (unsigned long i = 0; i < dimIntArray; i++) 
-                {
-                    intArray[v*stride+i] = DecodeUIntACEGC(acd, mModelValues, bModel0, bModel1, exp_k, M) + minValue;
-#ifdef DEBUG_VERBOSE
-                    printf("%i\n", intArray[v*dimIntArray+i]);
-                    fprintf(g_fileDebugSC3DMCDec, "%i\n", intArray[v*dimIntArray+i]);
-#endif //DEBUG_VERBOSE
-                }
-            }
-        }
+        m_iterator  = iteratorPred;
 #ifdef DEBUG_VERBOSE
         fflush(g_fileDebugSC3DMCDec);
 #endif //DEBUG_VERBOSE
@@ -385,7 +499,7 @@ namespace o3dgc
                                                    O3DGCSC3DMCPredictionMode & predMode,
                                                    const BinaryStream & bstream)
     {
-        assert(dimFloatArray <  O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES);
+        assert(dimFloatArray <  O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
         long predResidual;
         SC3DMCPredictor m_neighbors  [O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS];
         Arithmetic_Codec acd;
@@ -707,7 +821,7 @@ namespace o3dgc
                                                       unsigned long nQBits)
     {
         
-        Real idelta[O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES];
+        Real idelta[O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES];
         Real r;
         for(unsigned long d = 0; d < dimFloatArray; d++)
         {

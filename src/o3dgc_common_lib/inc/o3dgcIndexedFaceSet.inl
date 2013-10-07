@@ -39,8 +39,8 @@ namespace o3dgc
                                 m_nFloatAttribute[a],
                                 m_dimFloatAttribute[a], 
                                 m_dimFloatAttribute[a], // stride
-                                m_minFloatAttribute + (a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES), 
-                                m_maxFloatAttribute + (a * O3DGC_SC3DMC_MAX_DIM_FLOAT_ATTRIBUTES), quantMode);
+                                m_minFloatAttribute + (a * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES), 
+                                m_maxFloatAttribute + (a * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES), quantMode);
         }
     }
 }
