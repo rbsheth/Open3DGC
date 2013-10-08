@@ -2295,7 +2295,6 @@ var o3dgc = (function (module) {
         M = acd.ExpGolombDecode(0, bModel0, bModel1);
         var mModelValues = new module.AdaptiveDataModel();
         mModelValues.SetAlphabet(M + 2);
-
         if (predMode.m_value === O3DGC_SC3DMC_SURF_NORMALS_PREDICTION) {
             if (this.m_orientationSize < size) {
                 this.m_orientationBuffer = new ArrayBuffer(numFloatArray);
@@ -2310,7 +2309,6 @@ var o3dgc = (function (module) {
             this.ProcessNormals(ifs);
             dimFloatArray = 2;
         }
-
         if (this.m_quantFloatArraySize < size) {
             this.m_quantFloatArrayBuffer = new ArrayBuffer(4 * size);
             this.m_quantFloatArray = new Int32Array(this.m_quantFloatArrayBuffer);
@@ -2437,9 +2435,6 @@ var o3dgc = (function (module) {
         }
         return O3DGC_OK;
     }
-
-
-
     module.SC3DMCDecoder.prototype.DecodeFloatArrayASCII = function (floatArray,
                                                                      numFloatArray,
                                                                      dimFloatArray,
@@ -2715,7 +2710,6 @@ var o3dgc = (function (module) {
         if (ret !== O3DGC_OK) {
         return ret;
         }
-
         // decode IntAttributes
         for (var a = 0; a < ifs.GetNumIntAttributes(); ++a) {
             _stats.m_streamSizeIntAttribute[a] = _iterator.m_count;
@@ -2734,6 +2728,276 @@ var o3dgc = (function (module) {
         timer.Toc();
         _stats.m_timeReorder = timer.GetElapsedTime();
 
+        return ret;
+    }
+    // DVEncodeParams class
+    module.DVEncodeParams = function () {
+        this.m_encodeMode = O3DGC_DYNAMIC_VECTOR_LIFT;
+        this.m_streamTypeMode = O3DGC_STREAM_TYPE_ASCII;
+        this.m_quantBits = 10;
+    }
+    module.DVEncodeParams.prototype.GetStreamType = function () {
+        return this.m_streamTypeMode;
+    }
+    module.DVEncodeParams.prototype.GetEncodeMode = function () {
+        return this.m_encodeMode;
+    }
+    module.DVEncodeParams.prototype.GetQuantBits = function () {
+        return this.m_quantBits;
+    }
+    module.DVEncodeParams.prototype.SetStreamType = function (streamTypeMode) {
+        this.m_streamTypeMode=streamTypeMode;
+    }
+    module.DVEncodeParams.prototype.SetEncodeMode = function (encodeMode) {
+        this.m_encodeMode=encodeMode;
+    }
+    module.DVEncodeParams.prototype.SetQuantBits = function (quantBits) {
+        this.m_quantBits=quantBits;
+    }
+    // DynamicVector class
+    module.DynamicVector = function () {
+        this.m_num = 0;
+        this.m_dim = 0;
+        this.m_stride = 0;
+        this.m_max = {};
+        this.m_min = {};
+        this.m_vectors = {};
+    }
+    module.DynamicVector.prototype.GetNVector = function () {
+        return this.m_num;
+    }
+    module.DynamicVector.prototype.GetDimVector = function () {
+        return this.m_dim;
+    }
+    module.DynamicVector.prototype.GetStride = function () {
+        return this.m_stride;
+    }
+    module.DynamicVector.prototype.GetMinArray = function () {
+        return this.m_min;
+    }
+    module.DynamicVector.prototype.GetMaxArray = function () {
+        return this.m_max;
+    }
+    module.DynamicVector.prototype.GetVectors = function () {
+        return this.m_vectors;
+    }
+    module.DynamicVector.prototype.GetMin = function (j) {
+        return this.m_min[j];
+    }
+    module.DynamicVector.prototype.GetMax = function (j) {
+        return this.m_max[j];
+    }
+    module.DynamicVector.prototype.SetNVector = function (num) {
+        this.m_num = num;
+    }
+    module.DynamicVector.prototype.SetDimVector = function (dim) {
+        this.m_dim = dim;
+    }
+    module.DynamicVector.prototype.SetStride = function (stride) {
+        this.m_stride = stride;
+    }
+    module.DynamicVector.prototype.SetMinArray = function (min) {
+        this.m_min = min;
+    }
+    module.DynamicVector.prototype.SetMaxArray = function (max) {
+        this.m_max = max;
+    }
+    module.DynamicVector.prototype.SetMin = function (j, min) {
+        this.m_min[j] = min;
+    }
+    module.DynamicVector.prototype.SetMax = function (j, max) {
+        this.m_max[j] = max;
+    }
+    module.DynamicVector.prototype.SetVectors = function (vectors) {
+        this.m_vectors = vectors;
+    }
+    // DynamicVector class
+    module.DynamicVectorDecoder = function () {
+        this.m_streamSize    = 0;
+        this.m_maxNumVectors = 0;
+        this.m_numVectors    = 0;
+        this.m_dimVectors    = 0;
+        this.m_quantVectors  = {};
+        this.m_iterator      = new module.Iterator();;
+        this.m_streamType    = O3DGC_STREAM_TYPE_UNKOWN;
+    }
+    module.DynamicVectorDecoder.prototype.GetStreamType = function () {
+        return this.m_streamType;
+    }
+    module.DynamicVectorDecoder.prototype.GetIterator = function () {
+        return this.m_iterator;
+    }
+    module.DynamicVectorDecoder.prototype.SetStreamType = function (streamType) {
+        this.m_streamType = streamType;
+    }
+    module.DynamicVectorDecoder.prototype.SetIterator = function (iterator) {
+        this.m_iterator = iterator;
+    }
+    module.DynamicVectorDecoder.prototype.IUpdate = function (data, size) {
+        var size1 = size - 1;
+        var p = 2;
+        data[0] -= data[1] >>> 1;
+        while(p < size1){
+            data[p] -= (data[p-1] + data[p+1] + 2) >>> 2;
+            p += 2;
+        }
+        if ( p == size1){
+            data[p] -= data[p-1]>>>1;
+        }
+        return O3DGC_OK;
+    }
+    module.DynamicVectorDecoder.prototype.IPredict = function (data, size) {
+        var size1 = size - 1;
+        var p = 1;
+        while(p < size1){
+            data[p] += (data[p-1] + data[p+1] + 1) >>> 1;
+            p += 2;
+        }
+        if ( p == size1){
+            data[p] += data[p-1];
+        }
+        return O3DGC_OK;
+    }
+    module.DynamicVectorDecoder.prototype.Merge = function (data, size) {
+        var h = (size >>> 1) + (size & 1);
+        var a = h-1;
+        var b = h;
+        var tmp;
+        while (a > 0){
+            for (var i = a; i < b; i += 2){
+                tmp = data[i];
+                data[i] = data[i+1];
+                data[i+1] = tmp;
+            }
+            --a;
+            ++b;
+        }
+        return O3DGC_OK;
+    }
+    module.DynamicVectorDecoder.prototype.ITransform = function (data, size) {
+        var n = size;
+        var even = 0;
+        var k = 0;
+        var tmp = new Int32Array(32);
+        var e = new Int32Array(32);
+        tmp[k] = n;
+        e[k] = (n & 1)>>>0;
+        even += ((n&1) << k++) >>> 0;
+        while(n > 1){
+            n = (n >>> 1) + ((n & 1) >>> 0);
+            tmp[k] = n;
+            e[k] = ((n & 1) >>> 0);
+            even += ((n&1) << k++)>>>0;
+        }
+        for(var i = k-2; i >= 0; --i){
+            n = ((n << 1)>>>0) - (((even>>i) & 1))>>>0;
+            this.Merge (data, n);
+            this.IUpdate (data, n);
+            this.IPredict(data, n);
+        }
+        return O3DGC_OK;
+    }
+    module.DynamicVectorDecoder.prototype.IQuantize = function (floatArray, 
+                                                       numFloatArray, 
+                                                       dimFloatArray, 
+                                                       stride, 
+                                                       minFloatArray, 
+                                                       maxFloatArray, 
+                                                       nQBits) {
+        var size = numFloatArray * dimFloatArray;
+        var r;
+        var idelta;
+        for(var d = 0; d < dimFloatArray; ++d){
+            r = maxFloatArray[d] - minFloatArray[d];
+            if (r > 0.0){
+                idelta = (float)(r) / ((1 << nQBits) - 1);
+            }
+            else {
+                idelta = 1.0;
+            }
+            for(var v = 0; v < numFloatArray; ++v){
+                floatArray[v * stride + d] = this.m_quantVectors[v + d * numFloatArray] * idelta + minFloatArray[d];
+            }
+        }
+        return O3DGC_OK;
+    }
+    module.DynamicVectorDecoder.prototype.DecodeHeader = function (dynamicVector, bstream) {
+        var c0 = this.m_iterator.m_count;
+        var start_code = bstream.ReadUInt32(this.m_iterator, O3DGC_STREAM_TYPE_BINARY);
+        if (start_code !== O3DGC_DV_START_CODE) {
+            this.m_iterator.m_count = c0;
+            start_code = bstream.ReadUInt32(this.m_iterator, O3DGC_STREAM_TYPE_ASCII);
+            if (start_code !== O3DGC_DV_START_CODE) {
+                return O3DGC_ERROR_CORRUPTED_STREAM;
+            }
+            else {
+                this.m_streamType = O3DGC_STREAM_TYPE_ASCII;
+            }
+        }
+        else {
+            this.m_streamType = O3DGC_STREAM_TYPE_BINARY;
+        }
+        this.m_streamSize = bstream.ReadUInt32(this.m_iterator, this.m_streamType);
+        this.m_params.SetEncodeMode(bstream.ReadUChar(this.m_iterator, this.m_streamType));
+        dynamicVector.SetNVector(bstream.ReadUInt32(this.m_iterator, this.m_streamType));
+        if (dynamicVector.GetNVector() > 0){
+            dynamicVector.SetDimVector(bstream.ReadUInt32(this.m_iterator, this.m_streamType));
+            this.m_params.SetQuantBits(bstream.ReadUChar(this.m_iterator, this.m_streamType));
+        }
+        return O3DGC_OK;
+    }
+    module.DynamicVectorDecoder.prototype.DecodePlayload = function (dynamicVector, bstream) {
+        ret = O3DGC_OK;
+        dim  = dynamicVector.GetDimVector();
+        num  = dynamicVector.GetNVector();
+        size = dim * num;
+        for(var j=0 ; j < dynamicVector.GetDimVector() ; ++j){
+            dynamicVector.SetMin(j, bstream.ReadFloat32(this.m_iterator, this.m_streamType));
+            dynamicVector.SetMax(j, bstream.ReadFloat32(this.m_iterator, this.m_streamType));
+        }
+        var acd = new module.ArithmeticDecoder();
+        var bModel0 = new module.StaticBitModel();
+        var bModel1 = new module.AdaptiveBitModel();
+        var start = this.m_iterator.m_count;
+        var streamSize = bstream.ReadUInt32(this.m_iterator, this.m_streamType);        // bitsream size
+        streamSize  -= (this.m_iterator.m_count - start);
+        var exp_k = 0;
+        var M     = 0;
+        if (this.m_streamType == O3DGC_STREAM_TYPE_BINARY){
+            var buffer = bstream.GetBuffer(it, sizeSize);
+            this.m_iterator.m_count += sizeSize;
+            acd.SetBuffer(sizeSize, buffer);
+            acd.StartDecoder();
+            exp_k = acd.ExpGolombDecode(0, bModel0, bModel1);
+            M     = acd.ExpGolombDecode(0, bModel0, bModel1);
+        }
+        var mModelValues = new module.AdaptiveDataModel();
+        mModelValues.SetAlphabet(M + 2);
+        if (this.m_maxNumVectors < size) {
+            this.m_maxNumVectors = size;
+            this.m_quantVectors  = new Int32Array(this.m_maxNumVectors);
+        }
+        if (this.m_streamType == O3DGC_STREAM_TYPE_ASCII){
+            for(var v = 0; v < num; ++v){
+                for(var d = 0; d < dim; ++d){
+                    this.m_quantVectors[d * num + v] = bstream.ReadIntASCII(this.m_iterator);
+                }
+            }
+        }
+        else
+        {
+            for(var v = 0; v < num; ++v){
+                for(var d = 0; d < dim; ++d){
+                    this.m_quantVectors[d * num + v] = acd.DecodeIntACEGC(mModelValues, bModel0, bModel1, exp_k, M);
+                }
+            }
+        }
+        for(var d = 0; d < dim; ++d){
+            this.ITransform(this.m_quantVectors + d * num, num);
+        }
+        this.IQuantize(dynamicVector.GetVectors(), num, dim,
+                       dynamicVector.GetStride(), dynamicVector.GetMin(),
+                       dynamicVector.GetMax(), this.m_params.GetQuantBits());
         return ret;
     }
 
