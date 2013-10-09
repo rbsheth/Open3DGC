@@ -2905,29 +2905,31 @@ var o3dgc = (function (module) {
                                                        minFloatArray,
                                                        maxFloatArray,
                                                        nQBits) {
+        var _quantVectors = this.m_quantVectors;
         var size = numFloatArray * dimFloatArray;
         var r;
         var idelta;
         for (var d = 0; d < dimFloatArray; ++d) {
             r = maxFloatArray[d] - minFloatArray[d];
             if (r > 0.0) {
-                idelta = r / (((1 << nQBits)>>>0) - 1);
+                idelta = r / (((1 << nQBits) >>> 0) - 1);
             }
             else {
                 idelta = 1.0;
             }
             for (var v = 0; v < numFloatArray; ++v) {
-                floatArray[v * stride + d] = this.m_quantVectors[v + d * numFloatArray] * idelta + minFloatArray[d];
+                floatArray[v * stride + d] = _quantVectors[v + d * numFloatArray] * idelta + minFloatArray[d];
             }
         }
         return O3DGC_OK;
     }
     module.DynamicVectorDecoder.prototype.DecodeHeader = function (dynamicVector, bstream) {
-        var c0 = this.m_iterator.m_count;
-        var start_code = bstream.ReadUInt32(this.m_iterator, O3DGC_STREAM_TYPE_BINARY);
+        var _iterator = this.m_iterator;
+        var c0 = _iterator.m_count;
+        var start_code = bstream.ReadUInt32(_iterator, O3DGC_STREAM_TYPE_BINARY);
         if (start_code !== O3DGC_DV_START_CODE) {
-            this.m_iterator.m_count = c0;
-            start_code = bstream.ReadUInt32(this.m_iterator, O3DGC_STREAM_TYPE_ASCII);
+            _iterator.m_count = c0;
+            start_code = bstream.ReadUInt32(_iterator, O3DGC_STREAM_TYPE_ASCII);
             if (start_code !== O3DGC_DV_START_CODE) {
                 return O3DGC_ERROR_CORRUPTED_STREAM;
             }
@@ -2938,35 +2940,38 @@ var o3dgc = (function (module) {
         else {
             this.m_streamType = O3DGC_STREAM_TYPE_BINARY;
         }
-        this.m_streamSize = bstream.ReadUInt32(this.m_iterator, this.m_streamType);
-        this.m_params.SetEncodeMode(bstream.ReadUChar(this.m_iterator, this.m_streamType));
-        dynamicVector.SetNVector(bstream.ReadUInt32(this.m_iterator, this.m_streamType));
+        var _streamType = this.m_streamType;
+        this.m_streamSize = bstream.ReadUInt32(_iterator, _streamType);
+        this.m_params.SetEncodeMode(bstream.ReadUChar(_iterator, _streamType));
+        dynamicVector.SetNVector(bstream.ReadUInt32(_iterator, _streamType));
         if (dynamicVector.GetNVector() > 0) {
-            dynamicVector.SetDimVector(bstream.ReadUInt32(this.m_iterator, this.m_streamType));
-            this.m_params.SetQuantBits(bstream.ReadUChar(this.m_iterator, this.m_streamType));
+            dynamicVector.SetDimVector(bstream.ReadUInt32(_iterator, _streamType));
+            this.m_params.SetQuantBits(bstream.ReadUChar(_iterator, _streamType));
         }
         return O3DGC_OK;
     }
     module.DynamicVectorDecoder.prototype.DecodePlayload = function (dynamicVector, bstream) {
-        ret = O3DGC_OK;
-        var start = this.m_iterator.m_count;
-        var streamSize = bstream.ReadUInt32(this.m_iterator, this.m_streamType);        // bitsream size
-        dim = dynamicVector.GetDimVector();
-        num = dynamicVector.GetNVector();
-        size = dim * num;
+        var _iterator = this.m_iterator;
+        var _streamType = this.m_streamType;
+        var ret = O3DGC_OK;
+        var start = _iterator.m_count;
+        var streamSize = bstream.ReadUInt32(_iterator, _streamType);        // bitsream size
+        var dim = dynamicVector.GetDimVector();
+        var num = dynamicVector.GetNVector();
+        var size = dim * num;
         for (var j = 0; j < dynamicVector.GetDimVector(); ++j) {
-            dynamicVector.SetMin(j, bstream.ReadFloat32(this.m_iterator, this.m_streamType));
-            dynamicVector.SetMax(j, bstream.ReadFloat32(this.m_iterator, this.m_streamType));
+            dynamicVector.SetMin(j, bstream.ReadFloat32(_iterator, _streamType));
+            dynamicVector.SetMax(j, bstream.ReadFloat32(_iterator, _streamType));
         }
         var acd = new module.ArithmeticDecoder();
         var bModel0 = new module.StaticBitModel();
         var bModel1 = new module.AdaptiveBitModel();
-        streamSize -= (this.m_iterator.m_count - start);
+        streamSize -= (_iterator.m_count - start);
         var exp_k = 0;
         var M = 0;
-        if (this.m_streamType == O3DGC_STREAM_TYPE_BINARY) {
-            var buffer = bstream.GetBuffer(this.m_iterator, streamSize);
-            this.m_iterator.m_count += streamSize;
+        if (_streamType == O3DGC_STREAM_TYPE_BINARY) {
+            var buffer = bstream.GetBuffer(_iterator, streamSize);
+            _iterator.m_count += streamSize;
             acd.SetBuffer(streamSize, buffer);
             acd.StartDecoder();
             exp_k = acd.ExpGolombDecode(0, bModel0, bModel1);
@@ -2978,22 +2983,23 @@ var o3dgc = (function (module) {
             this.m_maxNumVectors = size;
             this.m_quantVectors = new Int32Array(this.m_maxNumVectors);
         }
-        if (this.m_streamType == O3DGC_STREAM_TYPE_ASCII) {
+        var _quantVectors = this.m_quantVectors;
+        if (_streamType == O3DGC_STREAM_TYPE_ASCII) {
             for (var v = 0; v < num; ++v) {
                 for (var d = 0; d < dim; ++d) {
-                    this.m_quantVectors[d * num + v] = bstream.ReadIntASCII(this.m_iterator);
+                    _quantVectors[d * num + v] = bstream.ReadIntASCII(_iterator);
                 }
             }
         }
         else {
             for (var v = 0; v < num; ++v) {
                 for (var d = 0; d < dim; ++d) {
-                    this.m_quantVectors[d * num + v] = acd.DecodeIntACEGC(mModelValues, bModel0, bModel1, exp_k, M);
+                    _quantVectors[d * num + v] = acd.DecodeIntACEGC(mModelValues, bModel0, bModel1, exp_k, M);
                 }
             }
         }
         for (var d = 0; d < dim; ++d) {
-            this.ITransform(this.m_quantVectors, d * num, num);
+            this.ITransform(_quantVectors, d * num, num);
         }
         this.IQuantize(dynamicVector.GetVectors(), num, dim,
                        dynamicVector.GetStride(), dynamicVector.GetMinArray(),
