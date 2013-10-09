@@ -4,30 +4,26 @@
     <head>
         <title> o3dgc decoding</title>
         <meta charset="utf-8">
-<?php
-    if (!isset($_GET["obj"]) || $_GET["obj"] != 'true'){
-        echo '<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">';
-        echo '<style>';
-        echo '    body {';
-        echo '        color: #cccccc;';
-        echo '        font-family:Monospace;';
-        echo '        font-size:13px;';
-        echo '        text-align:center;';
-        echo '        background-color: #050505;';
-        echo '        margin: 0px;';
-        echo '        overflow: hidden;';
-        echo '    }';
-        echo '    #info {';
-        echo '        position: absolute;';
-        echo '        top: 0px; width: 100%;';
-        echo '        padding: 5px;';
-        echo '    }';
-        echo '    a {';
-        echo '        color: #0080ff;';
-        echo '    }';
-        echo '</style>';
-    }
-?>
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <style>
+            body {
+                color: #cccccc;
+                font-family:Monospace;
+                font-size:13px;
+                text-align:center;
+                background-color: #050505;
+                margin: 0px;
+                overflow: hidden;
+            }
+            #info {
+                position: absolute;
+                top: 0px; width: 100%;
+                padding: 5px;
+            }
+            a {
+                color: #0080ff;
+            }
+        </style>
         <script>
         var container;
         var camera, scene, renderer;
@@ -38,17 +34,24 @@
         var resType = "arraybuffer";
 <?php
     if (isset($_GET["obj"]) && $_GET["obj"] == 'true'){
-        echo "        var dumpObj = true;\n";
+        echo "        var dump = true;\n";
     }
     else{
-        echo "        var dumpObj = false;\n";
+        echo "        var dump = false;\n";
     }
-    if (isset($_GET["model"]) && $_GET["model"] != ''){
+    if (isset($_GET["model"]) && ($_GET["model"] == 'lift.s3d' || $_GET["model"] == 'lift_ascii.s3d')){
+        echo "        dump = true;\n";
         echo "        var fileName = '".$_GET["model"]."';\n";
+        echo "        var dynamicVectorDecoding = true;\n";
+    }
+    else if (isset($_GET["model"]) && $_GET["model"] != ''){
+        echo "        var fileName = '".$_GET["model"]."';\n";
+        echo "        var dynamicVectorDecoding = false;\n";
     }
     else
     {
         echo "        var fileName = 'duck.s3d';\n";
+        echo "        var dynamicVectorDecoding = false;\n";
     }
 ?>
         if (fileName.indexOf("ascii") !== -1){
@@ -63,6 +66,92 @@
         </script>
         <script type="text/javascript" src="o3dgc.js"></script>
         <script>
+        function decodeDV(bstream, size){
+            var decoder = new o3dgc.DynamicVectorDecoder();
+            var dynamicVector = new o3dgc.DynamicVector();
+            var timer = new o3dgc.Timer();
+            timer.Tic();
+            decoder.DecodeHeader(dynamicVector, bstream);
+            timer.Toc();
+            console.log("DecodeHeader time (ms) " + timer.GetElapsedTime());
+            // allocate memory
+            if (dynamicVector.GetNVector() > 0 && dynamicVector.GetDimVector()) {
+                dynamicVector.SetVectors(new Float32Array(dynamicVector.GetNVector() * dynamicVector.GetDimVector()));
+                dynamicVector.SetMinArray(new Float32Array(dynamicVector.GetDimVector()));
+                dynamicVector.SetMaxArray(new Float32Array(dynamicVector.GetDimVector()));
+                dynamicVector.SetStride(dynamicVector.GetDimVector());
+            }
+            console.log("Dynamic vector info ");
+            console.log("\t# vectors   " + dynamicVector.GetNVector());
+            console.log("\tdim         " + dynamicVector.GetDimVector());
+            // decode DV
+            timer.Tic();
+            decoder.DecodePlayload(dynamicVector, bstream);
+            timer.Toc();
+            console.log("DecodePlayload time " + timer.GetElapsedTime() + " ms, " + size + " bytes (" + (8.0 * size / dynamicVector.GetNVector()) + " bpv)");
+            SaveDV(dynamicVector, fileName);
+        }
+        function decodeIFS(bstream, size){
+            var decoder = new o3dgc.SC3DMCDecoder();
+            var timer = new o3dgc.Timer();
+            ifs = new o3dgc.IndexedFaceSet();
+            timer.Tic();
+            decoder.DecodeHeader(ifs, bstream);
+            timer.Toc();
+            console.log("DecodeHeader time (ms) " + timer.GetElapsedTime());
+            // allocate memory
+            if (ifs.GetNCoordIndex() > 0) {
+                ifs.SetCoordIndex(new Uint16Array(3 * ifs.GetNCoordIndex()));
+            }
+            if (ifs.GetNCoord() > 0) {
+                ifs.SetCoord(new Float32Array(3 * ifs.GetNCoord()));
+            }
+            if (ifs.GetNNormal() > 0) {
+                ifs.SetNormal(new Float32Array(3 * ifs.GetNNormal()));
+            }
+            var numNumFloatAttributes = ifs.GetNumFloatAttributes();
+            for (var a = 0; a < numNumFloatAttributes; ++a){
+                if (ifs.GetNFloatAttribute(a) > 0){
+                    ifs.SetFloatAttribute(a, new Float32Array(ifs.GetFloatAttributeDim(a) * ifs.GetNFloatAttribute(a)));
+                }
+            }
+            var numNumIntAttributes = ifs.GetNumIntAttributes();
+            for (var a = 0; a < numNumIntAttributes; ++a){
+                if (ifs.GetNIntAttribute(a) > 0){
+                    ifs.SetIntAttribute(a, new Int32Array(ifs.GetIntAttributeDim(a) * ifs.GetNIntAttribute(a)));
+                }
+            }
+            console.log("Mesh info ");
+            console.log("\t# coords    " + ifs.GetNCoord());
+            console.log("\t# normals   " + ifs.GetNNormal());
+            for (var a = 0; a < numNumFloatAttributes; ++a){
+                console.log("\t# FloatAttribute[" + a + "] " + ifs.GetNFloatAttribute(a) + "(" + ifs.GetFloatAttributeType(a)+")");
+            }
+            for (var a = 0; a < numNumIntAttributes; ++a){
+                console.log("\t# IntAttribute[" + a + "] " + ifs.GetNIntAttribute(a) + "(" + ifs.GetIntAttributeType(a)+")");
+            }
+            console.log("\t# triangles " + ifs.GetNCoordIndex());
+            // decode mesh
+            timer.Tic();
+            decoder.DecodePlayload(ifs, bstream);
+            timer.Toc();
+            console.log("DecodePlayload time " + timer.GetElapsedTime() + " ms, " + size + " bytes (" + (8.0 * size / ifs.GetNCoord()) + " bpv)");
+            console.log("Details");
+            var stats = decoder.GetStats();
+            console.log("\t CoordIndex         " + stats.m_timeCoordIndex + " ms, " + stats.m_streamSizeCoordIndex + " bytes (" + (8.0 * stats.m_streamSizeCoordIndex / ifs.GetNCoord()) + " bpv)");
+            console.log("\t Coord              " + stats.m_timeCoord + " ms, " + stats.m_streamSizeCoord + " bytes (" + (8.0 * stats.m_streamSizeCoord / ifs.GetNCoord()) + " bpv)");
+            console.log("\t Normal             " + stats.m_timeNormal + " ms, " + stats.m_streamSizeNormal + " bytes (" + (8.0 * stats.m_streamSizeNormal / ifs.GetNCoord()) + " bpv)");
+            for (var a = 0; a < numNumFloatAttributes; ++a){
+                console.log("\t Float Attributes   " + stats.m_timeFloatAttribute[a] + " ms, " + stats.m_streamSizeFloatAttribute[a] + " bytes (" + (8.0 * stats.m_streamSizeFloatAttribute[a] / ifs.GetNCoord()) + " bpv)");
+            }
+            for (var a = 0; a < numNumIntAttributes; ++a){
+                console.log("\t Int Attributes   " + stats.m_timeIntAttribute[a] + " ms, " + stats.m_streamSizeIntAttribute[a] + " bytes (" + (8.0 * stats.m_streamSizeIntAttribute[a] / ifs.GetNCoord()) + " bpv)");
+            }
+            console.log("\t Reorder            " + stats.m_timeReorder + " ms,  " + 0 + " bytes (" + 0.0 + " bpv)");
+            if (dump){
+                SaveOBJ(ifs, fileName);
+            }
+        }
         function decode(arrayBuffer) {
             if (arrayBuffer) {
                 function str2ab(str) {
@@ -81,64 +170,11 @@
                     var bstream = new o3dgc.BinaryStream(arrayBuffer);
                     var size = arrayBuffer.byteLength;
                 }
-                var decoder = new o3dgc.SC3DMCDecoder();
-                var timer = new o3dgc.Timer();
-                ifs = new o3dgc.IndexedFaceSet();
-                timer.Tic();
-                decoder.DecodeHeader(ifs, bstream);
-                timer.Toc();
-                console.log("DecodeHeader time (ms) " + timer.GetElapsedTime());
-                // allocate memory
-                if (ifs.GetNCoordIndex() > 0) {
-                    ifs.SetCoordIndex(new Uint16Array(3 * ifs.GetNCoordIndex()));
+                if (dynamicVectorDecoding) {
+                    decodeDV(bstream, size);
                 }
-                if (ifs.GetNCoord() > 0) {
-                    ifs.SetCoord(new Float32Array(3 * ifs.GetNCoord()));
-                }
-                if (ifs.GetNNormal() > 0) {
-                    ifs.SetNormal(new Float32Array(3 * ifs.GetNNormal()));
-                }
-                var numNumFloatAttributes = ifs.GetNumFloatAttributes();
-                for (var a = 0; a < numNumFloatAttributes; ++a){
-                    if (ifs.GetNFloatAttribute(a) > 0){
-                        ifs.SetFloatAttribute(a, new Float32Array(ifs.GetFloatAttributeDim(a) * ifs.GetNFloatAttribute(a)));
-                    }
-                }
-                var numNumIntAttributes = ifs.GetNumIntAttributes();
-                for (var a = 0; a < numNumIntAttributes; ++a){
-                    if (ifs.GetNIntAttribute(a) > 0){
-                        ifs.SetIntAttribute(a, new Int32Array(ifs.GetIntAttributeDim(a) * ifs.GetNIntAttribute(a)));
-                    }
-                }
-                console.log("Mesh info ");
-                console.log("\t# coords    " + ifs.GetNCoord());
-                console.log("\t# normals   " + ifs.GetNNormal());
-                for (var a = 0; a < numNumFloatAttributes; ++a){
-                    console.log("\t# FloatAttribute[" + a + "] " + ifs.GetNFloatAttribute(a) + "(" + ifs.GetFloatAttributeType(a)+")");
-                }
-                for (var a = 0; a < numNumIntAttributes; ++a){
-                    console.log("\t# IntAttribute[" + a + "] " + ifs.GetNIntAttribute(a) + "(" + ifs.GetIntAttributeType(a)+")");
-                }
-                console.log("\t# triangles " + ifs.GetNCoordIndex());
-                // decode mesh
-                timer.Tic();
-                decoder.DecodePlayload(ifs, bstream);
-                timer.Toc();
-                console.log("DecodePlayload time " + timer.GetElapsedTime() + " ms, " + size + " bytes (" + (8.0 * size / ifs.GetNCoord()) + " bpv)");
-                console.log("Details");
-                var stats = decoder.GetStats();
-                console.log("\t CoordIndex         " + stats.m_timeCoordIndex + " ms, " + stats.m_streamSizeCoordIndex + " bytes (" + (8.0 * stats.m_streamSizeCoordIndex / ifs.GetNCoord()) + " bpv)");
-                console.log("\t Coord              " + stats.m_timeCoord + " ms, " + stats.m_streamSizeCoord + " bytes (" + (8.0 * stats.m_streamSizeCoord / ifs.GetNCoord()) + " bpv)");
-                console.log("\t Normal             " + stats.m_timeNormal + " ms, " + stats.m_streamSizeNormal + " bytes (" + (8.0 * stats.m_streamSizeNormal / ifs.GetNCoord()) + " bpv)");
-                for (var a = 0; a < numNumFloatAttributes; ++a){
-                    console.log("\t Float Attributes   " + stats.m_timeFloatAttribute[a] + " ms, " + stats.m_streamSizeFloatAttribute[a] + " bytes (" + (8.0 * stats.m_streamSizeFloatAttribute[a] / ifs.GetNCoord()) + " bpv)");
-                }
-                for (var a = 0; a < numNumIntAttributes; ++a){
-                    console.log("\t Int Attributes   " + stats.m_timeIntAttribute[a] + " ms, " + stats.m_streamSizeIntAttribute[a] + " bytes (" + (8.0 * stats.m_streamSizeIntAttribute[a] / ifs.GetNCoord()) + " bpv)");
-                }
-                console.log("\t Reorder            " + stats.m_timeReorder + " ms,  " + 0 + " bytes (" + 0.0 + " bpv)");
-                if (dumpObj){
-                    SaveOBJ(ifs, fileName);
+                else {
+                    decodeIFS(bstream, size);
                 }
             }
         }
@@ -150,7 +186,7 @@
         <div id="container"></div>
         <div id="info"><a href="https://github.com/amd/rest3d/tree/master/server/o3dgc" target="_blank">o3dgc</a> compressed stream decoding </div>
         <script>
-        if (dumpObj){
+        if (dump){
             while (typeof compressedStream === "undefined" && !compressedStream) {
             }
             decode(compressedStream);
@@ -238,6 +274,29 @@
                 meshAddedToScene = true;
             }
             renderer.render(scene, camera);
+        }
+        function SaveDV(dynamicVector, fileName) {
+            var num = dynamicVector.GetNVector();
+            var dim = dynamicVector.GetDimVector();
+            document.writeln("#### <br>");
+            document.writeln("# <br>");
+            document.writeln("# DV File Generated by test_o3dgc<br>");
+            document.writeln("#<br>");
+            document.writeln("####<br>");
+            document.writeln("# DV " + fileName + "<br>");
+            document.writeln("#<br>");
+            document.writeln("# Vectors:     " + num + "<br>");
+            document.writeln("# Dim:         " + dim + "<br>");
+            document.writeln("#<br>");
+            document.writeln("####<br>");
+            var vectors = dynamicVector.GetVectors();
+            for (var i = 0; i < num; ++i) {
+                document.writeln(i + ": ");
+                for (var d = 0; d < dim; ++d) {
+                    document.writeln(vectors[dim * i + d] + " ");
+                }
+                document.writeln("<br>");
+            }
         }
         function SaveOBJ(ifs, fileName) {
             var triangles = ifs.GetCoordIndex();
