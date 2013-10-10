@@ -2846,13 +2846,13 @@ var o3dgc = (function (module) {
         var n = size;
         var even = 0;
         var k = 0;
-        even += ((n & 1) << k++) >> 0;
+        even += ((n & 1) << k++) >>> 0;
         while (n > 1) {
-            n = (n >> 1) + ((n & 1) >> 0);
-            even += ((n & 1) << k++) >> 0;
+            n = (n >> 1) + ((n & 1) >>> 0);
+            even += ((n & 1) << k++) >>> 0;
         }
         for (var i = k - 2; i >= 0; --i) {
-            n = ((n << 1) >> 0) - (((even >> i) & 1)) >> 0;
+            n = ((n << 1) >>> 0) - (((even >>> i) & 1)) >>> 0;
             this.Merge(data, shift, n);
             this.IUpdate(data, shift, n);
             this.IPredict(data, shift, n);
