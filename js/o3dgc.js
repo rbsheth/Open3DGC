@@ -2293,7 +2293,7 @@ var o3dgc = (function (module) {
                 var u_begin = v2T.Begin(v);
                 var u_end = v2T.End(v);
                 for (var u = u_begin; u < u_end; ++u) {
-                    var ta = v2TNeighbors[u]; // v2T.GetNeighbor(u);
+                    var ta = v2TNeighbors[u];
                     if (ta < 0) {
                         break;
                     }
@@ -2315,7 +2315,7 @@ var o3dgc = (function (module) {
                             var u1_begin = v2T.Begin(a);
                             var u1_end = v2T.End(a);
                             for (var u1 = u1_begin; u1 < u1_end; ++u1) {
-                                var tb = v2TNeighbors[u1]; // v2T.GetNeighbor(u1);
+                                var tb = v2TNeighbors[u1];
                                 if (tb < 0) {
                                     break;
                                 }
@@ -2326,7 +2326,7 @@ var o3dgc = (function (module) {
                                     if (x === b) {
                                         foundB = true;
                                     }
-                                    if (x < v && x !== a && x !== b) {
+                                    else if (x < v && x !== a) {
                                         c = x;
                                     }
                                 }
@@ -2468,7 +2468,7 @@ var o3dgc = (function (module) {
                 var u_begin = v2T.Begin(v);
                 var u_end = v2T.End(v);
                 for (var u = u_begin; u < u_end; ++u) {
-                    var ta = v2TNeighbors[u]; // v2T.GetNeighbor(u);
+                    var ta = v2TNeighbors[u];
                     if (ta < 0) {
                         break;
                     }
@@ -2490,7 +2490,7 @@ var o3dgc = (function (module) {
                             var u1_begin = v2T.Begin(a);
                             var u1_end = v2T.End(a);
                             for (var u1 = u1_begin; u1 < u1_end; ++u1) {
-                                var tb = v2TNeighbors[u1]; // v2T.GetNeighbor(u1);
+                                var tb = v2TNeighbors[u1];
                                 if (tb < 0) {
                                     break;
                                 }
@@ -2501,7 +2501,7 @@ var o3dgc = (function (module) {
                                     if (x === b) {
                                         foundB = true;
                                     }
-                                    if (x < v && x !== a && x !== b) {
+                                    else if (x < v && x !== a) {
                                         c = x;
                                     }
                                 }
