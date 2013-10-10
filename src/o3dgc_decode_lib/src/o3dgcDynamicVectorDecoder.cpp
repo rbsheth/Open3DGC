@@ -70,7 +70,6 @@ namespace o3dgc
         const long h = (size >> 1) + (size & 1);
         long       a = h-1;
         long       b = h;
-    
         while (a > 0)
         {
             for (long i = a; i < b; i += 2)
@@ -87,16 +86,10 @@ namespace o3dgc
         unsigned long n    = size;
         unsigned long even = 0;
         unsigned long k    = 0;
-        unsigned long tmp[32];
-        unsigned long e[32];
-        tmp[k] = n;
-        e[k] = (n & 1);
         even += ((n&1) << k++);
         while(n > 1)
         {
             n = (n >> 1) + (n & 1);
-            tmp[k] = n;
-            e[k] = (n & 1);
             even += ((n&1) << k++);
         }
         for(long i = k-2; i >= 0; --i)

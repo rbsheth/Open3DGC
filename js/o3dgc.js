@@ -770,7 +770,6 @@ var o3dgc = (function (module) {
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -    
     // FIFO class
     module.FIFO = function () {
-        this.m_buffer = {};
         this.m_data = {};
         this.m_allocated = 0;
         this.m_size = 0;
@@ -789,8 +788,7 @@ var o3dgc = (function (module) {
     module.FIFO.prototype.Allocate = function (size) {
         if (size > this.m_allocated) {
             this.m_allocated = size;
-            this.m_buffer = new ArrayBuffer(4 * m_allocated);
-            this.m_data = new Int32Array(this.m_bufferData);
+            this.m_data = new Int32Array(this.m_allocated);
         }
         Clear();
         return O3DGC_OK;
@@ -824,21 +822,19 @@ var o3dgc = (function (module) {
         this.m_solid = true;
         this.m_convex = true;
         this.m_isTriangularMesh = true;
-        this.m_buffer = new ArrayBuffer(48 + 12 * O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES + 12 * O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
-        var shift = 0;
-        this.m_coordMin = new Float32Array(this.m_buffer, shift, 3); shift += 12;
-        this.m_coordMax = new Float32Array(this.m_buffer, shift, 3); shift += 12;
-        this.m_normalMin = new Float32Array(this.m_buffer, shift, 3); shift += 12;
-        this.m_normalMax = new Float32Array(this.m_buffer, shift, 3); shift += 12;
-        this.m_nFloatAttribute = new Uint32Array(this.m_buffer, shift, O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES); shift += 4 * O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES;
-        this.m_nIntAttribute = new Uint32Array(this.m_buffer, shift, O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES); shift += 4 * O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES;
-        this.m_dimFloatAttribute = new Uint32Array(this.m_buffer, shift, O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES); shift += 4 * O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES;
-        this.m_dimIntAttribute = new Uint32Array(this.m_buffer, shift, O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES); shift += 4 * O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES;
-        this.m_typeFloatAttribute = new Uint32Array(this.m_buffer, shift, O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES); shift += 4 * O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES;
-        this.m_typeIntAttribute = new Uint32Array(this.m_buffer, shift, O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES); shift += 4 * O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES;
-        this.m_minFloatAttributeBuffer = new ArrayBuffer(O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
+        this.m_coordMin = new Float32Array(3);
+        this.m_coordMax = new Float32Array(3);
+        this.m_normalMin = new Float32Array(3);
+        this.m_normalMax = new Float32Array(3);
+        this.m_nFloatAttribute = new Uint32Array(O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
+        this.m_nIntAttribute = new Uint32Array(O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
+        this.m_dimFloatAttribute = new Uint32Array(O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
+        this.m_dimIntAttribute = new Uint32Array(O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
+        this.m_typeFloatAttribute = new Uint32Array(O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
+        this.m_typeIntAttribute = new Uint32Array(O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
+        this.m_minFloatAttributeBuffer = new ArrayBuffer(4 * O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
         this.m_minFloatAttribute = new Float32Array(this.m_minFloatAttributeBuffer);
-        this.m_maxFloatAttributeBuffer = new ArrayBuffer(O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
+        this.m_maxFloatAttributeBuffer = new ArrayBuffer(4 * O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
         this.m_maxFloatAttribute = new Float32Array(this.m_maxFloatAttributeBuffer);
         this.m_coordIndex = {};
         this.m_coord = {};
@@ -1037,9 +1033,9 @@ var o3dgc = (function (module) {
     module.SC3DMCEncodeParams = function () {
         this.m_numFloatAttributes = 0;
         this.m_numIntAttributes = 0;
-        this.m_floatAttributeQuantBits = new Array(O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
-        this.m_floatAttributePredMode = new Array(O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
-        this.m_intAttributePredMode = new Array(O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
+        this.m_floatAttributeQuantBits = new Uint32Array(O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
+        this.m_floatAttributePredMode = new Uint32Array(O3DGC_SC3DMC_MAX_NUM_FLOAT_ATTRIBUTES);
+        this.m_intAttributePredMode = new Uint32Array(O3DGC_SC3DMC_MAX_NUM_INT_ATTRIBUTES);
         this.m_encodeMode = O3DGC_SC3DMC_ENCODE_MODE_TFAN;
         this.m_streamTypeMode = O3DGC_STREAM_TYPE_ASCII;
         this.m_coordQuantBits = 14;
@@ -1136,8 +1132,6 @@ var o3dgc = (function (module) {
         this.m_neighborsSize = 0;    // actual allocated size for m_neighbors
         this.m_numNeighborsSize = 0; // actual allocated size for m_numNeighbors
         this.m_numElements = 0;      // number of elements 
-        this.m_neighborsBuffer = {};
-        this.m_numNeighborsBuffer = {};
         this.m_neighbors = {};
         this.m_numNeighbors = {};
     }
@@ -1145,21 +1139,18 @@ var o3dgc = (function (module) {
         this.m_numElements = numNeighborsSize;
         if (neighborsSize > this.m_neighborsSize) {
             this.m_neighborsSize = neighborsSize;
-            this.m_neighborsBuffer = new ArrayBuffer(4 * this.m_neighborsSize);
-            this.m_neighbors = new Int32Array(this.m_neighborsBuffer);
+            this.m_neighbors = new Int32Array(this.m_neighborsSize);
         }
         if (numNeighborsSize > this.m_numNeighborsSize) {
             this.m_numNeighborsSize = numNeighborsSize;
-            this.m_numNeighborsBuffer = new ArrayBuffer(4 * this.m_numNeighborsSize);
-            this.m_numNeighbors = new Int32Array(this.m_numNeighborsBuffer);
+            this.m_numNeighbors = new Int32Array(this.m_numNeighborsSize);
         }
         return O3DGC_OK;
     }
     module.AdjacencyInfo.prototype.AllocateNumNeighborsArray = function (numElements) {
         if (numElements > this.m_numNeighborsSize) {
             this.m_numNeighborsSize = numElements;
-            this.m_numNeighborsBuffer = new ArrayBuffer(4 * this.m_numNeighborsSize);
-            this.m_numNeighbors = new Int32Array(this.m_numNeighborsBuffer);
+            this.m_numNeighbors = new Int32Array(this.m_numNeighborsSize);
         }
         this.m_numElements = numElements;
         return O3DGC_OK;
@@ -1170,8 +1161,7 @@ var o3dgc = (function (module) {
         }
         if (this.m_numNeighbors[this.m_numElements - 1] > this.m_neighborsSize) {
             this.m_neighborsSize = this.m_numNeighbors[this.m_numElements - 1];
-            this.m_neighborsBuffer = new ArrayBuffer(4 * this.m_neighborsSize);
-            this.m_neighbors = new Int32Array(this.m_neighborsBuffer);
+            this.m_neighbors = new Int32Array(this.m_neighborsSize);
         }
         return O3DGC_OK;
     }
@@ -1218,7 +1208,6 @@ var o3dgc = (function (module) {
     }
     // Vector class
     module.Vector = function () {
-        this.m_buffer = {};
         this.m_data = {};
         this.m_allocated = 0;
         this.m_size = 0;
@@ -1244,14 +1233,12 @@ var o3dgc = (function (module) {
     module.Vector.prototype.Allocate = function (size) {
         if (size > this.m_allocated) {
             this.m_allocated = size;
-            var tmp_buffer = new ArrayBuffer(4 * this.m_allocated);
-            var tmp_data = new Int32Array(tmp_buffer);
+            var tmp_data = new Int32Array(this.m_allocated);
             if (this.m_size > 0) {
                 for (var i = 0; i < this.m_size; ++i) {
                     tmp_data[i] = this.m_data[i];
                 }
             }
-            this.m_buffer = tmp_buffer;
             this.m_data = tmp_data;
         }
     }
@@ -1261,14 +1248,12 @@ var o3dgc = (function (module) {
             if (this.m_allocated < O3DGC_DEFAULT_VECTOR_SIZE) {
                 this.m_allocated = O3DGC_DEFAULT_VECTOR_SIZE;
             }
-            var tmp_buffer = new ArrayBuffer(4 * this.m_allocated);
-            var tmp_data = new Int32Array(tmp_buffer);
+            var tmp_data = new Int32Array(this.m_allocated);
             if (this.m_size > 0) {
                 for (var i = 0; i < this.m_size; ++i) {
                     tmp_data[i] = this.m_data[i];
                 }
             }
-            this.m_buffer = tmp_buffer;
             this.m_data = tmp_data;
         }
         this.m_data[this.m_size++] = value;
@@ -1473,9 +1458,7 @@ var o3dgc = (function (module) {
         this.m_sizeTFANAllocatedSize = 0;
         this.m_numTFANs = 0;
         this.m_numVertices = 0;
-        this.m_sizeTFANBuffer = {};
         this.m_sizeTFAN = {};
-        this.m_verticesBuffer = {};
         this.m_vertices = {};
     }
     module.TriangleFans.prototype.Allocate = function (sizeTFAN, verticesSize) {
@@ -1483,13 +1466,11 @@ var o3dgc = (function (module) {
         this.m_numVertices = 0;
         if (this.m_verticesAllocatedSize < verticesSize) {
             this.m_verticesAllocatedSize = verticesSize;
-            this.m_verticesBuffer = new ArrayBuffer(4 * this.m_verticesAllocatedSize);
-            this.m_vertices = new Int32Array(this.m_verticesBuffer);
+            this.m_vertices = new Int32Array(this.m_verticesAllocatedSize);
         }
         if (this.m_sizeTFANAllocatedSize < sizeTFAN) {
             this.m_sizeTFANAllocatedSize = sizeTFAN;
-            this.m_sizeTFANBuffer = new ArrayBuffer(4 * this.m_sizeTFANAllocatedSize);
-            this.m_sizeTFAN = new Int32Array(this.m_verticesBuffer);
+            this.m_sizeTFAN = new Int32Array(this.m_sizeTFANAllocatedSize);
         }
         return O3DGC_OK;
     }
@@ -1502,12 +1483,10 @@ var o3dgc = (function (module) {
         ++this.m_numVertices;
         if (this.m_numVertices > this.m_verticesAllocatedSize) {
             this.m_verticesAllocatedSize *= 2;
-            var tmp_verticesBuffer = new ArrayBuffer(4 * this.m_verticesAllocatedSize);
-            var tmp_vertices = new Int32Array(tmp_verticesBuffer);
+            var tmp_vertices = new Int32Array(this.m_verticesAllocatedSize);
             for (var i = 0; i < this.m_numVertices; ++i) {
                 tmp_vertices[i] = this.m_vertices[i];
             }
-            this.m_buffer = tmp_verticesBuffer;
             this.m_vertices = tmp_vertices;
         }
         this.m_vertices[this.m_numVertices - 1] = vertex;
@@ -1518,12 +1497,10 @@ var o3dgc = (function (module) {
         ++this.m_numTFANs;
         if (this.m_numTFANs > this.m_sizeTFANAllocatedSize) {
             this.m_sizeTFANAllocatedSize *= 2;
-            var tmp_sizeTFANBuffer = new ArrayBuffer(4 * this.m_sizeTFANAllocatedSize);
-            var tmp_sizeTFAN = new Int32Array(tmp_sizeTFANBuffer);
+            var tmp_sizeTFAN = new Int32Array(this.m_sizeTFANAllocatedSize);
             for (var i = 0; i < this.m_numTFANs; ++i) {
                 tmp_sizeTFAN[i] = this.m_sizeTFAN[i];
             }
-            this.m_sizeTFANBuffer = tmp_sizeTFANBuffer;
             this.m_sizeTFAN = tmp_sizeTFAN;
         }
         this.m_sizeTFAN[this.m_numTFANs - 1] = (this.m_numTFANs > 1) ? this.m_sizeTFAN[this.m_numTFANs - 2] : 0;
@@ -1564,7 +1541,7 @@ var o3dgc = (function (module) {
         this.m_numConqueredTriangles = 0;
         this.m_numVisitedVertices = 0;
         this.m_triangles = {};
-        this.m_visitedVerticesBuffer = {}
+        this.m_tempTriangles = {};
         this.m_visitedVertices = {};
         this.m_visitedVerticesValence = {};
         this.m_vertexToTriangle = new module.AdjacencyInfo();
@@ -1707,15 +1684,14 @@ var o3dgc = (function (module) {
             var it = 0;
             var prevTriangleIndex = 0;
             var numIndices = this.m_numTriangles * 3;
-            //            var tempTriangles = new Int32Array(_triangles);
-            var tempTriangles = new Int32Array(numIndices);
+            var _tempTriangles = this.m_tempTriangles;
             var t;
-            tempTriangles.set(_triangles);
+            _tempTriangles.set(_triangles);
             for (var i = 0; i < _numTriangles; ++i) {
                 t = UIntToInt(_order[it++]) + prevTriangleIndex;
-                _triangles[3 * t] = tempTriangles[3 * i];
-                _triangles[3 * t + 1] = tempTriangles[3 * i + 1];
-                _triangles[3 * t + 2] = tempTriangles[3 * i + 2];
+                _triangles[3 * t] = _tempTriangles[3 * i];
+                _triangles[3 * t + 1] = _tempTriangles[3 * i + 1];
+                _triangles[3 * t + 2] = _tempTriangles[3 * i + 2];
                 prevTriangleIndex = t + 1;
             }
         }
@@ -1858,14 +1834,12 @@ var o3dgc = (function (module) {
         this.m_itIndex.m_count = 0;
         if (this.m_numVertices > this.m_maxNumVertices) {
             this.m_maxNumVertices = this.m_numVertices;
-            this.m_visitedVerticesBuffer = new ArrayBuffer(8 * this.m_numVertices);
-            this.m_visitedVerticesValence = new Int32Array(this.m_visitedVerticesBuffer, 0, this.m_numVertices);
-            this.m_visitedVertices = new Int32Array(this.m_visitedVerticesBuffer, 4 * this.m_numVertices, this.m_numVertices);
+            this.m_visitedVerticesValence = new Int32Array(this.m_numVertices);
+            this.m_visitedVertices = new Int32Array(this.m_numVertices);
         }
         if (this.m_decodeTrianglesOrder && this.m_tempTrianglesSize < this.m_numTriangles) {
             this.m_tempTrianglesSize = this.m_numTriangles;
-            this.m_tempTrianglesBuffer = new ArrayBuffer(12 * this.m_tempTrianglesSize);
-            this.m_tempTriangles = new Int32Array(this.m_tempTrianglesBuffer);
+            this.m_tempTriangles = new Int32Array(3 * this.m_tempTrianglesSize);
         }
         this.m_ctfans.SetStreamType(this.m_streamType);
         this.m_ctfans.Allocate(this.m_numVertices, this.m_numTriangles);
@@ -1899,9 +1873,6 @@ var o3dgc = (function (module) {
         this.m_streamSize = 0;
         this.m_params = new module.SC3DMCEncodeParams();
         this.m_triangleListDecoder = new module.TriangleListDecoder();
-        this.m_quantFloatArrayBuffer = {};
-        this.m_orientationBuffer = {};
-        this.m_normalsBuffer = {};
         this.m_quantFloatArray = {};
         this.m_orientation = {};
         this.m_normals = {};
@@ -1911,11 +1882,9 @@ var o3dgc = (function (module) {
         this.m_stats = new module.SC3DMCStats();
         this.m_streamType = O3DGC_STREAM_TYPE_UNKOWN;
         this.m_neighbors = new Array(O3DGC_SC3DMC_MAX_PREDICTION_NEIGHBORS);
-        this.m_ideltaBuffer = new ArrayBuffer(4 * O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
-        this.m_idelta = new Float32Array(this.m_ideltaBuffer);
-        var m_minMaxBuffer = new ArrayBuffer(32);
-        this.m_minNormal = new Float32Array(m_minMaxBuffer, 0, 2);
-        this.m_maxNormal = new Float32Array(m_minMaxBuffer, 8, 2);
+        this.m_idelta = new Float32Array(O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES);
+        this.m_minNormal = new Float32Array(2);
+        this.m_maxNormal = new Float32Array(2);
         this.m_minNormal[0] = this.m_minNormal[1] = -2;
         this.m_maxNormal[0] = this.m_maxNormal[1] = 2;
         for (var i = 0; i < O3DGC_SC3DMC_MAX_DIM_ATTRIBUTES; ++i) {
@@ -2194,8 +2163,8 @@ var o3dgc = (function (module) {
         var nvert = ifs.GetNNormal();
         var normalSize = ifs.GetNNormal() * 2;
         if (this.m_normalsSize < normalSize) {
-            this.m_normalsBuffer = new ArrayBuffer(4 * normalSize);
-            this.m_normals = new Float32Array(this.m_normalsBuffer);
+            this.m_normalsSize = normalSize;
+            this.m_normals = new Float32Array(this.m_normalsSize);
         }
         var _normals = this.m_normals;
         var _quantFloatArray = this.m_quantFloatArray;
@@ -2297,8 +2266,8 @@ var o3dgc = (function (module) {
         mModelValues.SetAlphabet(M + 2);
         if (predMode.m_value === O3DGC_SC3DMC_SURF_NORMALS_PREDICTION) {
             if (this.m_orientationSize < size) {
-                this.m_orientationBuffer = new ArrayBuffer(numFloatArray);
-                this.m_orientation = new Int8Array(this.m_orientationBuffer);
+                this.m_orientationSize = size;
+                this.m_orientation = new Int8Array(this.m_orientationSize);
                 _orientation = this.m_orientation;
             }
             var dModel = new module.AdaptiveDataModel();
@@ -2310,8 +2279,8 @@ var o3dgc = (function (module) {
             dimFloatArray = 2;
         }
         if (this.m_quantFloatArraySize < size) {
-            this.m_quantFloatArrayBuffer = new ArrayBuffer(4 * size);
-            this.m_quantFloatArray = new Int32Array(this.m_quantFloatArrayBuffer);
+            this.m_quantFloatArraySize = size;
+            this.m_quantFloatArray = new Int32Array(this.m_quantFloatArraySize);
         }
         var _quantFloatArray = this.m_quantFloatArray;
         var _neighbors = this.m_neighbors;
@@ -2473,9 +2442,8 @@ var o3dgc = (function (module) {
 
         if (predMode.m_value === O3DGC_SC3DMC_SURF_NORMALS_PREDICTION) {
             if (this.m_orientationSize < numFloatArray) {
-                this.m_orientationBuffer = new ArrayBuffer(numFloatArray);
-                this.m_orientation = new Int8Array(this.m_orientationBuffer);
                 this.m_orientationSize = numFloatArray;
+                this.m_orientation = new Int8Array(this.m_orientationSize);
                 _orientation = this.m_orientation;
             }
             for (var i = 0; i < numFloatArray; ++i) {
@@ -2486,9 +2454,8 @@ var o3dgc = (function (module) {
         }
 
         if (this.m_quantFloatArraySize < size) {
-            this.m_quantFloatArrayBuffer = new ArrayBuffer(4 * size);
-            this.m_quantFloatArray = new Int32Array(this.m_quantFloatArrayBuffer);
             this.m_quantFloatArraySize = size;
+            this.m_quantFloatArray = new Int32Array(this.m_quantFloatArraySize);
         }
         var _quantFloatArray = this.m_quantFloatArray;
         var _neighbors = this.m_neighbors;
@@ -2879,15 +2846,9 @@ var o3dgc = (function (module) {
         var n = size;
         var even = 0;
         var k = 0;
-        var tmp = new Int32Array(32);
-        var e = new Int32Array(32);
-        tmp[k] = n;
-        e[k] = (n & 1) >> 0;
         even += ((n & 1) << k++) >> 0;
         while (n > 1) {
             n = (n >> 1) + ((n & 1) >> 0);
-            tmp[k] = n;
-            e[k] = ((n & 1) >> 0);
             even += ((n & 1) << k++) >> 0;
         }
         for (var i = k - 2; i >= 0; --i) {
