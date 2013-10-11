@@ -2002,17 +2002,18 @@ var o3dgc = (function () {
         }
     }
     function ParallelogramPredictors(triangles, ta, v, nPred, neighbors, dimFloatArray, quantFloatArray, stride, v2T, v2TNeighbors) {
-        var as, bs, cs, a, b, c, x, i, k, u1_begin, u1_end, u1, tb, foundB, p, id;
+        var ta3, tb3, as, bs, cs, a, b, c, x, i, k, u1_begin, u1_end, u1, tb, foundB, p, id;
+        ta3 = ta * 3;
         id = new module.SC3DMCTriplet(-1, -1, -1);
-        if (triangles[ta * 3] === v) {
-            a = triangles[ta * 3 + 1];
-            b = triangles[ta * 3 + 2];
-        } else if (triangles[ta * 3 + 1] === v) {
-            a = triangles[ta * 3];
-            b = triangles[ta * 3 + 2];
+        if (triangles[ta3] === v) {
+            a = triangles[ta3 + 1];
+            b = triangles[ta3 + 2];
+        } else if (triangles[ta3 + 1] === v) {
+            a = triangles[ta3];
+            b = triangles[ta3 + 2];
         } else {
-            a = triangles[ta * 3];
-            b = triangles[ta * 3 + 1];
+            a = triangles[ta3];
+            b = triangles[ta3 + 1];
         }
         if (a < v && b < v) {
             u1_begin = v2T.Begin(a);
@@ -2022,10 +2023,11 @@ var o3dgc = (function () {
                 if (tb < 0) {
                     break;
                 }
+                tb3 = tb * 3;
                 c = -1;
                 foundB = false;
                 for (k = 0; k < 3; ++k) {
-                    x = triangles[tb * 3 + k];
+                    x = triangles[tb3 + k];
                     if (x === b) {
                         foundB = true;
                     } else if (x < v && x !== a) {
@@ -2211,7 +2213,7 @@ var o3dgc = (function () {
         return this.DecodeIntArrayBinary(intArray, numIntArray, dimIntArray, stride, ifs, predMode, bstream);
     };
     function ComputeNormals(triangles, ntris, coords, nvert, normals) {
-        var v, n, t, a, b, c, d1, d2, n0;
+        var t3, v, n, t, a, b, c, d1, d2, n0;
         n0 = new module.Vec3();
         d1 = new module.Vec3();
         d2 = new module.Vec3();
@@ -2220,31 +2222,32 @@ var o3dgc = (function () {
             normals[v] = 0;
         }
         for (t = 0; t < ntris; ++t) {
-            a = triangles[t * 3];
-            b = triangles[t * 3 + 1];
-            c = triangles[t * 3 + 2];
-            d1.m_x = coords[3 * b] - coords[3 * a];
-            d1.m_y = coords[3 * b + 1] - coords[3 * a + 1];
-            d1.m_z = coords[3 * b + 2] - coords[3 * a + 2];
-            d2.m_x = coords[3 * c] - coords[3 * a];
-            d2.m_y = coords[3 * c + 1] - coords[3 * a + 1];
-            d2.m_z = coords[3 * c + 2] - coords[3 * a + 2];
+            t3 = t * 3;
+            a = triangles[t3] * 3;
+            b = triangles[t3 + 1] * 3;
+            c = triangles[t3 + 2] * 3;
+            d1.m_x = coords[b] - coords[a];
+            d1.m_y = coords[b + 1] - coords[a + 1];
+            d1.m_z = coords[b + 2] - coords[a + 2];
+            d2.m_x = coords[c] - coords[a];
+            d2.m_y = coords[c + 1] - coords[a + 1];
+            d2.m_z = coords[c + 2] - coords[a + 2];
             n0.m_x = d1.m_y * d2.m_z - d1.m_z * d2.m_y;
             n0.m_y = d1.m_z * d2.m_x - d1.m_x * d2.m_z;
             n0.m_z = d1.m_x * d2.m_y - d1.m_y * d2.m_x;
-            normals[3 * a] += n0.m_x;
-            normals[3 * a + 1] += n0.m_y;
-            normals[3 * a + 2] += n0.m_z;
-            normals[3 * b] += n0.m_x;
-            normals[3 * b + 1] += n0.m_y;
-            normals[3 * b + 2] += n0.m_z;
-            normals[3 * c] += n0.m_x;
-            normals[3 * c + 1] += n0.m_y;
-            normals[3 * c + 2] += n0.m_z;
+            normals[a] += n0.m_x;
+            normals[a + 1] += n0.m_y;
+            normals[a + 2] += n0.m_z;
+            normals[b] += n0.m_x;
+            normals[b + 1] += n0.m_y;
+            normals[b + 2] += n0.m_z;
+            normals[c] += n0.m_x;
+            normals[c + 1] += n0.m_y;
+            normals[c + 2] += n0.m_z;
         }
     }
     module.SC3DMCDecoder.prototype.ProcessNormals = function (ifs) {
-        var nvert, normalSize, normals, quantFloatArray, orientation, triangles, n0, n1, v, rna0, rnb0, ni1, norm0;
+        var v3, v2, nvert, normalSize, normals, quantFloatArray, orientation, triangles, n0, n1, v, rna0, rnb0, ni1, norm0;
         nvert = ifs.GetNNormal();
 
         normalSize = ifs.GetNNormal() * 3;
@@ -2260,9 +2263,10 @@ var o3dgc = (function () {
         n0 = new module.Vec3();
         n1 = new module.Vec3();
         for (v = 0; v < nvert; ++v) {
-            n0.m_x = normals[3 * v];
-            n0.m_y = normals[3 * v + 1];
-            n0.m_z = normals[3 * v + 2];
+            v3 = 3 * v;
+            n0.m_x = normals[v3];
+            n0.m_y = normals[v3 + 1];
+            n0.m_z = normals[v3 + 2];
             norm0 = Math.sqrt(n0.m_x * n0.m_x + n0.m_y * n0.m_y + n0.m_z * n0.m_z);
             if (norm0 === 0.0) {
                 norm0 = 1.0;
@@ -2276,8 +2280,9 @@ var o3dgc = (function () {
                 rna0 = 0.0;
                 rnb0 = 0.0;
             }
-            normals[2 * v] = rna0;
-            normals[2 * v + 1] = rnb0;
+            v2 = v * 2;
+            normals[v2] = rna0;
+            normals[v2 + 1] = rnb0;
         }
         return module.O3DGC_OK;
     };
