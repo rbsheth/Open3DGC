@@ -66,6 +66,18 @@
         </script>
         <script type="text/javascript" src="o3dgc.js"></script>
         <script>
+		function print(txt){
+			var text2 = document.createElement('div');
+			text2.style.position = 'absolute';
+			text2.style.width = 100;
+			text2.style.height = 100;
+			text2.style.backgroundColor = 'transparent';
+			text2.innerHTML = txt;
+			text2.style.top =  100 + 'px';
+			text2.style.left =  0 + 'px';
+			text2.style.textAlign='left';
+			document.body.appendChild(text2);
+		}
         function decodeDV(bstream, size){
             var decoder = new o3dgc.DynamicVectorDecoder();
             var dynamicVector = new o3dgc.DynamicVector();
@@ -98,7 +110,8 @@
             timer.Tic();
             decoder.DecodeHeader(ifs, bstream);
             timer.Toc();
-            console.log("DecodeHeader time (ms) " + timer.GetElapsedTime());
+			var headerDecodeTime = timer.GetElapsedTime();
+			var headerSize = decoder.m_iterator.m_count;
             // allocate memory
             if (ifs.GetNCoordIndex() > 0) {
                 ifs.SetCoordIndex(new Uint16Array(3 * ifs.GetNCoordIndex()));
@@ -121,33 +134,41 @@
                     ifs.SetIntAttribute(a, new Int32Array(ifs.GetIntAttributeDim(a) * ifs.GetNIntAttribute(a)));
                 }
             }
-            console.log("Mesh info ");
-            console.log("\t# coords    " + ifs.GetNCoord());
-            console.log("\t# normals   " + ifs.GetNNormal());
-            for (var a = 0; a < numNumFloatAttributes; ++a){
-                console.log("\t# FloatAttribute[" + a + "] " + ifs.GetNFloatAttribute(a) + "(" + ifs.GetFloatAttributeType(a)+")");
-            }
-            for (var a = 0; a < numNumIntAttributes; ++a){
-                console.log("\t# IntAttribute[" + a + "] " + ifs.GetNIntAttribute(a) + "(" + ifs.GetIntAttributeType(a)+")");
-            }
-            console.log("\t# triangles " + ifs.GetNCoordIndex());
             // decode mesh
             timer.Tic();
             decoder.DecodePlayload(ifs, bstream);
             timer.Toc();
-            console.log("DecodePlayload time " + timer.GetElapsedTime() + " ms, " + size + " bytes (" + (8.0 * size / ifs.GetNCoord()) + " bpv)");
-            console.log("Details");
-            var stats = decoder.GetStats();
-            console.log("\t CoordIndex         " + stats.m_timeCoordIndex + " ms, " + stats.m_streamSizeCoordIndex + " bytes (" + (8.0 * stats.m_streamSizeCoordIndex / ifs.GetNCoord()) + " bpv)");
-            console.log("\t Coord              " + stats.m_timeCoord + " ms, " + stats.m_streamSizeCoord + " bytes (" + (8.0 * stats.m_streamSizeCoord / ifs.GetNCoord()) + " bpv)");
-            console.log("\t Normal             " + stats.m_timeNormal + " ms, " + stats.m_streamSizeNormal + " bytes (" + (8.0 * stats.m_streamSizeNormal / ifs.GetNCoord()) + " bpv)");
+			var stats = decoder.GetStats();			var log = '<pre>';
+            log += "Mesh info \n";
+			log += "  # coords    " + ifs.GetNCoord() + "\n";
+			log += "  # normals   " + ifs.GetNNormal() + "\n";
             for (var a = 0; a < numNumFloatAttributes; ++a){
-                console.log("\t Float Attributes   " + stats.m_timeFloatAttribute[a] + " ms, " + stats.m_streamSizeFloatAttribute[a] + " bytes (" + (8.0 * stats.m_streamSizeFloatAttribute[a] / ifs.GetNCoord()) + " bpv)");
+				log += "  # FloatAttribute[" + a + "] " + ifs.GetNFloatAttribute(a) + "(" + ifs.GetFloatAttributeType(a)+")\n";
             }
             for (var a = 0; a < numNumIntAttributes; ++a){
-                console.log("\t Int Attributes   " + stats.m_timeIntAttribute[a] + " ms, " + stats.m_streamSizeIntAttribute[a] + " bytes (" + (8.0 * stats.m_streamSizeIntAttribute[a] / ifs.GetNCoord()) + " bpv)");
+				log += "  # IntAttribute[" + a + "] " + ifs.GetNIntAttribute(a) + "(" + ifs.GetIntAttributeType(a)+")" + "\n";
             }
-            console.log("\t Reorder            " + stats.m_timeReorder + " ms,  " + 0 + " bytes (" + 0.0 + " bpv)");
+			log += "  # triangles " + ifs.GetNCoordIndex() + "\n\n";
+
+			log += "DecodeHeader\n";
+			log += "  time       " + (headerDecodeTime).toFixed(0) + " ms\n";
+			log += "  size       " + (headerSize/1024).toFixed(1) + " KB (" + (8.0 * headerSize / ifs.GetNCoord()).toFixed(1) + " bpv)" + "\n\n";
+			log += "DecodePlayload\n";
+			log += "  time       " + (timer.GetElapsedTime()).toFixed(0) + " ms\n";
+			log += "  size       " + (size/1024).toFixed(1) + " KB (" + (8.0 * size / ifs.GetNCoord()).toFixed(1) + " bpv)" + "\n\n";
+			log += "Details\n";
+			log += "  CoordIndex " + (stats.m_timeCoordIndex).toFixed(0) + " ms, " + Math.round(stats.m_streamSizeCoordIndex/1024) + " KB (" + (8.0 * stats.m_streamSizeCoordIndex / ifs.GetNCoord()).toFixed(1) + " bpv)\n";
+			log += "  Coord      " + (stats.m_timeCoord).toFixed(0) + " ms, " + Math.round(stats.m_streamSizeCoord/1024) + " KB (" + (8.0 * stats.m_streamSizeCoord / ifs.GetNCoord()).toFixed(1) + " bpv)\n";
+			log += "  Normal     " + (stats.m_timeNormal).toFixed(0) + " ms, " + Math.round(stats.m_streamSizeNormal/1024) + " KB (" + (8.0 * stats.m_streamSizeNormal / ifs.GetNCoord()).toFixed(1) + " bpv)\n";
+            for (var a = 0; a < numNumFloatAttributes; ++a){
+				log += "  Float Attributes   " + (stats.m_timeFloatAttribute[a]).toFixed(0) + " ms, " + Math.round(stats.m_streamSizeFloatAttribute[a]/1024) + " KB (" + (8.0 * stats.m_streamSizeFloatAttribute[a] / ifs.GetNCoord()).toFixed(1) + " bpv)\n";
+            }
+            for (var a = 0; a < numNumIntAttributes; ++a){
+				log += "  Int Attributes   " + (stats.m_timeIntAttribute[a]).toFixed(0) + " ms, " + Math.round(stats.m_streamSizeIntAttribute[a]/1024) + " KB (" + (8.0 * stats.m_streamSizeIntAttribute[a] / ifs.GetNCoord()).toFixed(1) + " bpv)\n";
+            }
+			log += "  Reorder    " + (stats.m_timeReorder).toFixed(1) + " ms,  " + 0 + " KB (" + 0.0 + " bpv)\n";
+			log += '</pre>';
+			print(log);
             if (dump){
                 SaveOBJ(ifs, fileName);
             }
@@ -214,7 +235,7 @@
                 side: THREE.DoubleSide, vertexColors: THREE.VertexColors
             });
             renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false });
-            renderer.setClearColor(0xaaaaaa, 1);
+            renderer.setClearColor(0x000000, 1);
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.gammaInput = true;
             renderer.gammaOutput = true;
