@@ -2253,7 +2253,7 @@ var o3dgc = (function () {
         normalSize = ifs.GetNNormal() * 3;
         if (this.m_normalsSize < normalSize) {
             this.m_normalsSize = normalSize;
-            this.m_normals = new Float32Array(this.m_normalsSize);
+            this.m_normals = new Int32Array(this.m_normalsSize);
         }
         normals = this.m_normals;
         quantFloatArray = this.m_quantFloatArray;
